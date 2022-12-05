@@ -12,6 +12,7 @@ body section.titlebar {
   -webkit-user-select: none;
   -webkit-app-region: drag;
   background-color: #eaeaea;
+  z-index: 9999;
 
   div {
     display: flex;

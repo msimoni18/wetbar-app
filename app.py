@@ -1,9 +1,14 @@
 import sys
+import pandas as pd
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 app = Flask(__name__)
 app_config = {"host": "0.0.0.0", "port": sys.argv[1]}
+
+# Set global object to store files and data
+data = sys.modules[__name__]
+data.DATA = {}
 
 """
 ---------------------- DEVELOPER MODE CONFIG -----------------------
@@ -26,12 +31,25 @@ if "app.py" in sys.argv[0]:
 """
 --------------------------- REST CALLS -----------------------------
 """
-# Remove and replace with your own
-@app.route("/example")
-def example():
+@app.route("/modify-data", methods=['POST'])
+def modify_data():
+  if request.method == 'POST':
 
-  # See /src/components/App.js for frontend call
-  return jsonify("Example response from Flask! Learn more in /app.py & /src/components/App.js")
+    # Add data if it has not been loaded
+    for row in request.json:
+      if row['path'] not in data.DATA:
+        df = pd.read_csv(row['path'])
+        df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+        data.DATA[row['path']] = {
+          'data': df.to_dict(orient='list'), 
+          'parameters': df.columns.tolist()
+        }
+    
+    # Remove loaded data if file exists in loaded
+    # data and not in request
+    data.DATA = {row['path']: data.DATA[row['path']] for row in request.json}
+
+  return jsonify(data.DATA)
 
 
 """
