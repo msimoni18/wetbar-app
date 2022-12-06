@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Button, Select, MenuItem } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
+import { v4 as uuid } from "uuid";
 
 const FileSelect = (props) => {
   const { value, row } = props;
@@ -124,8 +125,9 @@ export default function DataGridTable(props) {
   ];
 
   const handleClick = () => {
+    const uniqueId = uuid();
     const newRow = {
-      id: rows.length + 1,
+      id: uniqueId,
       file: files,
       x: [],
       y: [],
@@ -145,8 +147,8 @@ export default function DataGridTable(props) {
     []
   );
 
-  const getRowInfo = (row) => {
-    console.log(getRowInfo);
+  const getData = () => {
+    console.log(rows);
   };
 
   return (
@@ -154,13 +156,14 @@ export default function DataGridTable(props) {
       <Button variant="contained" onClick={handleClick}>
         Add row
       </Button>
-      <Button variant="contained">Print table data</Button>
+      <Button variant="contained" onClick={getData}>
+        Print table data
+      </Button>
       <div style={{ height: 300, width: "100%" }}>
         <DataGrid
           rows={rows}
           columns={columns}
           disableSelectionOnClick
-          getRowId={(row) => getRowInfo(row)}
           columnVisibilityModel={{
             selectedFile: false,
             selectedX: false,
