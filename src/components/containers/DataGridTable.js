@@ -73,9 +73,8 @@ const ParameterSelect = (props) => {
 };
 
 export default function DataGridTable(props) {
-  const { data } = props;
+  const { data, setTableData } = props;
   const files = Object.keys(data);
-
   const [rows, setRows] = React.useState([]);
 
   const columns = [
@@ -148,7 +147,16 @@ export default function DataGridTable(props) {
   );
 
   const getData = () => {
-    console.log(rows);
+    const cellData = [];
+    rows.forEach((row) => {
+      const cells = {
+        file: row["selectedFile"],
+        x: row["selectedX"],
+        y: row["selectedY"],
+      };
+      cellData.push(cells);
+    });
+    setTableData(cellData);
   };
 
   return (

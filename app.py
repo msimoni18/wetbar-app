@@ -52,6 +52,24 @@ def modify_data():
   return jsonify(data.DATA)
 
 
+@app.route("/load-plot-data", methods=['POST'])
+def load_plot_data():
+  if request.method == 'POST':
+    plot_data = []
+    # print(request.json)
+    print(data.DATA)
+    for row in request.json:
+      plot_data.append({
+        'x': data.DATA[row['file']]['data'][row['x']],
+        'y': data.DATA[row['file']]['data'][row['y']],
+        'name': row['file'].split('/')[-1],
+        'type': 'scatter',
+        'mode': 'lines+markers'
+      })      
+
+    return jsonify(plot_data)
+
+
 """
 -------------------------- APP SERVICES ----------------------------
 """
