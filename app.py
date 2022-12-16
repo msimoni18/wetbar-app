@@ -1,7 +1,14 @@
+import os
 import sys
-import pandas as pd
-from flask import Flask, jsonify, request
+import glob
+import json
+from pathlib import Path
+from flask import Flask, json, jsonify, request
 from flask_cors import CORS
+# from api.hogs import SpaceUsage
+from api.utils import Worker, str2bool, read_file
+from api.archives import  create_archive, extract_files
+
 
 app = Flask(__name__)
 app_config = {"host": "0.0.0.0", "port": sys.argv[1]}
@@ -15,60 +22,287 @@ data.DATA = {}
 """
 # Developer mode uses app.py
 if "app.py" in sys.argv[0]:
-  # Update app config
-  app_config["debug"] = True
+    # Update app config
+    app_config["debug"] = True
 
-  # CORS settings
-  cors = CORS(
-    app,
-    resources={r"/*": {"origins": "http://localhost*"}},
-  )
+    # CORS settings
+    cors = CORS(
+        app,
+        resources={r"/*": {"origins": "http://localhost*"}},
+    )
 
-  # CORS headers
-  app.config["CORS_HEADERS"] = "Content-Type"
+    # CORS headers
+    app.config["CORS_HEADERS"] = "Content-Type"
 
 
 """
 --------------------------- REST CALLS -----------------------------
 """
-@app.route("/modify-data", methods=['POST'])
-def modify_data():
-  if request.method == 'POST':
+@app.route('/space-hogs', methods=['POST'])
+def space_hogs():
 
-    # Add data if it has not been loaded
-    for row in request.json:
-      if row['path'] not in data.DATA:
-        df = pd.read_csv(row['path'])
-        df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-        data.DATA[row['path']] = {
-          'data': df.to_dict(orient='list'), 
-          'parameters': df.columns.tolist()
-        }
+    if request.method == 'POST':
+        site = request.json
+
+        dummy_last_update = '12/12/2022 (Sun) at 0832'
+        dummy_allocation = 20000
+        dummy_stats = [
+            {'id': 0, 'user': 'Person 1', 'size': '100', 'util': '10', 'size_gt_year': '15', 'util_gt_year': '1', 'split_gt_year': '8'},
+            {'id': 1, 'user': 'Person 2', 'size': '500', 'util': '12', 'size_gt_year': '19', 'util_gt_year': '4', 'split_gt_year': '23'},
+            {'id': 2, 'user': 'Person 3', 'size': '232', 'util': '11.8', 'size_gt_year': '29', 'util_gt_year': '9', 'split_gt_year': '32'},
+            {'id': 3, 'user': 'Person 4', 'size': '1000', 'util': '16', 'size_gt_year': '6', 'util_gt_year': '10', 'split_gt_year': '50'},
+            ]
+
+        return jsonify({
+            'site': site,
+            'last_update': dummy_last_update,
+            'allocation': dummy_allocation,
+            'stats': dummy_stats
+        })
+
+
+@app.route('/archive-files', methods=['POST'])
+def archive_files():
+    """Route for creating and extracting archive files.
+
+    POST Parameters
+    ---------------
+    option : str, 'create' (default) or 'extract'
+    XXX
+
+    paths : list of dictionaries
+    XXX
+
+    file_extension : str, '.tar' or '.tar.gz' (default)
+    XXX
+
+    remove_directory : bool, default is False
+    XXX
+
+    archive_format : str, 'PAX' (default) or 'GNU'
+    XXX
+
+    search_criteria : str
+    XXX
+
+    output_directory : str, required
+    XXX
+
+    processors : int, default is 1
+    XXX
+    """
+
+    if request.method == 'POST':
+        print('POST REQUEST')
+
+        if not request.json["paths"]:
+            return jsonify(
+                'No files or directories were provided. Drag and drop '
+                'files or folders into the container and try again.'
+                )
     
-    # Remove loaded data if file exists in loaded
-    # data and not in request
-    data.DATA = {row['path']: data.DATA[row['path']] for row in request.json}
+        # Initialize worker
+        worker = Worker(workers=request.json['processors'])
 
-  return jsonify(data.DATA)
+        # Create
+        if request.json['active_tab'] == 0:
+            valid_folders = []
+            for file in request.json['paths']:
+                folder = file['path']
+                if os.path.isdir(folder):
+                    # Don't allow overwritting existing archive files
+                    archive_filename = os.path.join(Path(folder).parent, Path(folder).name + request.json['file_extension'])
+
+                    if os.path.isfile(archive_filename):
+                        print(f'Cannot create {archive_filename!r} because it already exists. Skipping...')
+                    else:
+                        # Collect valid folders
+                        valid_folders.append(folder)
+ 
+                else:
+                    print(f'Cannot create an archive file because {folder!r} is not a folder.')
+    
+            if valid_folders:
+                # Start worker
+                print('Creating archives...')
+                worker.run(
+                    create_archive,
+                    valid_folders,
+                    extension=request.json['file_extension'],
+                    format=request.json['archive_format'],
+                    remove_directory=str2bool(request.json['remove_directory'])
+                    )
+            else:
+                print(f'No valid folders were provided, so archive files cannot be created.')
+        
+        # Extract
+        elif request.json['active_tab'] == 1:
+
+            output_directory = request.json['output_directory']
+
+            if request.json['extract_option'] == 'files':
+                search_criteria = request.json['search_criteria'].split('\n')
+            else:
+                search_criteria = None
+            
+            # Create output directory if it does not exist
+            if not os.path.isdir(output_directory):
+                os.makedirs(output_directory)
+            
+            valid_files = []
+
+            for file in request.json['paths']:
+                filename = file['path']
+
+                if os.path.isfile(filename):
+                    valid_files.append(filename)
+                else:
+                    print(f'Cannot extract from {filename!r} because it is not an archive file.')
+            
+            if valid_files:
+                # Start worker
+                print('Extracting files...')
+                worker.run(
+                    extract_files,
+                    valid_files,
+                    search_criteria=search_criteria,
+                    output_path=output_directory
+                    )
+            else:
+                print(f'No valid files were provided, so files cannot be extracted.')
+
+        else:
+            return jsonify('Only "create" and "extract" are supported at this time.')
+
+    return jsonify('Archiving complete.')
 
 
-@app.route("/load-plot-data", methods=['POST'])
-def load_plot_data():
-  if request.method == 'POST':
-    plot_data = []
-    # print(request.json)
-    print(data.DATA)
-    for row in request.json:
-      plot_data.append({
-        'x': data.DATA[row['file']]['data'][row['x']],
-        'y': data.DATA[row['file']]['data'][row['y']],
-        'name': row['file'].split('/')[-1],
-        'type': 'scatter',
-        'mode': 'lines+markers'
-      })      
+@app.route('/load-files', methods=['POST'])
+def load_files():
+    """
+    POST Parameters
+    ---------------
+    paths : list of dicts
+        [{name: x1, path: y1}, ...]
+    
+    search_criteria: str, folder or file
 
-    return jsonify(plot_data)
+    regex : 
 
+    skiprows : 
+
+    delimiter : 
+
+    sheets : 
+
+    """
+
+    if request.method == 'POST':
+        result = {'status': False, 'message': '', 'data': []}
+
+        filepaths = request.json['paths']
+        search_criteria = request.json['search_criteria']
+        regex = request.json['regex']
+        skiprows = request.json['skiprows']
+        delimiter = request.json['delimiter']
+        sheets = request.json['sheets']
+
+        kwargs = {}
+        if skiprows != '':
+            kwargs['skiprows'] = skiprows
+        if delimiter != '':
+            kwargs['sep'] = delimiter
+        if sheets != '':
+            kwargs['sheet_name'] = sheets
+        
+        if not filepaths:
+            result['message'] = """
+            No files or dictionaries were provided. Drag 
+            and drop files or folders into the container 
+            and try again.
+            """
+            return jsonify(result)
+        
+        invalid_paths = []
+        for filepath in filepaths:
+            if not os.path.isfile(filepath['path']):
+                invalid_paths.append(False)
+        
+        if invalid_paths:
+            result['message'] = """
+            All files provided must be either all files or all 
+            directories, and they must exist. Make sure they are 
+            all either files or directories and that all of them 
+            exist.
+            """
+            return jsonify(result)
+        
+        if search_criteria == 'folder':
+            files = []
+            for filepath in filepaths:
+                files.extend(glob.glob(os.path.join(filepath['path'], regex), recursive=True))
+            
+            if not files:
+                result['message'] = """
+                No files were found in the folders provided with 
+                the regex input.
+                """
+                return jsonify(result)
+        
+        else:
+            files = [filepath['path'] for filepath in filepaths]
+        
+        for f in files:
+            if f not in data.DATA:
+                df = read_file(f, **kwargs)
+                data.DATA[f] = {'df': df.to_dict(orient='list'), 'parameters': df.columns.tolist()}
+        
+        # Remove loaded data if files exist in loaded data, but not request
+        data.DATA = {f: data.DATA[f] for f in files}
+
+        files_and_parameters = [{'file': f, 'parameters': data.DATA[f]['parameters']} for f in data.DATA]
+
+        result['stats'] = True
+        result['message'] = 'success'
+        result['data'] = files_and_parameters
+        return jsonify(result)
+
+
+@app.route('/get-loaded-data')
+def get_loaded_data():
+    if data.DATA:
+        return jsonify({
+            'status': True,
+            'message': 'success',
+            'files': sorted(list(data.DATA.keys()))
+        })
+    return jsonify({
+        'status': False,
+        'message': 'No files have been loaded.',
+        'files': []
+    })
+
+
+@app.route('/get-plot-data', methods=['POST'])
+def get_plot_data():
+    if request.method == 'POST':
+        plot_data = []
+        for row in request.json:
+            plot_data.append({
+                'x': data.DATA[row['file']]['df'][row['x']],
+                'y': data.DATA[row['file']]['df'][row['y']],
+                'name': row['name'],
+                'type': 'scatter',
+                'mode': row['mode']
+            })
+        return jsonify(plot_data)
+
+
+@app.route('/delete-loaded-data', methods=['POST'])
+def delete_loaded_data():
+    if request.method == 'POST':
+        data.DATA = {f: data.DATA[f] for f in request.json['paths']}
+        return jsonify(sorted(list(data.DATA.keys())))
 
 """
 -------------------------- APP SERVICES ----------------------------

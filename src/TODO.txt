@@ -1,0 +1,24 @@
+RunButton:
+- Convert RunButton to MUI button
+
+Sidebar:
+- Add highlighting to sidebar button whenever it is
+  selected so it's easy to tell what page you are on
+
+DragDropFileContainer:
+- Combine with SimpleFileContainer, passing props to disable
+  certain features like drag/drop
+
+Plots:
+- Add done/cancel buttons to each speed dialog window and only execute
+  update when done is selected and don't update state when cancel is
+  selected
+
+Archives:
+- Turn button into a loading button
+
+
+Backend:
+- Add list option to view contents of tar file
+
+- Add sockets to emit progress (use flask-socketio package)

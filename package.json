@@ -1,6 +1,6 @@
 {
-  "author": "Daniel Wade",
-  "description": "Started template for Electron, React, Python app",
+  "author": "Matthew Simoni",
+  "description": "Work Enhancing Toolbar",
   "dependencies": {
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
@@ -17,6 +17,8 @@
     "react-dom": "^18.2.0",
     "react-plotly.js": "^2.6.0",
     "react-redux": "^7.2.0",
+    "react-resize-detector": "^7.1.2",
+    "react-router-dom": "^6.4.5",
     "react-scripts": "3.4.1"
   },
   "devDependencies": {
@@ -61,7 +63,7 @@
   "homepage": "./",
   "license": "MIT",
   "main": "main.js",
-  "name": "electron-react-python-template",
+  "name": "WETbar",
   "private": true,
   "scripts": {
     "build": "node ./scripts/dispatch build all",

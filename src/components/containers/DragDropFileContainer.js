@@ -1,23 +1,24 @@
 import * as React from "react";
 
-import Box from "@mui/material/Box";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemAvatar from "@mui/material/ListItemAvatar";
-import ListItemText from "@mui/material/ListItemText";
-import Avatar from "@mui/material/Avatar";
-import IconButton from "@mui/material/IconButton";
-import FormGroup from "@mui/material/FormGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
-import Checkbox from "@mui/material/Checkbox";
+import {
+  Box,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Avatar,
+  IconButton,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+} from "@mui/material";
 import FolderIcon from "@mui/icons-material/Folder";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 import styles from "./DragDropFileContainer.module.scss";
 
 export default function DragDropFileContainer(props) {
-  const files = props.files;
-  const setFiles = props.setFiles;
+  const { files, setFiles } = props;
 
   const [dense, setDense] = React.useState(false);
   const [secondary, setSecondary] = React.useState(false);
@@ -101,27 +102,29 @@ export default function DragDropFileContainer(props) {
   }
 
   return (
-    <Box sx={{ flexGrow: 1, maxWidth: 752 }}>
-      <FormGroup row>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={dense}
-              onChange={(event) => setDense(event.target.checked)}
-            />
-          }
-          label="Enable dense"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={secondary}
-              onChange={(event) => setSecondary(event.target.checked)}
-            />
-          }
-          label="Enable secondary text"
-        />
-      </FormGroup>
+    <Box sx={{ flexGrow: 1 }}>
+      <Box sx={{ flexGrow: 1, marginLeft: "10px" }}>
+        <FormGroup row>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={dense}
+                onChange={(event) => setDense(event.target.checked)}
+              />
+            }
+            label="Enable dense"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={secondary}
+                onChange={(event) => setSecondary(event.target.checked)}
+              />
+            }
+            label="Enable secondary text"
+          />
+        </FormGroup>
+      </Box>
       <div
         className={styles["drag-drop-container"]}
         data-text="Drag and drop your file(s) here."

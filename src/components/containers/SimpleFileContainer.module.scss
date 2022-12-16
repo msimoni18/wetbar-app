@@ -1,19 +1,19 @@
-.drag-drop-container {
+.simple-file-container {
     position: relative;
     border: 2px solid black;
     border-radius: 10px;
     height: 200px;
-    overflow: scroll;
-    margin-bottom: 20px;
+    width: 100%;
+    overflow: auto;
     text-align: left;
+    justify-content: center;
 }
 
-.drag-drop-container::-webkit-scrollbar {
+.simple-file-container::-webkit-scrollbar {
     display: none;
 }
 
-div:empty:before {
-    content: attr(data-text);
+.empty-container {
     position: absolute;
     top: 50%;
     left: 50%;

@@ -1,14 +1,14 @@
-import * as React from "react";
-import PropTypes from "prop-types";
-import { Button, Select, MenuItem } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
-import { v4 as uuid } from "uuid";
+import * as React from 'react';
+import PropTypes from 'prop-types';
+import { Button, Select, MenuItem } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
+import { v4 as uuid } from 'uuid';
 
 const FileSelect = (props) => {
   const { value, row } = props;
 
-  const [file, setFile] = React.useState("");
+  const [file, setFile] = React.useState(row.selectedFile || '');
 
   const handleChange = (event) => {
     setFile(event.target.value);
@@ -16,7 +16,7 @@ const FileSelect = (props) => {
   };
 
   return (
-    <Select id="file-select" value={file} onChange={handleChange} fullWidth>
+    <Select id='file-select' value={file} onChange={handleChange} fullWidth>
       {value?.map((item, index) => (
         <MenuItem key={index} value={item}>
           {item}
@@ -33,32 +33,34 @@ FileSelect.propTypes = {
 const ParameterSelect = (props) => {
   const {
     field,
-    data = {},
-    row: { selectedFile },
+    formattedData = {},
+    row: { selectedFile, selectedX, selectedY },
   } = props;
 
-  const [parameter, setParameter] = React.useState("");
+  const [parameter, setParameter] = React.useState(
+    field === 'x' ? selectedX || '' : selectedY || ''
+  );
+
   const [availableParams, setAvailableParams] = React.useState([]);
 
-  // You can probably do this a better way, but I added this for simplicity
   React.useEffect(() => {
     if (selectedFile) {
-      setAvailableParams(data[selectedFile].parameters);
+      setAvailableParams(formattedData[selectedFile]);
     }
-  }, [selectedFile, data]);
+  }, [selectedFile, formattedData]);
 
   const handleChange = (event) => {
     setParameter(event.target.value);
-    if (field === "x") {
+    if (field === 'x') {
       props.row.selectedX = event.target.value;
-    } else if (field === "y") {
+    } else if (field === 'y') {
       props.row.selectedY = event.target.value;
     }
   };
 
   return (
     <Select
-      id="parameter-select"
+      id='parameter-select'
       value={parameter}
       onChange={handleChange}
       fullWidth
@@ -72,53 +74,101 @@ const ParameterSelect = (props) => {
   );
 };
 
+const ModeSelect = (props) => {
+  const { row } = props;
+
+  const [mode, setMode] = React.useState(row.selectedMode || 'lines');
+
+  const handleChange = (event) => {
+    setMode(event.target.value);
+    row.selectedMode = event.target.value;
+  };
+
+  return (
+    <Select id='mode-select' value={mode} onChange={handleChange} fullWidth>
+      <MenuItem value={'lines'}>lines</MenuItem>
+      <MenuItem value={'lines+markers'}>lines+markers</MenuItem>
+      <MenuItem value={'markers'}>markers</MenuItem>
+    </Select>
+  );
+};
+
 export default function DataGridTable(props) {
-  const { data, setTableData } = props;
-  const files = Object.keys(data);
-  const [rows, setRows] = React.useState([]);
+  const { data, rows, setRows } = props;
+
+  // Convert data into object containing file as key and parameters as value
+  const formattedData = {};
+  if (Object.keys(data).length > 0) {
+    data['data'].forEach((row) => {
+      formattedData[row.file] = row.parameters;
+    });
+  }
+
+  const files = Object.keys(formattedData);
 
   const columns = [
     {
-      field: "file",
-      headerName: "File",
+      field: 'file',
+      headerName: 'File',
       flex: 1,
+      minWidth: 600,
       renderCell: FileSelect,
     },
     {
-      field: "x",
-      headerName: "X",
+      field: 'x',
+      headerName: 'X',
       flex: 0.5,
-      renderCell: (props) => ParameterSelect({ ...props, data }),
+      minWidth: 200,
+      renderCell: (props) => ParameterSelect({ ...props, formattedData }),
     },
     {
-      field: "y",
-      headerName: "Y",
+      field: 'y',
+      headerName: 'Y',
       flex: 0.5,
-      renderCell: (props) => ParameterSelect({ ...props, data }),
+      minWidth: 200,
+      renderCell: (props) => ParameterSelect({ ...props, formattedData }),
     },
     {
-      field: "actions",
-      headerName: "Delete",
-      type: "actions",
+      field: 'name',
+      headerName: 'Name',
+      flex: 0.5,
+      minWidth: 200,
+      editable: true,
+    },
+    {
+      field: 'mode',
+      headerName: 'Mode',
+      flex: 0.5,
+      minWidth: 180,
+      renderCell: ModeSelect,
+    },
+    {
+      field: 'actions',
+      headerName: 'Delete',
+      type: 'actions',
       width: 80,
       getActions: (params) => [
         <GridActionsCellItem
           icon={<DeleteIcon />}
-          label="Delete"
+          label='Delete'
           onClick={deleteRow(params.id)}
         />,
       ],
     },
     {
-      field: "selectedFile",
+      field: 'selectedFile',
       hideable: true,
     },
     {
-      field: "selectedX",
+      field: 'selectedX',
       hideable: true,
     },
     {
-      field: "selectedY",
+      field: 'selectedY',
+      hideable: true,
+    },
+    {
+      field: 'selectedMode',
       hideable: true,
     },
   ];
@@ -130,9 +180,12 @@ export default function DataGridTable(props) {
       file: files,
       x: [],
       y: [],
+      mode: 'lines',
+      name: '',
       selectedFile: null,
       selectedX: null,
       selectedY: null,
+      selectedMode: 'lines',
     };
     setRows((prevState) => [...prevState, newRow]);
   };
@@ -146,28 +199,21 @@ export default function DataGridTable(props) {
     []
   );
 
-  const getData = () => {
-    const cellData = [];
-    rows.forEach((row) => {
-      const cells = {
-        file: row["selectedFile"],
-        x: row["selectedX"],
-        y: row["selectedY"],
-      };
-      cellData.push(cells);
-    });
-    setTableData(cellData);
+  const commitCellEdit = (props) => {
+    const { field, id, value } = props;
+    setRows((prevRows) =>
+      prevRows.map((row) => (row.id === id ? { ...row, [field]: value } : row))
+    );
   };
+
+  console.log(rows);
 
   return (
     <div>
-      <Button variant="contained" onClick={handleClick}>
+      <Button variant='contained' onClick={handleClick}>
         Add row
       </Button>
-      <Button variant="contained" onClick={getData}>
-        Print table data
-      </Button>
-      <div style={{ height: 300, width: "100%" }}>
+      <div style={{ height: 500, width: '100%' }}>
         <DataGrid
           rows={rows}
           columns={columns}
@@ -176,7 +222,9 @@ export default function DataGridTable(props) {
             selectedFile: false,
             selectedX: false,
             selectedY: false,
+            selectedMode: false,
           }}
+          onCellEditCommit={commitCellEdit}
         />
       </div>
     </div>
