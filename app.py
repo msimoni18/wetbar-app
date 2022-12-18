@@ -93,7 +93,6 @@ def archive_files():
     """
 
     if request.method == 'POST':
-        print('POST REQUEST')
 
         if not request.json["paths"]:
             return jsonify(
@@ -206,7 +205,7 @@ def load_files():
         skiprows = request.json['skiprows']
         delimiter = request.json['delimiter']
         sheets = request.json['sheets']
-
+        
         kwargs = {}
         if skiprows != '':
             kwargs['skiprows'] = skiprows
@@ -222,21 +221,7 @@ def load_files():
             and try again.
             """
             return jsonify(result)
-        
-        invalid_paths = []
-        for filepath in filepaths:
-            if not os.path.isfile(filepath['path']):
-                invalid_paths.append(False)
-        
-        if invalid_paths:
-            result['message'] = """
-            All files provided must be either all files or all 
-            directories, and they must exist. Make sure they are 
-            all either files or directories and that all of them 
-            exist.
-            """
-            return jsonify(result)
-        
+     
         if search_criteria == 'folder':
             files = []
             for filepath in filepaths:
@@ -250,6 +235,20 @@ def load_files():
                 return jsonify(result)
         
         else:
+            invalid_paths = []
+            for filepath in filepaths:
+                if not os.path.isfile(filepath['path']):
+                    invalid_paths.append(False)
+            
+            if invalid_paths:
+                result['message'] = """
+                All files provided must be either all files or all 
+                directories, and they must exist. Make sure they are 
+                all either files or directories and that all of them 
+                exist.
+                """
+                return jsonify(result)
+
             files = [filepath['path'] for filepath in filepaths]
         
         for f in files:
@@ -271,11 +270,13 @@ def load_files():
 @app.route('/get-loaded-data')
 def get_loaded_data():
     if data.DATA:
+        print('FILES EXIST')
         return jsonify({
             'status': True,
             'message': 'success',
             'files': sorted(list(data.DATA.keys()))
         })
+    print("NO FILES EXIST")
     return jsonify({
         'status': False,
         'message': 'No files have been loaded.',

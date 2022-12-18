@@ -1,4 +1,5 @@
 import * as React from 'react';
+import Plot from 'react-plotly.js';
 import {
   Table,
   TableBody,
@@ -13,6 +14,7 @@ import {
   MenuItem,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ResizeablePlot from 'components/containers/ResizeablePlot';
 import { v4 as uuid } from 'uuid';
 import styles from 'components/App.module.scss';
 
@@ -57,6 +59,7 @@ export default function Test() {
 
   return (
     <div className={styles['route-body']}>
+      <ResizeablePlot />
       <Button variant='contained' onClick={handleClick}>
         Add row
       </Button>

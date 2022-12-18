@@ -15,6 +15,8 @@ import {
   RadioGroup,
   Checkbox,
   Select,
+  IconButton,
+  Tooltip,
   TextField,
   SpeedDial,
   SpeedDialIcon,
@@ -156,7 +158,7 @@ export default function Plots() {
   const [title, setTitle] = React.useState('');
   const [xLabel, setXLabel] = React.useState('');
   const [yLabel, setYLabel] = React.useState('');
-  const [legend, setLegend] = React.useState(false);
+  const [legend, setLegend] = React.useState(true);
 
   const layout = {
     width: width,
@@ -179,7 +181,6 @@ export default function Plots() {
     setOpenLayoutOptions(false);
   };
 
-  // Speed Dial
   const actions = [
     {
       icon: <ArticleIcon />,
@@ -214,21 +215,13 @@ export default function Plots() {
         heading='Plots'
         description='Build interactive plots with ease.'
       />
-      <SpeedDial
-        ariaLabel='options'
-        icon={<SpeedDialIcon />}
-        sx={{ position: 'absolute', bottom: 16, left: 72 }}
-        direction='up'
-      >
-        {actions.map((action) => (
-          <SpeedDialAction
-            key={action.name}
-            icon={action.icon}
-            tooltipTitle={action.name}
-            onClick={action.click}
-          />
-        ))}
-      </SpeedDial>
+      {actions.map((action) => (
+        <Tooltip key={action.name} title={action.name}>
+          <IconButton key={action.name} onClick={action.click}>
+            {action.icon}
+          </IconButton>
+        </Tooltip>
+      ))}
       <Dialog
         open={openFileOptions}
         onClose={handleCloseFileOptions}
@@ -243,70 +236,94 @@ export default function Plots() {
           </DialogContentText>
           <hr />
           <DragDropFileContainer files={items} setFiles={setItems} />
-          <FormControl>
-            <FormLabel>Search Criteria:</FormLabel>
-            <RadioGroup
-              aria-labelledby='demo-radio-buttons-group-label'
-              value={searchCriteria}
-              name='radio-buttons-group'
+          <Box sx={{ display: 'flex' }}>
+            <Box
+              sx={{
+                border: '2px solid black',
+                padding: '10px',
+                width: '50%',
+                marginRight: '10px',
+                borderRadius: '10px',
+              }}
             >
-              <FormControlLabel
-                value='file'
-                control={<Radio />}
-                label='File'
-                onChange={(event) => setSearchCriteria(event.target.value)}
+              <FormControl>
+                <FormLabel>Search criteria:</FormLabel>
+                <RadioGroup
+                  aria-labelledby='demo-radio-buttons-group-label'
+                  value={searchCriteria}
+                  name='radio-buttons-group'
+                >
+                  <FormControlLabel
+                    value='file'
+                    control={<Radio />}
+                    label='File'
+                    onChange={(event) => setSearchCriteria(event.target.value)}
+                  />
+                  <FormControlLabel
+                    value='folder'
+                    control={<Radio />}
+                    label='Folder'
+                    onChange={(event) => setSearchCriteria(event.target.value)}
+                  />
+                </RadioGroup>
+              </FormControl>
+              <TextField
+                margin='dense'
+                id='search-criteria'
+                label='Search folders for regex:'
+                type='input'
+                variant='standard'
+                fullWidth
+                value={regex}
+                onChange={(event) => setRegex(event.target.value)}
               />
-              <FormControlLabel
-                value='folder'
-                control={<Radio />}
-                label='Folder'
-                onChange={(event) => setSearchCriteria(event.target.value)}
-              />
-            </RadioGroup>
-          </FormControl>
-          <TextField
-            margin='dense'
-            id='search-criteria'
-            label='Search folders for regex:'
-            type='input'
-            fullWidth
-            variant='standard'
-            value={regex}
-            onChange={(event) => setRegex(event.target.value)}
-          />
-          <FormControl>
-            <FormLabel>Optional inputs for .xlsx, .csv, .txt files:</FormLabel>
-            <TextField
-              margin='dense'
-              id='skiprows'
-              label='Skip Rows'
-              type='input'
-              fullWidth
-              variant='standard'
-              value={skiprows}
-              onChange={(event) => setSkiprows(event.target.value)}
-            />
-            <TextField
-              margin='dense'
-              id='delimiter'
-              label='Delimiter'
-              type='input'
-              fullWidth
-              variant='standard'
-              value={delimiter}
-              onChange={(event) => setDelimiter(event.target.value)}
-            />
-            <TextField
-              margin='dense'
-              id='sheets'
-              label='Sheets'
-              type='input'
-              fullWidth
-              variant='standard'
-              value={sheets}
-              onChange={(event) => setSheets(event.target.value)}
-            />
-          </FormControl>
+            </Box>
+            <Box
+              sx={{
+                border: '2px solid black',
+                padding: '10px',
+                width: '50%',
+                marginLeft: '10px',
+                borderRadius: '10px',
+              }}
+            >
+              <FormControl fullWidth>
+                <FormLabel>
+                  Optional inputs for .xlsx, .csv, .txt files:
+                </FormLabel>
+                <TextField
+                  margin='dense'
+                  id='skiprows'
+                  label='Skip Rows'
+                  type='input'
+                  fullWidth
+                  variant='standard'
+                  value={skiprows}
+                  onChange={(event) => setSkiprows(event.target.value)}
+                />
+                <TextField
+                  margin='dense'
+                  id='delimiter'
+                  label='Delimiter'
+                  type='input'
+                  fullWidth
+                  variant='standard'
+                  value={delimiter}
+                  onChange={(event) => setDelimiter(event.target.value)}
+                />
+                <TextField
+                  margin='dense'
+                  id='sheets'
+                  label='Sheets'
+                  type='input'
+                  fullWidth
+                  variant='standard'
+                  value={sheets}
+                  onChange={(event) => setSheets(event.target.value)}
+                />
+              </FormControl>
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button variant='contained' onClick={handleCloseFileOptions}>
@@ -381,92 +398,91 @@ export default function Plots() {
       >
         <DialogTitle>Layout Options</DialogTitle>
         <DialogContent>
-          <div className={plotStyles['dialog-component']}>
-            <FormControl>
-              <FormLabel>Labels</FormLabel>
-              <TextField
-                margin='dense'
-                id='x-label'
-                label='X-Axis Label'
-                type='input'
-                fullWidth
-                variant='standard'
-                value={xLabel}
-                onChange={(event) => setXLabel(event.target.value)}
-              />
-              <TextField
-                margin='dense'
-                id='y-label'
-                label='Y-Axis Label'
-                type='input'
-                fullWidth
-                variant='standard'
-                value={yLabel}
-                onChange={(event) => setYLabel(event.target.value)}
-              />
-              <TextField
-                margin='dense'
-                id='title-label'
-                label='Plot Title'
-                type='input'
-                fullWidth
-                variant='standard'
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-              />
-            </FormControl>
-          </div>
-          <div className={plotStyles['dialog-component']}>
-            <FormControl>
-              <FormLabel>Legend</FormLabel>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={legend}
-                    onClick={() => setLegend(!legend)}
-                  />
-                }
-                label='On'
-              />
-              <TextField
-                margin='dense'
-                id='location'
-                label='Location'
-                type='input'
-                fullWidth
-                variant='standard'
-              />
-            </FormControl>
-          </div>
-          <div className={plotStyles['dialog-component']}>
-            <FormControl>
-              <FormLabel>Gridlines</FormLabel>
-              <FormControlLabel
-                control={<Checkbox defaultChecked />}
-                label='Major'
-              />
-              <TextField
-                margin='dense'
-                id='major-gridline'
-                label='Major Color'
-                type='input'
-                fullWidth
-                variant='standard'
-              />
-              <FormControlLabel
-                control={<Checkbox defaultChecked />}
-                label='Minor'
-              />
-              <TextField
-                margin='dense'
-                id='minor-gridline'
-                label='Minor Color'
-                type='input'
-                fullWidth
-                variant='standard'
-              />
-            </FormControl>
-          </div>
+          <Box>
+            <Box
+              sx={{
+                border: '2px solid black',
+                padding: '10px',
+                width: '50%',
+                marginBottom: '10px',
+                borderRadius: '10px',
+              }}
+            >
+              <FormControl fullWidth>
+                <FormLabel>Labels:</FormLabel>
+                <TextField
+                  margin='dense'
+                  id='x-label'
+                  label='X-Axis Label'
+                  type='input'
+                  variant='standard'
+                  value={xLabel}
+                  onChange={(event) => setXLabel(event.target.value)}
+                />
+                <TextField
+                  margin='dense'
+                  id='y-label'
+                  label='Y-Axis Label'
+                  type='input'
+                  variant='standard'
+                  value={yLabel}
+                  onChange={(event) => setYLabel(event.target.value)}
+                />
+                <TextField
+                  margin='dense'
+                  id='title-label'
+                  label='Plot Title'
+                  type='input'
+                  variant='standard'
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                />
+              </FormControl>
+            </Box>
+            <Box
+              sx={{
+                border: '2px solid black',
+                padding: '10px',
+                width: '50%',
+                marginBottom: '10px',
+                borderRadius: '10px',
+              }}
+            >
+              <FormControl fullWidth>
+                <FormLabel>Legend:</FormLabel>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={legend}
+                      onClick={() => setLegend(!legend)}
+                    />
+                  }
+                  label='On'
+                />
+              </FormControl>
+            </Box>
+            <Box
+              sx={{
+                border: '2px solid black',
+                padding: '10px',
+                width: '50%',
+                marginBottom: '10px',
+                borderRadius: '10px',
+              }}
+            >
+              <FormControl fullWidth>
+                <FormLabel>Gridlines:</FormLabel>
+                <FormControlLabel
+                  control={<Checkbox defaultChecked />}
+                  label='Major'
+                />
+                <FormControlLabel
+                  control={<Checkbox defaultChecked />}
+                  label='Minor'
+                />
+              </FormControl>
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button variant='contained' onClick={handleCloseLayoutOptions}>
