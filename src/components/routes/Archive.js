@@ -226,7 +226,7 @@ export default function Archive() {
             <TextField
               label='Search Criteria'
               inputProps={{ style: { paddingLeft: 5 } }}
-              mulitline
+              multiline
               sx={{ width: '50%' }}
               maxRows={8}
               value={searchCriteria}

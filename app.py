@@ -8,6 +8,7 @@ from flask_cors import CORS
 # from api.hogs import SpaceUsage
 from api.utils import Worker, str2bool, read_file
 from api.archives import  create_archive, extract_files
+from api.utilization import DirectorySize
 
 
 app = Flask(__name__)
@@ -59,6 +60,14 @@ def space_hogs():
             'allocation': dummy_allocation,
             'stats': dummy_stats
         })
+
+
+@app.route('/space-utilization', methods=['POST'])
+def space_utilization():
+    if request.method == 'POST':
+        directory = DirectorySize(request.json) 
+        df = directory.get_dataframe()
+        return jsonify(directory.get_plotdata(df))
 
 
 @app.route('/archive-files', methods=['POST'])
