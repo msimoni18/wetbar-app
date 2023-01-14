@@ -1,4 +1,8 @@
 Flask
 flask-cors
-pyinstaller
+flask-socketio
 pandas
+pyinstaller
+python-engineio
+python-socketio
+simple-websocket

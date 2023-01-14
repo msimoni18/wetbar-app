@@ -2,9 +2,11 @@ import os
 import sys
 import glob
 import json
+import time
 from pathlib import Path
 from flask import Flask, json, jsonify, request
 from flask_cors import CORS
+from flask_socketio import SocketIO, emit
 # from api.hogs import SpaceUsage
 from api.utils import Worker, str2bool, read_file
 from api.archives import  create_archive, extract_files
@@ -13,6 +15,7 @@ from api.utilization import DirectorySize
 
 app = Flask(__name__)
 app_config = {"host": "0.0.0.0", "port": sys.argv[1]}
+app.config['SECRET_KEY'] = 'secret'
 
 # Set global object to store files and data
 data = sys.modules[__name__]
@@ -35,6 +38,7 @@ if "app.py" in sys.argv[0]:
     # CORS headers
     app.config["CORS_HEADERS"] = "Content-Type"
 
+socketio = SocketIO(app, cors_allowed_origins='*')
 
 """
 --------------------------- REST CALLS -----------------------------
@@ -314,6 +318,51 @@ def delete_loaded_data():
         data.DATA = {f: data.DATA[f] for f in request.json['paths']}
         return jsonify(sorted(list(data.DATA.keys())))
 
+
+
+#### Test function for socketio
+@socketio.on("connect")
+def connected():
+    """event listener when client connects to the server"""
+    print()
+    print('The client has successfully connected.')
+    print('sid: ', request.sid)
+    emit("connect", {"data": f"sid: {request.sid} is connected"})
+    print()
+
+
+@socketio.on('data')
+def handle_message(data):
+    """event listener when client types a message"""
+    print()
+    print("Data from the front end: ", str(data))
+    emit("data", {'data': data, 'sid':request.sid}, broadcast=True)
+    print()
+
+@socketio.on("disconnect")
+def disconnected():
+    """event listener when client disconnects to the server"""
+    print()
+    print("The client has been disconnected from the server")
+    emit("disconnect", f"user {request.sid} disconnected", broadcast=True)
+    print()
+
+
+@socketio.on('test-message')
+@app.route('/test-counter', methods=['POST'])
+def test_counter():
+    if request.method == 'POST':
+        print(request)
+        count = 0
+        for i in range(20):
+            if i > 9:
+                break
+            count = i + 1
+            socketio.emit("test-message", {'count': count})
+            time.sleep(1)
+        return jsonify(count)
+
+
 """
 -------------------------- APP SERVICES ----------------------------
 """
@@ -327,4 +376,5 @@ def quit():
 
 
 if __name__ == "__main__":
-  app.run(**app_config)
+#   app.run(**app_config)
+  socketio.run(app, **app_config)
