@@ -1,5 +1,6 @@
 import * as React from 'react';
 import Plot from 'react-plotly.js';
+import { io } from 'socket.io-client';
 import {
   Table,
   TableBody,
@@ -17,6 +18,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ResizeablePlot from 'components/containers/ResizeablePlot';
 import { v4 as uuid } from 'uuid';
 import styles from 'components/App.module.scss';
+import TestWebSocket from 'components/containers/TestWebSocket';
+import TestSocketCounter from 'components/containers/TestSocketCounter';
+
+// Electron Inter Process Communication and dialog
+const { ipcRenderer } = window.require('electron');
+
+// Dynamically generated TCP (open) port between 3000-3999
+const port = ipcRenderer.sendSync('get-port-number');
 
 function createData(id, file, x, y) {
   return { id, file, x, y };
@@ -36,7 +45,7 @@ const FileSelect = () => {
   };
 
   return (
-    <Select id='file-select' value={file} onChange={handleChange} fullWidth>
+    <Select id="file-select" value={file} onChange={handleChange} fullWidth>
       <MenuItem value={'File1'}>File1</MenuItem>
       <MenuItem value={'File2'}>File2</MenuItem>
       <MenuItem value={'File3'}>File3</MenuItem>
@@ -46,6 +55,47 @@ const FileSelect = () => {
 
 export default function Test() {
   const [rows, setRows] = React.useState(initialRows);
+  const [socketInstance, setSocketInstance] = React.useState('');
+  const [loading, setLoading] = React.useState(true);
+  const [buttonStatus, setButtonStatus] = React.useState(false);
+
+  const handleSocketClick = () => {
+    if (buttonStatus === false) {
+      setButtonStatus(true);
+    } else {
+      setButtonStatus(false);
+    }
+  };
+
+  React.useEffect(() => {
+    if (buttonStatus === true) {
+      const socket = io(`http://localhost:${port}`, {
+        transports: ['websocket'],
+        cors: {
+          origin: `http://localhost:${port}`,
+        },
+      });
+
+      setSocketInstance(socket);
+
+      socket.on('connect', (data) => {
+        console.log('on connect:');
+        console.log(data);
+      });
+
+      setLoading(false);
+
+      socket.on('disconnect', (data) => {
+        console.log('on disconnect:');
+        console.log(data);
+      });
+
+      return function cleanup() {
+        console.log('disconnecting socket');
+        socket.disconnect();
+      };
+    }
+  }, [buttonStatus]);
 
   const handleClick = () => {
     const uniqueId = uuid();
@@ -59,12 +109,18 @@ export default function Test() {
 
   return (
     <div className={styles['route-body']}>
+      <h3>Resizable plot by clicking and dragging the bottom right</h3>
+      <br />
       <ResizeablePlot />
-      <Button variant='contained' onClick={handleClick}>
+      <br />
+      <hr />
+      <h3>Test table</h3>
+      <br />
+      <Button variant="contained" onClick={handleClick}>
         Add row
       </Button>
       <TableContainer component={Paper}>
-        <Table sx={{ minWidth: 300 }} aria-label='simple table'>
+        <Table sx={{ minWidth: 300 }} aria-label="simple table">
           <TableHead>
             <TableRow>
               <TableCell>Files</TableCell>
@@ -75,7 +131,7 @@ export default function Test() {
           <TableBody>
             {rows.map((row) => (
               <TableRow key={row.id}>
-                <TableCell component='th' scope='row'>
+                <TableCell component="th" scope="row">
                   <FileSelect />
                 </TableCell>
                 <TableCell>x param</TableCell>
@@ -90,6 +146,42 @@ export default function Test() {
           </TableBody>
         </Table>
       </TableContainer>
+      <br />
+      <hr />
+      <br />
+      <h3>Test web sockets</h3>
+      <br />
+      {!buttonStatus ? (
+        <div>
+          <Button variant="contained" onClick={handleSocketClick}>
+            Turn chat on
+          </Button>
+          <br />
+        </div>
+      ) : (
+        <>
+          <Button variant="contained" onClick={handleSocketClick}>
+            Turn chat off
+          </Button>
+          <div>
+            {!loading && (
+              <div>
+                <br />
+                <TestWebSocket socket={socketInstance} />
+              </div>
+            )}
+          </div>
+          <br />
+        </>
+      )}
+      <br />
+      <hr />
+      <br />
+      <h3>Test counter with sockets</h3>
+      <br />
+      <TestSocketCounter />
+      <br />
+      <hr />
     </div>
   );
 }
