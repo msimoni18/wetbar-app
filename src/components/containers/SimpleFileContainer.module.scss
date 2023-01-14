@@ -1,0 +1,22 @@
+.simple-file-container {
+    position: relative;
+    border: 2px solid black;
+    border-radius: 10px;
+    height: 200px;
+    width: 100%;
+    overflow: auto;
+    text-align: left;
+    justify-content: center;
+}
+
+.simple-file-container::-webkit-scrollbar {
+    display: none;
+}
+
+.empty-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: grey;
+}
