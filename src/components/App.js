@@ -1,94 +1,86 @@
-import * as React from 'react';
-import { MemoryRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import React, { Fragment, useEffect } from 'react';
+import { get } from 'utils/requests';
 
+import { Counter } from 'components/counter/Counter';
 import Titlebar from 'components/titlebar/Titlebar';
-import Sidebar from 'components/sidebar/Sidebar';
-import Archive from 'components/routes/Archive';
-import Cleanup from 'components/routes/Cleanup';
-import Flamingo from 'components/routes/Flamingo';
-import Plots from 'components/routes/Plots';
-import SpaceHogs from 'components/routes/SpaceHogs';
-import SpaceUtilization from 'components/routes/SpaceUtilization';
-import Test from 'components/routes/Test';
 
-export default function App() {
+import logo from 'logo.svg';
+import styles from 'components/App.module.scss';
+
+function App() {
+
+  useEffect(() => {
+
+    /**
+     * Example call to Flask
+     * @see /src/utils/requests.js
+     * @see /app.py
+     */
+    setTimeout(() => get(
+      'example', // Route
+      (response) => alert(response), // Response callback
+      (error) => console.error(error) // Error callback
+    ), 3000);
+  }, []);
+
   return (
-    <React.Fragment>
-      <Router>
-        <Titlebar />
-        <Sidebar />
-        <Routes>
-          <Route path='/' element={<Test />} />
-          <Route path='/space-hogs' element={<SpaceHogs />} />
-          <Route path='/cleanup' element={<Cleanup />} />
-          <Route path='/archive' element={<Archive />} />
-          <Route path='/utilization' element={<SpaceUtilization />} />
-          <Route path='/plots' element={<Plots />} />
-          <Route path='/flamingo' element={<Flamingo />} />
-        </Routes>
-      </Router>
-    </React.Fragment>
+    <Fragment>
+      <Titlebar />
+
+      <div className={ styles.app }>
+        <header className={ styles['app-header'] }>
+          <img src={ logo } className={ styles['app-logo'] } alt="logo" />
+          <Counter />
+          <p>
+            Edit
+            {' '}
+            <code>src/App.js</code>
+            {' '}
+            and save to reload.
+          </p>
+          <span>
+            <span>Learn </span>
+            <a
+              className={ styles['app-link'] }
+              href="https://reactjs.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              React
+            </a>
+            <span>, </span>
+            <a
+              className={ styles['app-link'] }
+              href="https://redux.js.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Redux
+            </a>
+            <span>, </span>
+            <a
+              className={ styles['app-link'] }
+              href="https://redux-toolkit.js.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Redux Toolkit
+            </a>
+            ,
+            <span> and </span>
+            <a
+              className={ styles['app-link'] }
+              href="https://react-redux.js.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              React Redux
+            </a>
+          </span>
+        </header>
+      </div>
+    </Fragment>
   );
 }
 
-// import * as React from "react";
-// import { post } from "utils/requests";
-
-// import Titlebar from "components/titlebar/Titlebar";
-// import DragDropFileContainer from "components/containers/DragDropFileContainer";
-// import DataGridTable from "components/containers/DataGridTable";
-// import LinePlot from "components/containers/LinePlot";
-
-// import styles from "components/App.module.scss";
-
-// const initialLayout = {
-//   width: 800,
-//   height: 500,
-//   title: "Plot Title",
-//   xaxis: {
-//     title: "X Label",
-//   },
-//   yaxis: {
-//     title: "Y Label",
-//   },
-// };
-
-// function App() {
-//   const [files, setFiles] = React.useState([]);
-//   const [loadedData, setLoadedData] = React.useState({});
-//   const [tableData, setTableData] = React.useState([]);
-//   const [plotData, setPlotData] = React.useState([]);
-//   const [plotLayout, setPlotLayout] = React.useState(initialLayout);
-
-//   React.useEffect(() => {
-//     post(
-//       JSON.stringify(files),
-//       "modify-data",
-//       (response) => setLoadedData(response),
-//       (response) => console.error(response)
-//     );
-//   }, [files]);
-
-//   React.useEffect(() => {
-//     post(
-//       JSON.stringify(tableData),
-//       "load-plot-data",
-//       (response) => setPlotData(response),
-//       (response) => console.error(response)
-//     );
-//   }, [tableData]);
-
-//   return (
-//     <React.Fragment>
-//       <Titlebar />
-
-//       <div className={styles.app}>
-//         <DragDropFileContainer files={files} setFiles={setFiles} />
-//         <DataGridTable data={loadedData} setTableData={setTableData} />
-//         <LinePlot data={plotData} layout={plotLayout} />
-//       </div>
-//     </React.Fragment>
-//   );
-// }
-
-// export default App;
+export default App;
