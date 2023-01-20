@@ -3,12 +3,15 @@ import sys
 import glob
 import json
 import time
+import datetime
+import fnmatch
+import collections
 from pathlib import Path
 from flask import Flask, json, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 # from api.hogs import SpaceUsage
-from api.utils import Worker, str2bool, read_file
+from api.utils import Worker, str2bool, read_file, sort_nicely
 from api.archives import  create_archive, extract_files
 from api.utilization import DirectorySize
 
@@ -69,9 +72,9 @@ def space_hogs():
 @app.route('/space-utilization', methods=['POST'])
 def space_utilization():
     if request.method == 'POST':
-        directory = DirectorySize(request.json) 
+        directory = DirectorySize(request.json)
         df = directory.get_dataframe()
-        return jsonify(directory.get_plotdata(df))
+        return jsonify({'directory': directory.get_plotdata(df), 'extensions': directory.extension_info})
 
 
 @app.route('/archive-files', methods=['POST'])
@@ -112,7 +115,7 @@ def archive_files():
                 'No files or directories were provided. Drag and drop '
                 'files or folders into the container and try again.'
                 )
-    
+
         # Initialize worker
         worker = Worker(workers=request.json['processors'])
 
@@ -130,10 +133,10 @@ def archive_files():
                     else:
                         # Collect valid folders
                         valid_folders.append(folder)
- 
+
                 else:
                     print(f'Cannot create an archive file because {folder!r} is not a folder.')
-    
+
             if valid_folders:
                 # Start worker
                 print('Creating archives...')
@@ -146,7 +149,7 @@ def archive_files():
                     )
             else:
                 print(f'No valid folders were provided, so archive files cannot be created.')
-        
+
         # Extract
         elif request.json['active_tab'] == 1:
 
@@ -156,11 +159,11 @@ def archive_files():
                 search_criteria = request.json['search_criteria'].split('\n')
             else:
                 search_criteria = None
-            
+
             # Create output directory if it does not exist
             if not os.path.isdir(output_directory):
                 os.makedirs(output_directory)
-            
+
             valid_files = []
 
             for file in request.json['paths']:
@@ -170,7 +173,7 @@ def archive_files():
                     valid_files.append(filename)
                 else:
                     print(f'Cannot extract from {filename!r} because it is not an archive file.')
-            
+
             if valid_files:
                 # Start worker
                 print('Extracting files...')
@@ -196,16 +199,16 @@ def load_files():
     ---------------
     paths : list of dicts
         [{name: x1, path: y1}, ...]
-    
+
     search_criteria: str, folder or file
 
-    regex : 
+    regex :
 
-    skiprows : 
+    skiprows :
 
-    delimiter : 
+    delimiter :
 
-    sheets : 
+    sheets :
 
     """
 
@@ -218,7 +221,7 @@ def load_files():
         skiprows = request.json['skiprows']
         delimiter = request.json['delimiter']
         sheets = request.json['sheets']
-        
+
         kwargs = {}
         if skiprows != '':
             kwargs['skiprows'] = skiprows
@@ -226,49 +229,49 @@ def load_files():
             kwargs['sep'] = delimiter
         if sheets != '':
             kwargs['sheet_name'] = sheets
-        
+
         if not filepaths:
             result['message'] = """
-            No files or dictionaries were provided. Drag 
-            and drop files or folders into the container 
+            No files or dictionaries were provided. Drag
+            and drop files or folders into the container
             and try again.
             """
             return jsonify(result)
-     
+
         if search_criteria == 'folder':
             files = []
             for filepath in filepaths:
                 files.extend(glob.glob(os.path.join(filepath['path'], regex), recursive=True))
-            
+
             if not files:
                 result['message'] = """
-                No files were found in the folders provided with 
+                No files were found in the folders provided with
                 the regex input.
                 """
                 return jsonify(result)
-        
+
         else:
             invalid_paths = []
             for filepath in filepaths:
                 if not os.path.isfile(filepath['path']):
                     invalid_paths.append(False)
-            
+
             if invalid_paths:
                 result['message'] = """
-                All files provided must be either all files or all 
-                directories, and they must exist. Make sure they are 
-                all either files or directories and that all of them 
+                All files provided must be either all files or all
+                directories, and they must exist. Make sure they are
+                all either files or directories and that all of them
                 exist.
                 """
                 return jsonify(result)
 
             files = [filepath['path'] for filepath in filepaths]
-        
+
         for f in files:
             if f not in data.DATA:
                 df = read_file(f, **kwargs)
                 data.DATA[f] = {'df': df.to_dict(orient='list'), 'parameters': df.columns.tolist()}
-        
+
         # Remove loaded data if files exist in loaded data, but not request
         data.DATA = {f: data.DATA[f] for f in files}
 
@@ -318,6 +321,121 @@ def delete_loaded_data():
         data.DATA = {f: data.DATA[f] for f in request.json['paths']}
         return jsonify(sorted(list(data.DATA.keys())))
 
+
+@socketio.on('cleanup')
+@app.route('/cleanup', methods=['POST'])
+def cleanup():
+    if request.method == 'POST':
+
+        dry_run = request.json['dry_run']
+
+        folders = []
+        for folder in request.json['folders']:
+            folders.append(folder['path'])
+
+        extensions = []
+        for extension in request.json['extensions']:
+            if extension['checked']:
+                extensions.append(extension['file'])
+
+        dirs = 0
+        files = collections.defaultdict(int)
+        files_not_deleted = []
+
+        # Start timer.
+        t0 = time.time()
+
+        # # Set up log file.
+        # # timestamp = datetime.datetime.now().strftime('%m%d%Y_%H%M-%S-%f')
+        # # log_filename = os.path.join(log_filepath, f'wetbar_cleanup_{timestamp}')
+
+        for folder in folders:
+            for i, (dirpath, dirnames, filenames) in enumerate(os.walk(folder), 1):
+                dirs += 1
+                socketio.emit("cleanup", {
+                    'directory': dirs,
+                    'size': sum(files.values()),
+                    'files': len(files),
+                    'files_not_deleted': len(files_not_deleted)
+                    })
+                # print(f'# of directories searched: {dirs:,}')
+
+                t1 = time.time()
+                # hours, minutes, seconds = str(datetime.timedelta(seconds=(t1-t0))).split(':')
+                # print(f'TIme elapsed: {hours}:{minutes}:{round(float(seconds), 1)}')
+                # TODO: socketio.emit(f'{hours}:{minutes}:{round(float(seconds), 1)}')
+
+                if filenames:
+                    for filename in filenames:
+                        fpath = os.path.join(dirpath, filename)
+                        if any(fnmatch.fnmatch(fpath, ext) for ext in extensions) and fpath not in files:
+                            try:
+                                files[fpath] = os.path.getsize(fpath)
+                                # file_out.write(f'{len(files)} -- {fpath}\n')
+                                # TODO: socketio.emit(f'{len(files):,}')
+                            except FileNotFoundError:
+                                # Can occur on Windows OS because the absolute file path is greater
+                                # than 259 characters.
+                                files_not_deleted.append(f'(total length: {len(str(fpath))}) {fpath}')
+
+                            # print(f'Size: {sum(files.values()):,}')
+                            # print(f'# of files deleted: {len(files):,}')
+                            socketio.emit("cleanup", {
+                                'dirCount': dirs,
+                                'size': sum(files.values()),
+                                'fileCount': len(files),
+                                'filesNotDeleted': len(files_not_deleted)
+                                })
+
+                            # Skip removing files if dry run checkbox is checked
+                            if not dry_run:
+                                try:
+                                    Path(fpath).unlink()
+                                except FileNotFoundError:
+                                    pass
+
+                            # Calculate file size as each file is found.
+                            # total_size, size_str = calculate_size(size)
+                            # TODO: socketio.emit(f'{total_size} {size_str}')
+
+        # # Do one final calculation in case no files were found.
+        # total_size, size_str = calculate_size(size)
+        # # TODO: socketio.emit(f'{total_size} {size_str}')
+
+        # t1 = time.time()
+        # hours, minutes, seconds = str(datetime.timedelta(seconds=(t1-t0))).split(':')
+        # total_time_str = f'{hours} hours, {minutes} minutes, {round(float(seconds), 1)} seconds'
+        # # TODO: socketio.emit(f'{hours}:{minutes}:{round(float(seconds), 1)}')
+
+        # TODO: Remove write to file above and only write to file here
+        # with open(log_filename, 'r+') as file_out:
+        #     contents = file_out.readlines()
+        #     file_out.seek(0)
+        #     file_out.write(f'Number of directories searched: {len(dirs):,}\n')
+        #     file_out.write(f'Number of files deleted: {len(files):,}\n')
+        #     if files_not_deleted:
+        #         file_out.write(f'Number of files that cannot be deleted (total length exceeds 259 characters): {len(files_not_deleted):,}\n')
+        #     file_out.write(f'Total space reduction: {total_size} {size_str}\n')
+        #     file_out.write(f'Total time to complete: {total_time_str}\n\n\n')
+
+        #     msg1 = 'Files that were deleted:'
+        #     file_out.write(msg1 + '\n')
+        #     file_out.write('-' * len(msg1) + '\n')
+
+        #     for line in contents:
+        #         file_out.write(line)
+
+        #     if files_not_deleted:
+        #         file_out.write('\n\n')
+        #         msg2 = 'Files that cannot be deleted because the total length exceeds 259 characters:'
+        #         file_out.write(msg2 + '\n')
+        #         file_out.write('-' * len(msg2) + '\n')
+        #         for i, filename in enumerate(files_not_deleted, 1):
+        #             file_out.write(f'{i} -- {filename}\n')
+
+        # TODO: socketio.emit(f'log_filename')
+
+        return jsonify()
 
 
 #### Test function for socketio
