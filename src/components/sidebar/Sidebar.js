@@ -1,7 +1,7 @@
 import React from 'react';
 import { MemoryRouter as Router, Routes, Route, Link } from 'react-router-dom';
-
 import { Box, Drawer, List, ListItem, ListItemButton } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const iconStyle = {
   fontSize: '24px',
@@ -27,72 +27,77 @@ export default function Sidebar() {
             backgroundColor: '#eaeaea',
           },
         }}
-        variant='permanent'
-        anchor='left'
+        variant="permanent"
+        anchor="left"
       >
         <List sx={{ width: '100%' }}>
-          <Link to='/'>
+          <Link to="/">
             <ListItem disablePadding>
               <ListItemButton>
-                <span role='img' aria-label='na' className={iconStyle}>
+                <span role="img" aria-label="na" className={iconStyle}>
                   T
                 </span>
               </ListItemButton>
             </ListItem>
           </Link>
-          <Link to='/space-hogs'>
+          <Link to="/space-hogs">
             <ListItem disablePadding>
               <ListItemButton>
-                <span role='img' aria-label='hog' className={iconStyle}>
+                <span role="img" aria-label="hog" className={iconStyle}>
                   🐷
                 </span>
               </ListItemButton>
             </ListItem>
           </Link>
-          <Link to='/cleanup'>
+          <Link to="/cleanup">
             <ListItem disablePadding>
               <ListItemButton>
-                <span role='img' aria-label='broom' className={iconStyle}>
+                <span role="img" aria-label="broom" className={iconStyle}>
                   🧹
                 </span>
               </ListItemButton>
             </ListItem>
           </Link>
-          <Link to='/archive'>
+          <Link to="/archive">
             <ListItem disablePadding>
               <ListItemButton>
-                <span role='img' aria-label='cabinet' className={iconStyle}>
+                <span role="img" aria-label="cabinet" className={iconStyle}>
                   🗄
                 </span>
               </ListItemButton>
             </ListItem>
           </Link>
-          <Link to='/utilization'>
+          <Link to="/utilization">
             <ListItem disablePadding>
               <ListItemButton>
-                <span role='img' aria-label='calculator' className={iconStyle}>
+                <span role="img" aria-label="calculator" className={iconStyle}>
                   🔢
                 </span>
               </ListItemButton>
             </ListItem>
           </Link>
-          <Link to='/plots'>
+          <Link to="/plots">
             <ListItem disablePadding>
               <ListItemButton>
-                <span role='img' aria-label='graph' className={iconStyle}>
+                <span role="img" aria-label="graph" className={iconStyle}>
                   📈
                 </span>
               </ListItemButton>
             </ListItem>
           </Link>
-          <Link to='/flamingo'>
+          <Link to="/flamingo">
             <ListItem disablePadding>
               <ListItemButton>
-                <span role='img' aria-label='flamingo' className={iconStyle}>
+                <span role="img" aria-label="flamingo" className={iconStyle}>
                   🦩
                 </span>
               </ListItemButton>
             </ListItem>
+          </Link>
+          <Link to="/settings">
+            <ListItemButton>
+              <SettingsIcon />
+            </ListItemButton>
           </Link>
         </List>
       </Drawer>

@@ -1,3 +1,4 @@
+import re
 import time
 import concurrent.futures
 import pandas as pd
@@ -92,3 +93,9 @@ def read_file(filename, **kwargs):
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
     return df
+
+
+def sort_nicely(lst):
+    convert = lambda text: int(text) if text.isdigit() else text
+    alpha_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+    return sorted(lst, key=alpha_key)

@@ -9,6 +9,7 @@ import Flamingo from 'components/routes/Flamingo';
 import Plots from 'components/routes/Plots';
 import SpaceHogs from 'components/routes/SpaceHogs';
 import SpaceUtilization from 'components/routes/SpaceUtilization';
+import Settings from 'components/routes/Settings';
 import Test from 'components/routes/Test';
 
 export default function App() {
@@ -18,13 +19,14 @@ export default function App() {
         <Titlebar />
         <Sidebar />
         <Routes>
-          <Route path='/' element={<Test />} />
-          <Route path='/space-hogs' element={<SpaceHogs />} />
-          <Route path='/cleanup' element={<Cleanup />} />
-          <Route path='/archive' element={<Archive />} />
-          <Route path='/utilization' element={<SpaceUtilization />} />
-          <Route path='/plots' element={<Plots />} />
-          <Route path='/flamingo' element={<Flamingo />} />
+          <Route path="/" element={<Test />} />
+          <Route path="/space-hogs" element={<SpaceHogs />} />
+          <Route path="/cleanup" element={<Cleanup />} />
+          <Route path="/archive" element={<Archive />} />
+          <Route path="/utilization" element={<SpaceUtilization />} />
+          <Route path="/plots" element={<Plots />} />
+          <Route path="/flamingo" element={<Flamingo />} />
+          <Route path="/settings" element={<Settings />} />
         </Routes>
       </Router>
     </React.Fragment>

@@ -326,7 +326,6 @@ def delete_loaded_data():
 @app.route('/cleanup', methods=['POST'])
 def cleanup():
     if request.method == 'POST':
-
         dry_run = request.json['dry_run']
 
         folders = []
@@ -345,25 +344,9 @@ def cleanup():
         # Start timer.
         t0 = time.time()
 
-        # # Set up log file.
-        # # timestamp = datetime.datetime.now().strftime('%m%d%Y_%H%M-%S-%f')
-        # # log_filename = os.path.join(log_filepath, f'wetbar_cleanup_{timestamp}')
-
         for folder in folders:
             for i, (dirpath, dirnames, filenames) in enumerate(os.walk(folder), 1):
                 dirs += 1
-                socketio.emit("cleanup", {
-                    'directory': dirs,
-                    'size': sum(files.values()),
-                    'files': len(files),
-                    'files_not_deleted': len(files_not_deleted)
-                    })
-                # print(f'# of directories searched: {dirs:,}')
-
-                t1 = time.time()
-                # hours, minutes, seconds = str(datetime.timedelta(seconds=(t1-t0))).split(':')
-                # print(f'TIme elapsed: {hours}:{minutes}:{round(float(seconds), 1)}')
-                # TODO: socketio.emit(f'{hours}:{minutes}:{round(float(seconds), 1)}')
 
                 if filenames:
                     for filename in filenames:
@@ -371,21 +354,10 @@ def cleanup():
                         if any(fnmatch.fnmatch(fpath, ext) for ext in extensions) and fpath not in files:
                             try:
                                 files[fpath] = os.path.getsize(fpath)
-                                # file_out.write(f'{len(files)} -- {fpath}\n')
-                                # TODO: socketio.emit(f'{len(files):,}')
                             except FileNotFoundError:
                                 # Can occur on Windows OS because the absolute file path is greater
                                 # than 259 characters.
                                 files_not_deleted.append(f'(total length: {len(str(fpath))}) {fpath}')
-
-                            # print(f'Size: {sum(files.values()):,}')
-                            # print(f'# of files deleted: {len(files):,}')
-                            socketio.emit("cleanup", {
-                                'dirCount': dirs,
-                                'size': sum(files.values()),
-                                'fileCount': len(files),
-                                'filesNotDeleted': len(files_not_deleted)
-                                })
 
                             # Skip removing files if dry run checkbox is checked
                             if not dry_run:
@@ -394,48 +366,18 @@ def cleanup():
                                 except FileNotFoundError:
                                     pass
 
-                            # Calculate file size as each file is found.
-                            # total_size, size_str = calculate_size(size)
-                            # TODO: socketio.emit(f'{total_size} {size_str}')
+                t1 = time.time()
+                hours, minutes, seconds = str(datetime.timedelta(seconds=(t1-t0))).split(':')
 
-        # # Do one final calculation in case no files were found.
-        # total_size, size_str = calculate_size(size)
-        # # TODO: socketio.emit(f'{total_size} {size_str}')
+                socketio.emit("cleanup", {
+                    'directory': dirs,
+                    'size': sum(files.values()),
+                    'files': len(files),
+                    'files_not_deleted': len(files_not_deleted),
+                    'time': f'{hours}:{minutes}:{round(float(seconds), 1)}'
+                    })
 
-        # t1 = time.time()
-        # hours, minutes, seconds = str(datetime.timedelta(seconds=(t1-t0))).split(':')
-        # total_time_str = f'{hours} hours, {minutes} minutes, {round(float(seconds), 1)} seconds'
-        # # TODO: socketio.emit(f'{hours}:{minutes}:{round(float(seconds), 1)}')
-
-        # TODO: Remove write to file above and only write to file here
-        # with open(log_filename, 'r+') as file_out:
-        #     contents = file_out.readlines()
-        #     file_out.seek(0)
-        #     file_out.write(f'Number of directories searched: {len(dirs):,}\n')
-        #     file_out.write(f'Number of files deleted: {len(files):,}\n')
-        #     if files_not_deleted:
-        #         file_out.write(f'Number of files that cannot be deleted (total length exceeds 259 characters): {len(files_not_deleted):,}\n')
-        #     file_out.write(f'Total space reduction: {total_size} {size_str}\n')
-        #     file_out.write(f'Total time to complete: {total_time_str}\n\n\n')
-
-        #     msg1 = 'Files that were deleted:'
-        #     file_out.write(msg1 + '\n')
-        #     file_out.write('-' * len(msg1) + '\n')
-
-        #     for line in contents:
-        #         file_out.write(line)
-
-        #     if files_not_deleted:
-        #         file_out.write('\n\n')
-        #         msg2 = 'Files that cannot be deleted because the total length exceeds 259 characters:'
-        #         file_out.write(msg2 + '\n')
-        #         file_out.write('-' * len(msg2) + '\n')
-        #         for i, filename in enumerate(files_not_deleted, 1):
-        #             file_out.write(f'{i} -- {filename}\n')
-
-        # TODO: socketio.emit(f'log_filename')
-
-        return jsonify()
+        return jsonify({'files': sort_nicely(list(files.keys())), 'files_not_deleted': sort_nicely(files_not_deleted)})
 
 
 #### Test function for socketio
