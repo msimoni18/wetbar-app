@@ -1,6 +1,3 @@
-RunButton:
-- Convert RunButton to MUI button
-
 DragDropFileContainer:
 - Combine with SimpleFileContainer, passing props to disable
   certain features like drag/drop

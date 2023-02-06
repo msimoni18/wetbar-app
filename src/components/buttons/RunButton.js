@@ -1,12 +1,19 @@
 import React from "react";
-import styles from "./RunButton.module.scss";
+import Button from "@mui/material/Button";
+import SendIcon from "@mui/icons-material/Send";
 
 export default function RunButton(props) {
   const { handleClick } = props;
 
   return (
-    <button type="button" className={ styles["run-btn"] } onClick={ handleClick }>
+    <Button
+      variant="contained"
+      size="large"
+      color="primary"
+      onClick={ handleClick }
+      endIcon={ <SendIcon /> }
+    >
       Run
-    </button>
+    </Button>
   );
 }
