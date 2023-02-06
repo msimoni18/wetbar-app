@@ -1,103 +1,155 @@
-import React from 'react';
-import { MemoryRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { Box, Drawer, List, ListItem, ListItemButton } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
-
-const iconStyle = {
-  fontSize: '24px',
-  padding: '20px 0 20px 0',
-  width: '100%',
-  textAlign: 'center',
-};
+import * as React from "react";
+import { MemoryRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { Box, Drawer, List, ListItem, ListItemButton, Tooltip } from "@mui/material";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 const drawerWidth = 60;
 
+const buttonStyle = {
+  justifyContent: "center",
+  height: "50px"
+};
+
 export default function Sidebar() {
+  const [selectedIndex, setSelectedIndex] = React.useState(0);
+
+  const handleListItemClick = (event, index) => {
+    setSelectedIndex(index);
+  };
+
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Box sx={ { display: "flex" } }>
       <Drawer
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
+        sx={ {
+          "width": drawerWidth,
+          "flexShrink": 0,
+          "& .MuiDrawer-paper": {
             width: drawerWidth,
-            boxSizing: 'border-box',
-            marginTop: '32px',
-            alignItems: 'center',
-            backgroundColor: '#eaeaea',
-          },
-        }}
+            boxSizing: "border-box",
+            marginTop: "32px",
+            alignItems: "center",
+            backgroundColor: "#eaeaea"
+          }
+        } }
         variant="permanent"
         anchor="left"
       >
-        <List sx={{ width: '100%' }}>
+        <List sx={ { width: "100%" } }>
           <Link to="/">
-            <ListItem disablePadding>
-              <ListItemButton>
-                <span role="img" aria-label="na" className={iconStyle}>
-                  T
-                </span>
-              </ListItemButton>
-            </ListItem>
-          </Link>
-          <Link to="/space-hogs">
-            <ListItem disablePadding>
-              <ListItemButton>
-                <span role="img" aria-label="hog" className={iconStyle}>
-                  🐷
-                </span>
-              </ListItemButton>
-            </ListItem>
+            <Tooltip title="Space Hogs" placement="right" arrow>
+              <ListItem disablePadding>
+                <ListItemButton
+                  sx={ buttonStyle }
+                  selected={ selectedIndex === 0 }
+                  onClick={ (event) => handleListItemClick(event, 0) }
+                >
+                  <span role="img" aria-label="hog">
+                    🐷
+                  </span>
+                </ListItemButton>
+              </ListItem>
+            </Tooltip>
           </Link>
           <Link to="/cleanup">
-            <ListItem disablePadding>
-              <ListItemButton>
-                <span role="img" aria-label="broom" className={iconStyle}>
-                  🧹
-                </span>
-              </ListItemButton>
-            </ListItem>
+            <Tooltip title="File Cleanup" placement="right" arrow>
+              <ListItem disablePadding>
+                <ListItemButton
+                  sx={ buttonStyle }
+                  selected={ selectedIndex === 1 }
+                  onClick={ (event) => handleListItemClick(event, 1) }
+                >
+                  <span role="img" aria-label="broom">
+                    🧹
+                  </span>
+                </ListItemButton>
+              </ListItem>
+            </Tooltip>
           </Link>
           <Link to="/archive">
-            <ListItem disablePadding>
-              <ListItemButton>
-                <span role="img" aria-label="cabinet" className={iconStyle}>
-                  🗄
-                </span>
-              </ListItemButton>
-            </ListItem>
+            <Tooltip title="Archive Files" placement="right" arrow>
+              <ListItem disablePadding>
+                <ListItemButton
+                  sx={ buttonStyle }
+                  selected={ selectedIndex === 2 }
+                  onClick={ (event) => handleListItemClick(event, 2) }
+                >
+                  <span role="img" aria-label="cabinet">
+                    🗄
+                  </span>
+                </ListItemButton>
+              </ListItem>
+            </Tooltip>
           </Link>
           <Link to="/utilization">
-            <ListItem disablePadding>
-              <ListItemButton>
-                <span role="img" aria-label="calculator" className={iconStyle}>
-                  🔢
-                </span>
-              </ListItemButton>
-            </ListItem>
+            <Tooltip title="Space Utilization" placement="right" arrow>
+              <ListItem disablePadding>
+                <ListItemButton
+                  sx={ buttonStyle }
+                  selected={ selectedIndex === 3 }
+                  onClick={ (event) => handleListItemClick(event, 3) }
+                >
+                  <span role="img" aria-label="calculator">
+                    🔢
+                  </span>
+                </ListItemButton>
+              </ListItem>
+            </Tooltip>
           </Link>
           <Link to="/plots">
-            <ListItem disablePadding>
-              <ListItemButton>
-                <span role="img" aria-label="graph" className={iconStyle}>
-                  📈
-                </span>
-              </ListItemButton>
-            </ListItem>
+            <Tooltip title="Plots" placement="right" arrow>
+              <ListItem disablePadding>
+                <ListItemButton
+                  sx={ buttonStyle }
+                  selected={ selectedIndex === 4 }
+                  onClick={ (event) => handleListItemClick(event, 4) }
+                >
+                  <span role="img" aria-label="graph">
+                    📈
+                  </span>
+                </ListItemButton>
+              </ListItem>
+            </Tooltip>
           </Link>
           <Link to="/flamingo">
-            <ListItem disablePadding>
-              <ListItemButton>
-                <span role="img" aria-label="flamingo" className={iconStyle}>
-                  🦩
-                </span>
-              </ListItemButton>
-            </ListItem>
+            <Tooltip title="Flamingo" placement="right" arrow>
+              <ListItem disablePadding>
+                <ListItemButton
+                  sx={ buttonStyle }
+                  selected={ selectedIndex === 5 }
+                  onClick={ (event) => handleListItemClick(event, 5) }
+                >
+                  <span role="img" aria-label="flamingo">
+                    🦩
+                  </span>
+                </ListItemButton>
+              </ListItem>
+            </Tooltip>
           </Link>
           <Link to="/settings">
-            <ListItemButton>
-              <SettingsIcon />
-            </ListItemButton>
+            <Tooltip title="Settings" placement="right" arrow>
+              <ListItemButton
+                sx={ buttonStyle }
+                selected={ selectedIndex === 6 }
+                onClick={ (event) => handleListItemClick(event, 6) }
+              >
+                <SettingsIcon />
+              </ListItemButton>
+            </Tooltip>
+          </Link>
+          <Link to="/test">
+            <Tooltip title="Test" placement="right" arrow>
+              <ListItem disablePadding>
+                <ListItemButton
+                  sx={ buttonStyle }
+                  selected={ selectedIndex === 7 }
+                  onClick={ (event) => handleListItemClick(event, 7) }
+                >
+                  <span role="img" aria-label="na">
+                    T
+                  </span>
+                </ListItemButton>
+              </ListItem>
+            </Tooltip>
           </Link>
         </List>
       </Drawer>

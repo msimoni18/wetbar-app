@@ -1,6 +1,6 @@
-import React from 'react';
+import React from "react";
 
-import styles from 'components/titlebar/scss/TitlebarButtons.module.scss';
+import styles from "components/titlebar/scss/TitlebarButtons.module.scss";
 
 /**
  * @description Titlebar minimize button.
@@ -10,7 +10,7 @@ export const MinimizeButton = (props) => (
   <button
     { ...props }
     aria-label="Minimize"
-    className={ styles['minimize-button'] }
+    className={ styles["minimize-button"] }
     title="Minimize"
     type="button"
   >
@@ -26,7 +26,7 @@ export const MaximizeButton = (props) => (
   <button
     { ...props }
     aria-label="Maximize"
-    className={ styles['maximize-button'] }
+    className={ styles["maximize-button"] }
     title="Maximize"
     type="button"
   >
@@ -42,7 +42,7 @@ export const ContractButton = (props) => (
   <button
     { ...props }
     aria-label="Contract"
-    className={ styles['contract-button'] }
+    className={ styles["contract-button"] }
     title="Contract"
     type="button"
   >
@@ -59,7 +59,7 @@ export const CloseButton = (props) => (
   <button
     { ...props }
     aria-label="Close"
-    className={ styles['close-button'] }
+    className={ styles["close-button"] }
     title="Close"
     type="button"
   >

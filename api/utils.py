@@ -1,3 +1,4 @@
+import os
 import re
 import time
 import concurrent.futures
@@ -13,7 +14,7 @@ def timer(func):
         t2 = time.time()
         print(f'Time to complete: {round((t2 - t1), 2)} seconds')
         return result
-    
+
     return wrapper
 
 
@@ -33,7 +34,7 @@ class Worker:
 
     def __init__(self, workers=1):
         self.workers = workers
-    
+
     @timer
     def run(self, fn, files, **kwargs):
         num = len(files)
@@ -49,7 +50,7 @@ def str2list(item):
         new_item = [int(i) for i in item.strip('] [').split(', ')]
     except (ValueError, NameError):
         new_item = item.strip('] [').split(', ')
-    
+
     # Strip spaces from front and back of string.
     # AttributeError occurs if list of ints.
     try:
@@ -61,17 +62,19 @@ def str2list(item):
 
 
 def read_file(filename, **kwargs):
+    # Enable long path
+    filename = winapi_path(filename)
 
     if 'skiprows' in kwargs:
         kwargs['skiprows'] = str2list(kwargs['skiprows'])
-    
+
     if 'sheet_name' in kwargs:
         kwargs['sheet_name'] = str2list(kwargs['sheet_name'])
-    
+
     if str(filename).endswith('.xlsx'):
         if 'sheet_name' not in kwargs:
             kwargs['sheet_name'] = None
-        
+
         try:
             df = pd.read_excel(filename, **kwargs)
             df = pd.concat(df, axis=1)
@@ -86,10 +89,10 @@ def read_file(filename, **kwargs):
         if 'skiprows' not in kwargs:
             kwargs['skiprows'] = [0, 2]
         df = pd.read_csv(filename, **kwargs)
-        
+
     else:
         df = pd.read_csv(filename, **kwargs)
-    
+
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
     return df
@@ -99,3 +102,16 @@ def sort_nicely(lst):
     convert = lambda text: int(text) if text.isdigit() else text
     alpha_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
     return sorted(lst, key=alpha_key)
+
+
+def winapi_path(dos_path, encoding=None):
+    """Fix MAX_PATH character issue on Windows."""
+    if not isinstance(dos_path, str) and encoding is not None:
+        dos_path = dos_path.decode(encoding)
+
+    path = os.path.abspath(dos_path)
+
+    if path.startswith(u'\\\\'):
+        return u'\\\\?\\UNC\\' + path[2:]
+
+    return u'\\\\?\\' + path

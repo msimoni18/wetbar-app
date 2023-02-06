@@ -1,34 +1,38 @@
-import * as React from 'react';
-import { MemoryRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import * as React from "react";
+import { MemoryRouter as Router, Routes, Route, Link } from "react-router-dom";
 
-import Titlebar from 'components/titlebar/Titlebar';
-import Sidebar from 'components/sidebar/Sidebar';
-import Archive from 'components/routes/Archive';
-import Cleanup from 'components/routes/Cleanup';
-import Flamingo from 'components/routes/Flamingo';
-import Plots from 'components/routes/Plots';
-import SpaceHogs from 'components/routes/SpaceHogs';
-import SpaceUtilization from 'components/routes/SpaceUtilization';
-import Settings from 'components/routes/Settings';
-import Test from 'components/routes/Test';
+import Titlebar from "components/titlebar/Titlebar";
+import Sidebar from "components/sidebar/Sidebar";
+import Archive from "components/routes/Archive";
+import Cleanup from "components/routes/Cleanup";
+import Flamingo from "components/routes/Flamingo";
+import Plots from "components/routes/Plots";
+import SpaceHogs from "components/routes/SpaceHogs";
+import SpaceUtilization from "components/routes/SpaceUtilization";
+import Settings from "components/routes/Settings";
+import Test from "components/routes/Test";
+import { ThemeProvider } from "@mui/material";
+import theme from "../theme/theme";
 
 export default function App() {
   return (
     <React.Fragment>
-      <Router>
-        <Titlebar />
-        <Sidebar />
-        <Routes>
-          <Route path="/" element={<Test />} />
-          <Route path="/space-hogs" element={<SpaceHogs />} />
-          <Route path="/cleanup" element={<Cleanup />} />
-          <Route path="/archive" element={<Archive />} />
-          <Route path="/utilization" element={<SpaceUtilization />} />
-          <Route path="/plots" element={<Plots />} />
-          <Route path="/flamingo" element={<Flamingo />} />
-          <Route path="/settings" element={<Settings />} />
-        </Routes>
-      </Router>
+      <ThemeProvider theme={ theme }>
+        <Router>
+          <Titlebar />
+          <Sidebar />
+          <Routes>
+            <Route path="/" element={ <SpaceHogs /> } />
+            <Route path="/cleanup" element={ <Cleanup /> } />
+            <Route path="/archive" element={ <Archive /> } />
+            <Route path="/utilization" element={ <SpaceUtilization /> } />
+            <Route path="/plots" element={ <Plots /> } />
+            <Route path="/flamingo" element={ <Flamingo /> } />
+            <Route path="/settings" element={ <Settings /> } />
+            <Route path="/test" element={ <Test /> } />
+          </Routes>
+        </Router>
+      </ThemeProvider>
     </React.Fragment>
   );
 }

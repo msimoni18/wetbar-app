@@ -1,144 +1,141 @@
-import * as React from 'react';
-import { post } from 'utils/requests';
-import { formatBytes } from 'utils/utilities';
-import Plot from 'react-plotly.js';
-import { useResizeDetector } from 'react-resize-detector';
-import { Box, TextField, Slider } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
-import { v4 as uuid } from 'uuid';
-import Header from 'components/containers/Header';
-import RunButton from 'components/buttons/RunButton';
-import styles from 'components/App.module.scss';
-import { number } from 'prop-types';
+import * as React from "react";
+import { post } from "utils/requests";
+import { formatBytes } from "utils/utilities";
+import Plot from "react-plotly.js";
+import { useResizeDetector } from "react-resize-detector";
+import { Box, TextField, Slider } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { v4 as uuid } from "uuid";
+import Header from "components/containers/Header";
+import RunButton from "components/buttons/RunButton";
+import styles from "components/App.module.scss";
+import { number } from "prop-types";
 
 const marks = [
   {
-    label: '-1',
-    value: -1,
+    label: "-1",
+    value: -1
   },
   {
-    label: '2',
-    value: 2,
+    label: "2",
+    value: 2
   },
   {
-    label: '3',
-    value: 3,
+    label: "3",
+    value: 3
   },
   {
-    label: '4',
-    value: 4,
+    label: "4",
+    value: 4
   },
   {
-    label: '5',
-    value: 5,
+    label: "5",
+    value: 5
   },
   {
-    label: '6',
-    value: 6,
+    label: "6",
+    value: 6
   },
   {
-    label: '7',
-    value: 7,
+    label: "7",
+    value: 7
   },
   {
-    label: '8',
-    value: 8,
-  },
+    label: "8",
+    value: 8
+  }
 ];
 
 const columns = [
   {
-    field: 'extension',
-    headerName: 'Extension',
+    field: "extension",
+    headerName: "Extension",
     flex: 1,
-    minWidth: 125,
+    minWidth: 125
   },
   {
-    field: 'bytes',
+    field: "bytes",
     type: number,
-    headerName: 'Bytes',
+    headerName: "Bytes",
     valueFormatter: (params) => {
       if (params.value == null) {
-        return '';
+        return "";
       }
 
       const formattedValue = formatBytes(params.value);
 
       return `${formattedValue}`;
-    },
+    }
   },
   {
-    field: 'perc_bytes',
+    field: "perc_bytes",
     type: number,
-    headerName: '% Bytes',
+    headerName: "% Bytes",
     valueFormatter: (params) => {
       if (params.value == null) {
-        return '';
+        return "";
       }
       return `${params.value}%`;
-    },
+    }
   },
   {
-    field: 'count',
+    field: "count",
     type: number,
-    headerName: 'Files',
+    headerName: "Files"
   },
   {
-    field: 'perc_count',
+    field: "perc_count",
     type: number,
-    headerName: '% Files',
+    headerName: "% Files",
     valueFormatter: (params) => {
       if (params.value == null) {
-        return '';
+        return "";
       }
       return `${params.value}%`;
-    },
-  },
+    }
+  }
 ];
 
 export default function SpaceUtilization() {
   const { width, height, ref } = useResizeDetector();
-  const [directory, setDirectory] = React.useState('');
+  const [directory, setDirectory] = React.useState("");
   const [data, setData] = React.useState([]);
   const [extensionData, setExtensionData] = React.useState([]);
   const [depth, setDepth] = React.useState(-1);
 
   const plotLayout = {
-    width: width,
+    width
     // height: 500,
   };
 
   const handlePlotData = (response) => {
-    const directory = response['directory'];
-    const extensions = response['extensions'];
+    const dir = response.directory;
+    const ext = response.extensions;
 
-    const formattedBytes = directory['values'].map((value) =>
-      formatBytes(value)
-    );
-
-    console.log(formattedBytes);
+    const formattedBytes = dir.values.map((value) =>
+      formatBytes(value));
 
     const newData = [
       {
-        branchvalues: 'total',
-        ids: directory['ids'],
-        labels: directory['labels'],
-        maxdepth: depth,
-        parents: directory['parents'],
+        branchvalues: "total",
+        ids: dir.ids,
+        labels: dir.labels,
+        maxdepth: dir,
+        parents: dir.parents,
         root: {
-          color: 'lightgrey',
+          color: "lightgrey"
         },
-        type: 'treemap',
-        values: directory['values'],
+        type: "treemap",
+        values: dir.values,
         text: formattedBytes,
-        hovertemplate: '<b>%{text}</b><extra></extra>',
-        textinfo: 'label',
-      },
+        hovertemplate: "<b>%{text}</b><extra></extra>",
+        textinfo: "label"
+      }
     ];
 
     setData(newData);
 
-    const newExtensions = extensions.map((row) => {
+    const newExtensions = ext.map((row) => {
       const uniqueId = uuid();
       return { ...row, id: uniqueId };
     });
@@ -148,7 +145,7 @@ export default function SpaceUtilization() {
   const handleButtonClick = () => {
     post(
       JSON.stringify(directory),
-      'space-utilization',
+      "space-utilization",
       // (response) => alert(response),
       (response) => handlePlotData(response),
       (error) => console.error(error)
@@ -166,48 +163,48 @@ export default function SpaceUtilization() {
   // }, [data]);
 
   return (
-    <div className={styles['route-body']}>
+    <div className={ styles["route-body"] }>
       <Header
         heading="Space Utilization"
         description="Figure out how much space your taking up."
       />
-      <Box sx={{ marginBottom: '2%' }}>
+      <Box sx={ { marginBottom: "2%" } }>
         <TextField
           required
           fullWidth
           label="Directory"
           variant="outlined"
-          value={directory}
-          onChange={(event) => setDirectory(event.target.value)}
+          value={ directory }
+          onChange={ (event) => setDirectory(event.target.value) }
         />
       </Box>
       <Slider
         aria-label="Depth"
-        value={depth}
+        value={ depth }
         valueLabelDisplay="auto"
-        marks={marks}
-        step={null}
-        min={-1}
-        max={8}
-        onChange={(event) => setDepth(event.target.value)}
+        marks={ marks }
+        step={ null }
+        min={ -1 }
+        max={ 8 }
+        onChange={ (event) => setDepth(event.target.value) }
       />
-      <RunButton handleClick={handleButtonClick} />
-      <div ref={ref} style={{ paddingBottom: '2%' }}>
-        <Plot data={data} layout={plotLayout} />
+      <RunButton handleClick={ handleButtonClick } />
+      <div ref={ ref } style={ { paddingBottom: "2%" } }>
+        <Plot data={ data } layout={ plotLayout } />
       </div>
       <div
-        style={{
+        style={ {
           height: 1000,
-          width: '500px',
-          paddingBottom: '2%',
-          display: 'flex',
-          justifyContent: 'center',
-          margin: 'auto',
-        }}
+          width: "500px",
+          paddingBottom: "2%",
+          display: "flex",
+          justifyContent: "center",
+          margin: "auto"
+        } }
       >
         <DataGrid
-          rows={extensionData}
-          columns={columns}
+          rows={ extensionData }
+          columns={ columns }
           disableSelectionOnClick
         />
       </div>

@@ -3,6 +3,7 @@ import re
 import collections
 from pathlib import Path
 import pandas as pd
+from .utils import winapi_path
 
 
 class DirectorySize:
@@ -52,7 +53,13 @@ class DirectorySize:
             for f in files:
                 # Store file size
                 f = os.path.join(root, f)
-                fsize = os.path.getsize(f)
+
+                try:
+                    fsize = os.path.getsize(f)
+                except FileNotFoundError:
+                    f_winapi = winapi_path(f)
+                    fsize = os.path.getsize(f_winapi)
+
                 file_size[str(Path(f))] += fsize
 
                 # Store extension size

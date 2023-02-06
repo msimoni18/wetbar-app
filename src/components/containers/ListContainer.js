@@ -1,6 +1,6 @@
-import * as React from 'react';
-import { List, ListItem, ListItemText } from '@mui/material';
-import styles from './ListContainer.module.scss';
+import * as React from "react";
+import { List, ListItem, ListItemText } from "@mui/material";
+import styles from "./ListContainer.module.scss";
 
 export default function ListContainer(props) {
   const { files } = props;
@@ -8,8 +8,8 @@ export default function ListContainer(props) {
   function generate() {
     return files.map((file, index) => {
       return (
-        <ListItem key={index}>
-          <ListItemText primary={`${index + 1} -- ${file}`} />
+        <ListItem key={ index }>
+          <ListItemText primary={ `${index + 1} -- ${file}` } />
         </ListItem>
       );
     });
@@ -17,10 +17,10 @@ export default function ListContainer(props) {
 
   return (
     <div
-      className={styles['list-container']}
+      className={ styles["list-container"] }
       data-text="No files were found based on the folders and file extensions provided."
     >
-      {files.length > 0 && <List dense={true}>{generate()}</List>}
+      {files.length > 0 && <List dense>{generate()}</List>}
     </div>
   );
 }

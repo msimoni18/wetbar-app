@@ -1,14 +1,14 @@
 // Built-in modules
-const { spawn } = require('child_process');
-const path = require('path');
+const { spawn } = require("child_process");
+const path = require("path");
 
 // Electron modules
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain } = require("electron");
 
 // Extra modules
-const getPort = require('get-port');
-const isDevMode = require('electron-is-dev');
-const { get } = require('axios');
+const getPort = require("get-port");
+const isDevMode = require("electron-is-dev");
+const { get } = require("axios");
 
 /**
  * @description - Shuts down Electron & Flask.
@@ -52,15 +52,15 @@ const createMainWindow = (port) => {
    * the app and developer server compile.
    */
   if (isDevMode) {
-    mainWindow.loadURL('http://localhost:3000');
+    mainWindow.loadURL("http://localhost:3000");
     mainWindow.hide();
 
     /**
      * Hide loading window and show main window
      * once the main window is ready.
      */
-    mainWindow.webContents.on('did-finish-load', () => {
-      mainWindow.webContents.openDevTools({ mode: 'undocked' });
+    mainWindow.webContents.on("did-finish-load", () => {
+      mainWindow.webContents.openDevTools({ mode: "undocked" });
 
       /**
        * Checks page for errors that may have occurred
@@ -95,7 +95,7 @@ const createMainWindow = (port) => {
        */
       executeOnWindow(isPageLoaded, handleLoad);
     });
-  } else mainWindow.loadFile(path.join(__dirname, 'build/index.html'));
+  } else mainWindow.loadFile(path.join(__dirname, "build/index.html"));
 
   /**
    * If using in production, the built version of the
@@ -116,18 +116,18 @@ const createMainWindow = (port) => {
     }
   `;
 
-  mainWindow.on('focus', () => executeOnWindow(setTitleOpacity(1)));
-  mainWindow.on('blur', () => executeOnWindow(setTitleOpacity(0.5)));
+  mainWindow.on("focus", () => executeOnWindow(setTitleOpacity(1)));
+  mainWindow.on("blur", () => executeOnWindow(setTitleOpacity(0.5)));
 
   /**
    * Listen and respond to ipcRenderer events on the frontend.
    * @see `src\utils\services.js`
    */
-  ipcMain.on('app-maximize', (_event, _arg) => mainWindow.maximize());
-  ipcMain.on('app-minimize', (_event, _arg) => mainWindow.minimize());
-  ipcMain.on('app-quit', (_event, _arg) => shutdown(port));
-  ipcMain.on('app-unmaximize', (_event, _arg) => mainWindow.unmaximize());
-  ipcMain.on('get-port-number', (event, _arg) => {
+  ipcMain.on("app-maximize", (_event, _arg) => mainWindow.maximize());
+  ipcMain.on("app-minimize", (_event, _arg) => mainWindow.minimize());
+  ipcMain.on("app-quit", (_event, _arg) => shutdown(port));
+  ipcMain.on("app-unmaximize", (_event, _arg) => mainWindow.unmaximize());
+  ipcMain.on("get-port-number", (event, _arg) => {
     event.returnValue = port;
   });
 };
@@ -142,14 +142,14 @@ const createLoadingWindow = () => {
 
     // Variants of developer loading screen
     const loaderConfig = {
-      react: 'utilities/loaders/react/index.html',
-      redux: 'utilities/loaders/redux/index.html',
+      react: "utilities/loaders/react/index.html",
+      redux: "utilities/loaders/redux/index.html"
     };
 
     try {
       loadingWindow.loadFile(path.join(__dirname, loaderConfig.redux));
 
-      loadingWindow.webContents.on('did-finish-load', () => {
+      loadingWindow.webContents.on("did-finish-load", () => {
         loadingWindow.show();
         resolve();
       });
@@ -166,9 +166,9 @@ const createLoadingWindow = () => {
  */
 const installExtensions = async () => {
   const isForceDownload = Boolean(process.env.UPGRADE_EXTENSIONS);
-  const installer = require('electron-devtools-installer');
+  const installer = require("electron-devtools-installer");
 
-  const extensions = ['REACT_DEVELOPER_TOOLS', 'REDUX_DEVTOOLS'].map(
+  const extensions = ["REACT_DEVELOPER_TOOLS", "REDUX_DEVTOOLS"].map(
     (extension) => installer.default(installer[extension], isForceDownload)
   );
 
@@ -186,7 +186,7 @@ app.whenReady().then(async () => {
    * based on availability.
    */
   const port = await getPort({
-    port: getPort.makeRange(3001, 3999),
+    port: getPort.makeRange(3001, 3999)
   });
 
   /**
@@ -195,12 +195,14 @@ app.whenReady().then(async () => {
    */
   browserWindows.mainWindow = new BrowserWindow({
     frame: false,
+    height: 800,
+    width: 1400,
     webPreferences: {
       contextIsolation: false,
       enableRemoteModule: true,
       nodeIntegration: true,
-      preload: path.join(app.getAppPath(), 'preload.js'),
-    },
+      preload: path.join(app.getAppPath(), "preload.js")
+    }
   });
 
   /**
@@ -214,7 +216,7 @@ app.whenReady().then(async () => {
     spawn(`python app.py ${port}`, {
       detached: true,
       shell: true,
-      stdio: 'inherit',
+      stdio: "inherit"
     });
   } else {
     /**
@@ -227,21 +229,21 @@ app.whenReady().then(async () => {
     const runFlask = {
       darwin: `open -gj "${path.join(
         app.getAppPath(),
-        'resources',
-        'app.app'
+        "resources",
+        "WETbar.app"
       )}" --args`,
-      linux: './resources/app/app',
-      win32: 'start ./resources/app/app.exe',
+      linux: "./resources/app/WETbar",
+      win32: "start ./resources/app/WETbar.exe"
     }[process.platform];
 
     spawn(`${runFlask} ${port}`, {
       detached: false,
       shell: true,
-      stdio: 'pipe',
+      stdio: "pipe"
     });
   }
 
-  app.on('activate', () => {
+  app.on("activate", () => {
     /**
      * On macOS it's common to re-create a window in the app when the
      * dock icon is clicked and there are no other windows open.
@@ -257,9 +259,8 @@ app.whenReady().then(async () => {
   const initialInstance = app.requestSingleInstanceLock();
   if (!initialInstance) app.quit();
   else {
-    app.on('second-instance', () => {
-      if (browserWindows.mainWindow?.isMinimized())
-        browserWindows.mainWindow?.restore();
+    app.on("second-instance", () => {
+      if (browserWindows.mainWindow?.isMinimized()) { browserWindows.mainWindow?.restore(); }
       browserWindows.mainWindow?.focus();
     });
   }
@@ -269,8 +270,8 @@ app.whenReady().then(async () => {
    * for applications and their menu bar to stay active until the user quits
    * explicitly with Cmd + Q.
    */
-  app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
+  app.on("window-all-closed", () => {
+    if (process.platform !== "darwin") {
       shutdown(port);
     }
   });

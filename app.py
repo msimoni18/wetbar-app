@@ -11,7 +11,7 @@ from flask import Flask, json, jsonify, request
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit
 # from api.hogs import SpaceUsage
-from api.utils import Worker, str2bool, read_file, sort_nicely
+from api.utils import Worker, str2bool, read_file, sort_nicely, winapi_path
 from api.archives import  create_archive, extract_files
 from api.utilization import DirectorySize
 
@@ -74,6 +74,7 @@ def space_utilization():
     if request.method == 'POST':
         directory = DirectorySize(request.json)
         df = directory.get_dataframe()
+        print('Space utilization complete...')
         return jsonify({'directory': directory.get_plotdata(df), 'extensions': directory.extension_info})
 
 
@@ -84,28 +85,32 @@ def archive_files():
     POST Parameters
     ---------------
     option : str, 'create' (default) or 'extract'
-    XXX
+        Determines if archive files will be created or extracted from.
 
     paths : list of dictionaries
-    XXX
+        List of dictionary objects containing the name of the file
+        and the full path of the file.
 
     file_extension : str, '.tar' or '.tar.gz' (default)
-    XXX
+        File extension when 'option=create'.
 
     remove_directory : bool, default is False
-    XXX
+        Remove directory after the archive file has been created. This
+        option is only used when 'option=create'.
 
     archive_format : str, 'PAX' (default) or 'GNU'
-    XXX
+        Format of the archive file. This option is only used when
+        'option=create'.
 
     search_criteria : str
-    XXX
+        String containing all of the search criteria, separated by '\n'.
 
     output_directory : str, required
-    XXX
+        Directory where the extract files will be stored. This option
+        is only used when 'option=extract'.
 
     processors : int, default is 1
-    XXX
+        Number of processors to use for multiprocessing.
     """
 
     if request.method == 'POST':
@@ -277,9 +282,12 @@ def load_files():
 
         files_and_parameters = [{'file': f, 'parameters': data.DATA[f]['parameters']} for f in data.DATA]
 
-        result['stats'] = True
+        result['status'] = True
         result['message'] = 'success'
         result['data'] = files_and_parameters
+
+        # TODO: Confirm loading button stops loading if error occurs while
+        #       loading files.
         return jsonify(result)
 
 
@@ -339,7 +347,6 @@ def cleanup():
 
         dirs = 0
         files = collections.defaultdict(int)
-        files_not_deleted = []
 
         # Start timer.
         t0 = time.time()
@@ -355,9 +362,8 @@ def cleanup():
                             try:
                                 files[fpath] = os.path.getsize(fpath)
                             except FileNotFoundError:
-                                # Can occur on Windows OS because the absolute file path is greater
-                                # than 259 characters.
-                                files_not_deleted.append(f'(total length: {len(str(fpath))}) {fpath}')
+                                fpath = winapi_path(fpath)
+                                files[fpath] = os.path.getsize(fpath)
 
                             # Skip removing files if dry run checkbox is checked
                             if not dry_run:
@@ -373,11 +379,10 @@ def cleanup():
                     'directory': dirs,
                     'size': sum(files.values()),
                     'files': len(files),
-                    'files_not_deleted': len(files_not_deleted),
                     'time': f'{hours}:{minutes}:{round(float(seconds), 1)}'
                     })
 
-        return jsonify({'files': sort_nicely(list(files.keys())), 'files_not_deleted': sort_nicely(files_not_deleted)})
+        return jsonify({'files': sort_nicely(list(files.keys()))})
 
 
 #### Test function for socketio
