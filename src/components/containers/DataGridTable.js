@@ -1,6 +1,6 @@
 import * as React from "react";
 import PropTypes from "prop-types";
-import { Button, Select, MenuItem } from "@mui/material";
+import { Button, Select, MenuItem, Autocomplete, TextField } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
 import { v4 as uuid } from "uuid";
@@ -49,28 +49,25 @@ const ParameterSelect = (props) => {
     }
   }, [selectedFile, formattedData]);
 
-  const handleChange = (event) => {
-    setParameter(event.target.value);
+  const handleChange = (event, newInputValue) => {
+    setParameter(newInputValue);
     if (field === "x") {
-      props.row.selectedX = event.target.value;
+      props.row.selectedX = newInputValue;
     } else if (field === "y") {
-      props.row.selectedY = event.target.value;
+      props.row.selectedY = newInputValue;
     }
   };
 
   return (
-    <Select
-      id="parameter-select"
-      value={ parameter }
-      onChange={ handleChange }
+    <Autocomplete
+      disablePortal
+      id="parameter-select-combo-box"
+      options={ availableParams }
+      inputValue={ parameter }
+      onInputChange={ handleChange }
       fullWidth
-    >
-      {availableParams?.map((item, index) => (
-        <MenuItem key={ index } value={ item }>
-          {item}
-        </MenuItem>
-      ))}
-    </Select>
+      renderInput={ (params) => <TextField { ...params } /> }
+    />
   );
 };
 

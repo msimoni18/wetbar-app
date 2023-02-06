@@ -1,4 +1,5 @@
 import os
+from sys import platform
 import re
 import time
 import concurrent.futures
@@ -110,6 +111,9 @@ def winapi_path(dos_path, encoding=None):
         dos_path = dos_path.decode(encoding)
 
     path = os.path.abspath(dos_path)
+
+    if platform != 'window':
+        return path
 
     if path.startswith(u'\\\\'):
         return u'\\\\?\\UNC\\' + path[2:]
