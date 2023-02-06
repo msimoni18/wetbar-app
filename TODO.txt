@@ -9,8 +9,6 @@ Plots:
 
 - Add color picker for line colors
 
-- Allow search in X and Y dropdowns
-
 Archives:
 - Turn button into a loading button
 
