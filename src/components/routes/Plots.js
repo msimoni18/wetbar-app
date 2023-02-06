@@ -1,11 +1,8 @@
 import * as React from "react";
-import Plot from "react-plotly.js";
 import { useResizeDetector } from "react-resize-detector";
 import { post, get } from "utils/requests";
 import {
   Box,
-  Tabs,
-  Tab,
   InputLabel,
   FormControl,
   FormControlLabel,
@@ -17,9 +14,6 @@ import {
   Select,
   IconButton,
   TextField,
-  SpeedDial,
-  SpeedDialIcon,
-  SpeedDialAction,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -31,7 +25,7 @@ import {
 } from "@mui/material";
 import Tooltip, { tooltipClasses } from "@mui/material/Tooltip";
 import { styled } from "@mui/material/styles";
-import { green, red, grey } from "@mui/material/colors";
+import { grey } from "@mui/material/colors";
 import DatasetIcon from "@mui/icons-material/Dataset";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ArticleIcon from "@mui/icons-material/Article";

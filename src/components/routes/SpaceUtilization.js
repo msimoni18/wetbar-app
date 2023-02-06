@@ -156,7 +156,7 @@ export default function SpaceUtilization() {
     const [prevObject] = data;
     const prevData = { ...prevObject, maxdepth: depth };
     setData([prevData]);
-  }, [depth]);
+  }, [depth, data]);
 
   // React.useEffect(() => {
   //   console.log(data);
