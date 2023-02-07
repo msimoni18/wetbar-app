@@ -38,13 +38,9 @@ export default function ResizeablePlot({ data, layout, children }) {
     >
       <Plot data={ data } layout={ newLayout } />
       <button
-        className={ styles["draghandle-top"] }
+        className={ styles.draghandle }
         type="button"
-        onMouseDown={ handler }
-      />
-      <button
-        className={ styles["draghandle-bottom"] }
-        type="button"
+        aria-label="Drag handle"
         onMouseDown={ handler }
       />
     </div>

@@ -7,7 +7,7 @@
   justify-content: center;
 }
 
-.draghandle-bottom {
+.draghandle {
   position: absolute;
   bottom: 0;
   right: 0;
@@ -19,19 +19,7 @@
   transition: opacity 0.5s ease;
 }
 
-.draghandle-top {
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform: translate(-50%, -50%);
-  height: 10px;
-  width: 10px;
-  border-radius: 50%;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-
-.draghandle-bottom:hover, .draghandle-top:hover {
+.draghandle:hover {
   opacity: 1;
   background-color: white;
   border: 1px solid black;

@@ -1,4 +1,5 @@
 import * as React from "react";
+import { get } from "utils/requests";
 import PropTypes from "prop-types";
 import { Button, Select, MenuItem, Autocomplete, TextField } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -6,7 +7,7 @@ import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
 import { v4 as uuid } from "uuid";
 
 const FileSelect = (props) => {
-  const { value, row } = props;
+  const { value, row, files } = props;
 
   const [file, setFile] = React.useState(row.selectedFile || "");
 
@@ -17,7 +18,7 @@ const FileSelect = (props) => {
 
   return (
     <Select id="file-select" value={ file } onChange={ handleChange } fullWidth>
-      {value?.map((item, index) => (
+      {files?.map((item, index) => (
         <MenuItem key={ index } value={ item }>
           {item}
         </MenuItem>
@@ -42,32 +43,34 @@ const ParameterSelect = (props) => {
   );
 
   const [availableParams, setAvailableParams] = React.useState([]);
-
   React.useEffect(() => {
     if (selectedFile) {
       setAvailableParams(formattedData[selectedFile]);
     }
   }, [selectedFile, formattedData]);
 
-  const handleChange = (event, newInputValue) => {
-    setParameter(newInputValue);
+  const handleChange = (event) => {
+    setParameter(event.target.value);
     if (field === "x") {
-      props.row.selectedX = newInputValue;
+      props.row.selectedX = event.target.value;
     } else if (field === "y") {
-      props.row.selectedY = newInputValue;
+      props.row.selectedY = event.target.value;
     }
   };
 
   return (
-    <Autocomplete
-      disablePortal
-      id="parameter-select-combo-box"
-      options={ availableParams }
-      inputValue={ parameter }
-      onInputChange={ handleChange }
+    <Select
+      id="parameter-select"
+      value={ parameter }
+      onChange={ handleChange }
       fullWidth
-      renderInput={ (params) => <TextField { ...params } /> }
-    />
+    >
+      {availableParams?.map((item, index) => (
+        <MenuItem key={ index } value={ item }>
+          {item}
+        </MenuItem>
+      ))}
+    </Select>
   );
 };
 
@@ -91,17 +94,28 @@ const ModeSelect = (props) => {
 };
 
 export default function DataGridTable(props) {
-  const { data, rows, setRows } = props;
+  const { rows, setRows } = props;
+  const [formattedData, setFormattedData] = React.useState({});
+  const [files, setFiles] = React.useState([]);
 
   // Convert data into object containing file as key and parameters as value
-  const formattedData = {};
-  if (Object.keys(data).length > 0) {
-    data.data.forEach((row) => {
-      formattedData[row.file] = row.parameters;
-    });
-  }
+  const handleResponse = (response) => {
+    const newData = {};
+    if (response.data?.length > 0) {
+      response.data.forEach((row) => {
+        newData[row.file] = row.parameters;
+      });
+      setFormattedData(newData);
+      setFiles(Object.keys(newData));
+    }
+  };
 
-  const files = Object.keys(formattedData);
+  React.useEffect(() => {
+    get(
+      "get-loaded-data",
+      (response) => handleResponse(response)
+    );
+  }, []);
 
   const deleteRow = React.useCallback(
     (id) => () => {
@@ -118,7 +132,8 @@ export default function DataGridTable(props) {
       headerName: "File",
       flex: 1,
       minWidth: 600,
-      renderCell: FileSelect
+      // renderCell: FileSelect
+      renderCell: (prop) => FileSelect({ ...prop, files })
     },
     {
       field: "x",
@@ -201,8 +216,6 @@ export default function DataGridTable(props) {
     setRows((prevRows) =>
       prevRows.map((row) => (row.id === id ? { ...row, [field]: value } : row)));
   };
-
-  console.log(rows);
 
   return (
     <div>
