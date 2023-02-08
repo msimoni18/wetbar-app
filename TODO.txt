@@ -2,12 +2,22 @@ DragDropFileContainer:
 - Combine with SimpleFileContainer, passing props to disable
   certain features like drag/drop
 
+SimpleFileContainer
+- Add option to delete loaded files
+
 Plots:
 - Add done/cancel buttons to each speed dialog window and only execute
   update when done is selected and don't update state when cancel is
   selected
 
 - Add color picker for line colors
+
+- Change X and Y select components to autocomplete components
+
+- Add plot container controls on the side instead of the top
+
+- Add css so only the last plot container has margin so the last
+  plot can be resized down
 
 Archives:
 - Turn button into a loading button

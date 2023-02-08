@@ -294,17 +294,22 @@ def load_files():
 @app.route('/get-loaded-data')
 def get_loaded_data():
     if data.DATA:
-        print('FILES EXIST')
+
+        new_data = [{
+            'file': f,
+            'parameters': data.DATA[f]['parameters']
+            } for f in sorted(data.DATA)]
+
         return jsonify({
             'status': True,
             'message': 'success',
-            'files': sorted(list(data.DATA.keys()))
+            'data': new_data
         })
-    print("NO FILES EXIST")
+
     return jsonify({
         'status': False,
         'message': 'No files have been loaded.',
-        'files': []
+        'data': []
     })
 
 
