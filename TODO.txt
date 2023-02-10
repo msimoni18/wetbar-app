@@ -19,9 +19,6 @@ Plots:
 - Add css so only the last plot container has margin so the last
   plot can be resized down
 
-Archives:
-- Turn button into a loading button
-
 Backend:
 - Add list option to view contents of tar file
 

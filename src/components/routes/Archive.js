@@ -4,6 +4,7 @@ import { post } from "utils/requests";
 import PropTypes from "prop-types";
 import {
   Box,
+  Grid,
   Tabs,
   Tab,
   InputLabel,
@@ -53,6 +54,8 @@ function allyProps(index) {
   };
 }
 
+const numProcessors = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
 export default function Archive() {
   const [items, setItems] = React.useState([]);
   const [activeTab, setActiveTab] = React.useState(0);
@@ -80,10 +83,6 @@ export default function Archive() {
   }, [extractType]);
 
   const [processors, setProcessors] = React.useState(1);
-
-  const handleProcessorChange = (event) => {
-    setProcessors(event.target.value);
-  };
 
   const handleChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -123,104 +122,72 @@ export default function Archive() {
           </Tabs>
         </Box>
         <TabPanel value={ activeTab } index={ 0 }>
-          <Box sx={ { marginBottom: "2%" } }>
-            <FormControl fullWidth>
-              <FormLabel>File Type:</FormLabel>
-              <RadioGroup
-                aria-labelledby="radio-buttons-group-label"
-                defaultValue=".tar.gz"
-                name="file-type-radio-buttons-group"
-                row
-              >
-                <FormControlLabel
-                  value=".tar"
-                  control={ <Radio /> }
-                  label=".tar"
+          <Grid container spacing={ 8 }>
+            <Grid item>
+              <FormControl>
+                <FormLabel>File Type:</FormLabel>
+                <RadioGroup
+                  aria-labelledby="radio-buttons-group-label"
+                  name="file-type-radio-buttons-group"
+                  value={ fileExtension }
                   onChange={ (event) => setFileExtension(event.target.value) }
-                />
-                <FormControlLabel
-                  value=".tar.gz"
-                  control={ <Radio /> }
-                  label=".tar.gz"
-                  onChange={ (event) => setFileExtension(event.target.value) }
-                />
-              </RadioGroup>
-            </FormControl>
-          </Box>
-          <Box sx={ { marginBottom: "2%" } }>
-            <FormControl fullWidth>
-              <FormLabel>Archive Format:</FormLabel>
-              <RadioGroup
-                aria-labelledby="radio-buttons-group-label"
-                defaultValue="PAX"
-                name="archive-format-radio-buttons-group"
-                row
-              >
-                <FormControlLabel
-                  value="PAX"
-                  control={ <Radio /> }
-                  label="PAX"
+                  row
+                >
+                  <FormControlLabel value=".tar" control={ <Radio /> } label=".tar" />
+                  <FormControlLabel value=".tar.gz" control={ <Radio /> } label=".tar.gz" />
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+            <Grid item>
+              <FormControl>
+                <FormLabel>Archive Format:</FormLabel>
+                <RadioGroup
+                  aria-labelledby="radio-buttons-group-label"
+                  name="archive-format-radio-buttons-group"
+                  value={ archiveFormat }
                   onChange={ (event) => setArchiveFormat(event.target.value) }
-                />
-                <FormControlLabel
-                  value="GNU"
-                  control={ <Radio /> }
-                  label="GNU"
-                  onChange={ (event) => setArchiveFormat(event.target.value) }
-                />
-              </RadioGroup>
-            </FormControl>
-          </Box>
-          <Box sx={ { marginBottom: "2%" } }>
-            <FormControl fullWidth>
-              <FormLabel>Remove directories after completion:</FormLabel>
-              <RadioGroup
-                aria-labelledby="radio-buttons-group-label"
-                defaultValue={ false }
-                name="remove-directory-radio-buttons-group"
-                row
-              >
-                <FormControlLabel
-                  value
-                  control={ <Radio /> }
-                  label="Yes"
+                  row
+                >
+                  <FormControlLabel value="PAX" control={ <Radio /> } label="PAX" />
+                  <FormControlLabel value="GNU" control={ <Radio /> } label="GNU" />
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+            <Grid item>
+              <FormControl>
+                <FormLabel>Remove directories after completion:</FormLabel>
+                <RadioGroup
+                  aria-labelledby="radio-buttons-group-label"
+                  name="remove-directory-radio-buttons-group"
+                  value={ removeDirectory }
                   onChange={ (event) => setRemoveDirectory(event.target.value) }
-                />
-                <FormControlLabel
-                  value={ false }
-                  control={ <Radio /> }
-                  label="No"
-                  onChange={ (event) => setRemoveDirectory(event.target.value) }
-                />
-              </RadioGroup>
-            </FormControl>
-          </Box>
+                  row
+                >
+                  <FormControlLabel value control={ <Radio /> } label="Yes" />
+                  <FormControlLabel value={ false } control={ <Radio /> } label="No" />
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+          </Grid>
         </TabPanel>
         <TabPanel value={ activeTab } index={ 1 }>
-          <Box sx={ { marginBottom: "2%" } }>
-            <FormControl fullWidth>
-              <FormLabel>Extract Options:</FormLabel>
-              <RadioGroup
-                aria-labelledby="radio-buttons-group-label"
-                defaultValue="all"
-                name="extract-type-radio-buttons-group"
-                row
-              >
-                <FormControlLabel
-                  value="all"
-                  control={ <Radio /> }
-                  label="Entire File"
+          <Grid container spacing={ 8 }>
+            <Grid item>
+              <FormControl>
+                <FormLabel>Extract Options:</FormLabel>
+                <RadioGroup
+                  aria-labelledby="radio-buttons-group-label"
+                  name="extract-type-radio-buttons-group"
+                  value={ extractType }
                   onChange={ (event) => setExtractType(event.target.value) }
-                />
-                <FormControlLabel
-                  value="files"
-                  control={ <Radio /> }
-                  label="Specific Files"
-                  onChange={ (event) => setExtractType(event.target.value) }
-                />
-              </RadioGroup>
-            </FormControl>
-          </Box>
+                  row
+                >
+                  <FormControlLabel value="all" control={ <Radio /> } label="Entire File" />
+                  <FormControlLabel value="files" control={ <Radio /> } label="Specific Files" />
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+          </Grid>
           {toggleCriteria && (
             <TextField
               label="Search Criteria"
@@ -245,37 +212,30 @@ export default function Archive() {
             />
           </Box>
         </TabPanel>
-        <Box
-          sx={ {
-            width: "100%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center"
-          } }
-        >
-          <FormControl sx={ { width: 100 } }>
-            <InputLabel id="processor-select-label">Processors</InputLabel>
-            <Select
-              value={ processors }
-              labelId="processor-select-label"
-              id="processor-select"
-              label="Processors"
-              onChange={ handleProcessorChange }
-            >
-              <MenuItem value={ 1 }>1</MenuItem>
-              <MenuItem value={ 2 }>2</MenuItem>
-              <MenuItem value={ 3 }>3</MenuItem>
-              <MenuItem value={ 4 }>4</MenuItem>
-              <MenuItem value={ 5 }>5</MenuItem>
-              <MenuItem value={ 6 }>6</MenuItem>
-              <MenuItem value={ 7 }>7</MenuItem>
-              <MenuItem value={ 8 }>8</MenuItem>
-              <MenuItem value={ 9 }>9</MenuItem>
-              <MenuItem value={ 10 }>10</MenuItem>
-            </Select>
-          </FormControl>
-          <RunButton handleClick={ handleButtonClick } />
-        </Box>
+        <br />
+        <Grid container alignItems="center" spacing={ 2 }>
+          <Grid item>
+            <FormControl sx={ { width: 100 } }>
+              <InputLabel id="processor-select-label">Processors</InputLabel>
+              <Select
+                labelId="processor-select-label"
+                id="processor-select"
+                label="Processors"
+                value={ processors }
+                onChange={ (event) => setProcessors(event.target.value) }
+              >
+                {numProcessors?.map((item, index) => (
+                  <MenuItem key={ index } value={ item }>
+                    {item}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item>
+            <RunButton handleClick={ handleButtonClick } />
+          </Grid>
+        </Grid>
       </Box>
     </div>
   );

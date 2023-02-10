@@ -1,9 +1,9 @@
 import * as React from "react";
-import { post } from "utils/requests";
-import { formatBytes } from "utils/utilities";
+import { post, socketIO } from "utils/requests";
+import { formatBytes, addCommaToNumber } from "utils/utilities";
 import Plot from "react-plotly.js";
 import { useResizeDetector } from "react-resize-detector";
-import { Box, TextField, Slider } from "@mui/material";
+import { Box, TextField, Slider, Grid, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { v4 as uuid } from "uuid";
 import Header from "components/containers/Header";
@@ -101,16 +101,61 @@ export default function SpaceUtilization() {
   const [directory, setDirectory] = React.useState("");
   const [data, setData] = React.useState([]);
   const [extensionData, setExtensionData] = React.useState([]);
-  const [depth, setDepth] = React.useState(-1);
+  const [stats, setStats] = React.useState({
+    totalSize: 0,
+    fileCount: 0,
+    directoryCount: 0
+  });
+  const [depth, setDepth] = React.useState(2);
+  const [active, setActive] = React.useState(false);
+
+  const [connected, setConnected] = React.useState(false);
+
+  React.useEffect(() => {
+    if (connected === false) {
+      const socket = socketIO();
+
+      socket.on("connect", (response) => {
+        console.log("connected");
+        console.log(response);
+        setConnected(true);
+      });
+
+      socket.on("disconnected", (response) => {
+        console.log("disconnected");
+        console.log(response);
+      });
+
+      socket.on("space-utilization", (stat) => {
+        setStats({
+          totalSize: formatBytes(stat.total_size),
+          fileCount: addCommaToNumber(stat.file_count),
+          directoryCount: addCommaToNumber(stat.directory_count)
+        });
+      });
+    }
+
+  });
 
   const plotLayout = {
-    width
-    // height: 500,
+    width,
+    height: "500px",
+    margin: {
+      t: "25",
+      r: "25",
+      b: "25",
+      l: "25"
+    }
   };
 
   const handlePlotData = (response) => {
     const dir = response.directory;
     const ext = response.extensions;
+    // const stat = {
+    //   ...response.stats,
+    //   "total_size": formatBytes(response.stats.total_size)
+    // };
+    // setStats(stat);
 
     const formattedBytes = dir.values.map((value) =>
       formatBytes(value));
@@ -120,16 +165,16 @@ export default function SpaceUtilization() {
         branchvalues: "total",
         ids: dir.ids,
         labels: dir.labels,
-        maxdepth: dir,
         parents: dir.parents,
-        root: {
-          color: "lightgrey"
-        },
-        type: "treemap",
         values: dir.values,
+        maxdepth: depth,
+        type: "treemap",
         text: formattedBytes,
         hovertemplate: "<b>%{text}</b><extra></extra>",
-        textinfo: "label"
+        textinfo: "label",
+        root: {
+          color: "lightgrey"
+        }
       }
     ];
 
@@ -140,9 +185,13 @@ export default function SpaceUtilization() {
       return { ...row, id: uniqueId };
     });
     setExtensionData(newExtensions);
+
+    setActive(false);
   };
 
   const handleButtonClick = () => {
+    setActive(true);
+
     post(
       JSON.stringify(directory),
       "space-utilization",
@@ -156,11 +205,7 @@ export default function SpaceUtilization() {
     const [prevObject] = data;
     const prevData = { ...prevObject, maxdepth: depth };
     setData([prevData]);
-  }, [depth, data]);
-
-  // React.useEffect(() => {
-  //   console.log(data);
-  // }, [data]);
+  }, [depth]);
 
   return (
     <div className={ styles["route-body"] }>
@@ -178,36 +223,56 @@ export default function SpaceUtilization() {
           onChange={ (event) => setDirectory(event.target.value) }
         />
       </Box>
-      <Slider
-        aria-label="Depth"
-        value={ depth }
-        valueLabelDisplay="auto"
-        marks={ marks }
-        step={ null }
-        min={ -1 }
-        max={ 8 }
-        onChange={ (event) => setDepth(event.target.value) }
-      />
-      <RunButton handleClick={ handleButtonClick } />
-      <div ref={ ref } style={ { paddingBottom: "2%" } }>
-        <Plot data={ data } layout={ plotLayout } />
-      </div>
-      <div
-        style={ {
-          height: 1000,
-          width: "500px",
-          paddingBottom: "2%",
-          display: "flex",
-          justifyContent: "center",
-          margin: "auto"
-        } }
-      >
-        <DataGrid
-          rows={ extensionData }
-          columns={ columns }
-          disableSelectionOnClick
-        />
-      </div>
+      <Box sx={ { paddingBottom: "5%" } }>
+        <Grid container spacing={ 6 } alignItems="center">
+          <Grid item xs={ 3 }>
+            <RunButton active={ active } handleClick={ handleButtonClick } />
+          </Grid>
+          <Grid item xs={ 5 }>
+            <Typography gutterBottom>Depth</Typography>
+            <Slider
+              aria-label="Depth"
+              value={ depth }
+              valueLabelDisplay="auto"
+              marks={ marks }
+              step={ null }
+              min={ -1 }
+              max={ 8 }
+              onChange={ (event) => setDepth(event.target.value) }
+            />
+          </Grid>
+          <Grid item xs={ 4 }>
+            <div style={ { display: "flex" } }>
+              <div style={ { marginRight: "5px", textAlign: "right" } }>
+                <p><b>Total size:</b></p>
+                <p><b>File count:</b></p>
+                <p><b>Directory count:</b></p>
+              </div>
+              <div>
+                <p>{stats.totalSize}</p>
+                <p>{stats.fileCount}</p>
+                <p>{stats.directoryCount}</p>
+              </div>
+            </div>
+          </Grid>
+        </Grid>
+      </Box>
+      <Grid container spacing={ 2 } alignItems="center">
+        <Grid item xs={ 12 } sm={ 12 } md={ 6 }>
+          <div ref={ ref }>
+            <Plot data={ data } layout={ plotLayout } />
+          </div>
+        </Grid>
+        <Grid item xs={ 12 } sm={ 12 } md={ 6 }>
+          <Box sx={ { height: "500px" } }>
+            <DataGrid
+              rows={ extensionData }
+              columns={ columns }
+              disableSelectionOnClick
+            />
+          </Box>
+        </Grid>
+      </Grid>
     </div>
   );
 }

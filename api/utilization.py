@@ -1,135 +1,118 @@
 import os
-import re
-import collections
+import sys
+sys.path.append('..')
 from pathlib import Path
 import pandas as pd
-from .utils import winapi_path
+
+from entry import socketio
+from api.utils import winapi_path, sort_nicely
 
 
 class DirectorySize:
 
     def __init__(self, directory):
         self.directory = directory
-        self._file_size = None
-        self._extension_size = None
-        self._parent_size = None
+        self._stats = {}
+        self._extensions = {}
 
     @property
-    def extension_info(self):
-        return self._extension_size
+    def stats(self):
+        return self._stats
 
     @property
-    def parent_info(self):
-        return self._parent_size
+    def extensions(self):
+        return self._extensions
 
-    @property
-    def file_info(self):
-        return self._file_size
+    def get_directory_size(self):
+        def _recursive_func(directory):
+            total = 0
+            for entry in os.scandir(directory):
+                if entry.is_dir():
+                    _recursive_func(entry.path)
+                    total += parent_size[entry.path]
+                else:
+                    size = entry.stat().st_size
+                    total += size
+                    file_size[entry.path] = size
 
-    def get_relative_path(self, path):
+            parent_size[directory] = total
+            self._stats = {
+                'total_size': sum(file_size.values()),
+                'file_count': len(file_size),
+                'directory_count': len(parent_size)
+            }
+            socketio.emit('space-utilization', self._stats)
+
+        file_size = {}
+        parent_size = {}
+
+        _recursive_func(self.directory)
+
+        # Get extension info
+        extensions = {}
+        for fname, size in file_size.items():
+            ext = os.path.splitext(fname)[-1]
+            if ext == '':
+                ext = '.'
+
+            try:
+                extensions[ext]['bytes'] += size
+                extensions[ext]['count'] += 1
+            except KeyError:
+                extensions[ext] = {'bytes': 0, 'count': 0}
+                extensions[ext]['bytes'] += size
+                extensions[ext]['count'] += 1
+
+        # Format extension info
+        extension_info = []
+        for key in extensions:
+            size = extensions[key]['bytes']
+            count = extensions[key]['count']
+
+            extension_info.append({
+                'extension': key,
+                'bytes': size,
+                'perc_bytes': round(size/self._stats['total_size']*100, 1),
+                'count': count,
+                'perc_count': round(count/self._stats['file_count']*100, 1)
+            })
+
+        extension_info = sorted(extension_info, key=lambda item: item['bytes'], reverse=True)
+        self._extensions = extension_info.copy()
+
+        return file_size, parent_size
+
+    def _get_relative_path(self, path):
         """Return path relative to directory attribute."""
         return str(Path(path).relative_to(Path(self.directory).parent))
 
-    def get_parent_path(self, path):
+    def _get_parent_path(self, path):
         """Determine if path is top or not, then determine parent path."""
         if path == os.path.split(self.directory)[1]:
             return path
         return os.path.split(path)[0]
 
-    def get_directory_size(self):
-        """
-        Return a dictionary containing total size in bytes for all
-        directories and files.
-        """
-        parents = []
-        file_size = collections.defaultdict(int)
-        extension_size = collections.defaultdict()
-        parent_size = collections.defaultdict(int)
-        total_count = 0
-        total_size = 0
-
-        for root, dirs, files in os.walk(self.directory):
-            parents.append(str(Path(root)))
-            for f in files:
-                # Store file size
-                f = os.path.join(root, f)
-
-                try:
-                    fsize = os.path.getsize(f)
-                except FileNotFoundError:
-                    f_winapi = winapi_path(f)
-                    fsize = os.path.getsize(f_winapi)
-
-                file_size[str(Path(f))] += fsize
-
-                # Store extension size
-                ext = os.path.splitext(f)[-1]
-                if ext == '':
-                    ext = '.'
-
-                if ext not in extension_size:
-                    extension_size[ext] = {'bytes': 0, 'count': 0}
-
-                extension_size[ext]['bytes'] += fsize
-                total_size += fsize
-                extension_size[ext]['count'] += 1
-                total_count += 1
-
-        # Calculate parent size
-        for parent in parents:
-            parent_split = re.split('\\\\|/', parent)
-
-            slim_file_size = {}
-            for filename, value in file_size.items():
-                parent_for_file = re.split('\\\\|/', filename)[:len(parent_split)]
-                if parent_split == parent_for_file:
-                    slim_file_size[filename] = value
-
-            parent_size[parent] += sum(slim_file_size.values())
-
-        directory_tree = {**parent_size, **file_size}
-
-        # Format extension info
-        extension_info = []
-        for key in extension_size:
-            size = extension_size[key]['bytes']
-            count = extension_size[key]['count']
-
-            extension_info.append({
-                'extension': key,
-                'bytes': size,
-                'perc_bytes': round(size/total_size*100, 1),
-                'count': count,
-                'perc_count': round(count/total_count*100, 1)
-            })
-
-        extension_info = sorted(extension_info, key=lambda item: item['bytes'], reverse=True)
-
-        self._file_size = dict(file_size).copy()
-        self._extension_size = extension_info.copy()
-        self._parent_size = dict(parent_size).copy()
-
-        return directory_tree
-
     def get_dataframe(self):
         """
-        Return a DataFrame containing data needed for Treemap chart.
+        Return a dataframe containing data needed for treemap chart.
         """
-        data = self.get_directory_size()
+        file_size, parent_size = self.get_directory_size()
+
+        directory_tree = {**parent_size, **file_size}
+        directory_tree = {i: directory_tree[i] for i in sort_nicely(directory_tree)}
 
         result = []
-        for key, value in data.items():
-            parent = self.get_relative_path(self.get_parent_path(key))
+        for key, value in directory_tree.items():
+            parent = self._get_relative_path(self._get_parent_path(key))
             label = str(Path(key).name)
             size = value
-            ids = self.get_relative_path(key)
+            ids = self._get_relative_path(key)
 
             result.append({'parents': parent, 'labels': label, 'size': size, 'ids': ids})
 
-        df = pd.DataFrame(result).sort_values(['parents', 'labels']).reset_index(drop=True)
+        df = pd.DataFrame(result)
 
         # Get first folder
-        # df.loc[df.index == 0, 'ids'] = os.path.split(df.loc[0, 'ids'])[1]
         df.loc[df.index == 0, 'parents'] = ''
 
         return df

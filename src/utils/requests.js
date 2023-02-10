@@ -1,8 +1,10 @@
+import { io } from "socket.io-client";
+
 // Electron Inter Process Communication and dialog
-const { ipcRenderer } = window.require('electron');
+const { ipcRenderer } = window.require("electron");
 
 // Dynamically generated TCP (open) port between 3000-3999
-const port = ipcRenderer.sendSync('get-port-number');
+const port = ipcRenderer.sendSync("get-port-number");
 
 /**
  * @namespace Requests
@@ -40,10 +42,21 @@ export const post = (
 ) => {
   fetch(`http://localhost:${port}/${route}`, {
     body,
-    method: 'POST',
-    headers: { 'Content-type': 'application/json' }
+    method: "POST",
+    headers: { "Content-type": "application/json" }
   })
     .then((response) => response.json())
     .then(callback)
     .catch((error) => (errorCallback ? errorCallback(error) : console.error(error)));
+};
+
+export const socketIO = () => {
+  const socket = io(`http://localhost:${port}`, {
+    transports: ["websocket"],
+    cors: {
+      origin: `http://localhost:${port}`
+    }
+  });
+
+  return socket;
 };

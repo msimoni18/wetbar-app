@@ -1,9 +1,12 @@
 import os
+import sys
+sys.path.append('..')
 import tarfile
 import fnmatch
 import shutil
 from pathlib import Path
-from .utils import winapi_path
+
+from api.utils import winapi_path
 
 
 def extract_files(filename, search_criteria=None, output_path='.'):

@@ -7,41 +7,19 @@ import datetime
 import fnmatch
 import collections
 from pathlib import Path
-from flask import Flask, json, jsonify, request
-from flask_cors import CORS
-from flask_socketio import SocketIO, emit
+from flask import jsonify, request
+from flask_socketio import emit
 # from api.hogs import SpaceUsage
 from api.utils import Worker, str2bool, read_file, sort_nicely, winapi_path
 from api.archives import  create_archive, extract_files
 from api.utilization import DirectorySize
+from entry import app, app_config, socketio
 
-
-app = Flask(__name__)
-app_config = {"host": "0.0.0.0", "port": sys.argv[1]}
-app.config['SECRET_KEY'] = 'secret'
 
 # Set global object to store files and data
 data = sys.modules[__name__]
 data.DATA = {}
 
-"""
----------------------- DEVELOPER MODE CONFIG -----------------------
-"""
-# Developer mode uses app.py
-if "app.py" in sys.argv[0]:
-    # Update app config
-    app_config["debug"] = True
-
-    # CORS settings
-    cors = CORS(
-        app,
-        resources={r"/*": {"origins": "http://localhost*"}},
-    )
-
-    # CORS headers
-    app.config["CORS_HEADERS"] = "Content-Type"
-
-socketio = SocketIO(app, cors_allowed_origins='*')
 
 """
 --------------------------- REST CALLS -----------------------------
@@ -69,13 +47,18 @@ def space_hogs():
         })
 
 
+@socketio.on('space-utilization')
 @app.route('/space-utilization', methods=['POST'])
 def space_utilization():
     if request.method == 'POST':
         directory = DirectorySize(request.json)
         df = directory.get_dataframe()
         print('Space utilization complete...')
-        return jsonify({'directory': directory.get_plotdata(df), 'extensions': directory.extension_info})
+        return jsonify({
+            'directory': directory.get_plotdata(df),
+            'extensions': directory.extensions,
+            'stats': directory.stats
+            })
 
 
 @app.route('/archive-files', methods=['POST'])
