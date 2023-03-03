@@ -59,6 +59,7 @@ const numProcessors = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 export default function Archive() {
   const [items, setItems] = React.useState([]);
   const [activeTab, setActiveTab] = React.useState(0);
+  const [active, setActive] = React.useState(false);
 
   // Create options
   const [fileExtension, setFileExtension] = React.useState(".tar.gz");
@@ -88,7 +89,14 @@ export default function Archive() {
     setActiveTab(newValue);
   };
 
+  const handleResponse = (response) => {
+    setActive(false);
+    alert(response);
+  };
+
   const handleButtonClick = () => {
+    setActive(true);
+
     post(
       JSON.stringify({
         active_tab: activeTab,
@@ -102,7 +110,7 @@ export default function Archive() {
         processors
       }),
       "archive-files",
-      (response) => alert(response),
+      (response) => handleResponse(response),
       (error) => console.error(error)
     );
   };
@@ -233,7 +241,7 @@ export default function Archive() {
             </FormControl>
           </Grid>
           <Grid item>
-            <RunButton handleClick={ handleButtonClick } />
+            <RunButton active={ active } handleClick={ handleButtonClick } />
           </Grid>
         </Grid>
       </Box>
