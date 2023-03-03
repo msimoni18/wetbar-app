@@ -1,5 +1,6 @@
 import * as React from "react";
 import Plot from "react-plotly.js";
+import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import styles from "./ResizeablePlot.module.scss";
 
 export default function ResizeablePlot({ data, layout, children }) {
@@ -37,12 +38,7 @@ export default function ResizeablePlot({ data, layout, children }) {
       style={ { width: size.x, height: size.y } }
     >
       <Plot data={ data } layout={ newLayout } />
-      <button
-        className={ styles.draghandle }
-        type="button"
-        aria-label="Drag handle"
-        onMouseDown={ handler }
-      />
+      <DragIndicatorIcon className={ styles.draghandle } onMouseDown={ handler } />
     </div>
   );
 }
