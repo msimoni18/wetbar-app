@@ -103,17 +103,17 @@ export default function Plots() {
 
   const actions = [
     {
-      icon: <ArticleIcon />,
+      icon: <ArticleIcon fontSize="large" />,
       name: "File Options",
       click: handleOpenFileOptions
     },
     {
-      icon: <CheckCircleIcon />,
+      icon: <CheckCircleIcon fontSize="large" />,
       name: "Loaded Files",
       click: handleOpenViewLoadedFiles
     },
     {
-      icon: <AddCircleIcon />,
+      icon: <AddCircleIcon fontSize="large" />,
       name: "Add New Plot",
       click: handleAddNewPlot
     }
@@ -125,7 +125,7 @@ export default function Plots() {
         heading="Plots"
         description="Build interactive plots with ease."
       />
-      <Box sx={ { display: "flex", justifyContent: "center", border: "1px solid black", borderRadius: "10px", width: "20%", margin: "auto" } }>
+      <Box sx={ { display: "flex", justifyContent: "center", border: "1px solid black", borderRadius: "10px", width: "20%", margin: "auto", marginBottom: "15px" } }>
         {actions.map((action) => (
           <Tooltip key={ action.name } title={ action.name }>
             <IconButton key={ action.name } onClick={ action.click }>
@@ -283,12 +283,6 @@ export default function Plots() {
         </DialogActions>
       </Dialog>
       {plotList}
-      {/* <PlotContainer data={ loadedData } /> */}
-      {/* <div ref={ ref } className={ plotStyles["plot-container"] }>
-        <LinePlot data={ plotData } layout={ layout } />
-      </div>
-      <br />
-      <ResizeablePlot data={ plotData } layout={ layout } /> */}
     </div>
   );
 }

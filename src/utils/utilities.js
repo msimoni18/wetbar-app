@@ -15,3 +15,9 @@ export function addCommaToNumber(number) {
   str[0] = str[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return str.join(".");
 }
+
+export function rgbaToString(rgba) {
+  return `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a})`;
+}
+
+export const lineStyles = ["solid", "dot", "dash", "longdash", "dashdot", "longdashdot"];

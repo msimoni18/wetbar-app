@@ -1,55 +1,82 @@
 import * as React from "react";
+import Plot from "react-plotly.js";
 import { useResizeDetector } from "react-resize-detector";
-import { post } from "utils/requests";
+import { v4 as uuid } from "uuid";
 import {
   Box,
-  InputLabel,
-  FormControl,
-  FormControlLabel,
-  FormLabel,
-  MenuItem,
+  Button,
   Checkbox,
+  FormControlLabel,
+  IconButton,
+  MenuItem,
   Select,
   TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Typography,
   Tooltip,
-  IconButton
+  Typography
 } from "@mui/material";
-import DatasetIcon from "@mui/icons-material/Dataset";
-import DashboardIcon from "@mui/icons-material/Dashboard";
-import SaveIcon from "@mui/icons-material/Save";
-import DeleteIcon from "@mui/icons-material/Delete";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
+import { post, get } from "utils/requests";
+import { rgbaToString } from "utils/utilities";
 import ResizeablePlot from "components/containers/ResizeablePlot";
-import DataGridTable from "components/containers/DataGridTable";
-import { HtmlTooltip } from "components/containers/tooltips/HtmlTooltip";
+import ColorSelector from "./ColorSelector";
+import Series from "./Series";
+import { Accordion, AccordionSummary, AccordionDetails } from "./CustomComponents";
+import { lineStyles } from "../../utils/utilities";
 import styles from "./PlotContainer.module.scss";
+
+const formatItemStyle = {
+  borderLeft: "1px dashed grey",
+  paddingLeft: "1rem",
+  marginBottom: "2rem"
+};
+
+const initialColors = {
+  majorGridline: { r: 230, g: 230, b: 230, a: 1 },
+  minorGridline: { r: 216, g: 216, b: 216, a: 1 },
+  font: { r: 68, g: 68, b: 68, a: 1 },
+  plotBackground: { r: 255, g: 255, b: 255, a: 1 }
+};
 
 export default function PlotContainer() {
   const { width, height, ref } = useResizeDetector();
+  const [expanded, setExpanded] = React.useState("");
+  const [loadedData, setLoadedData] = React.useState([]);
 
-  // Data
-  const [openPlotData, setOpenPlotData] = React.useState(false);
-  const [tableRows, setTableRows] = React.useState([]);
-  const [plotData, setPlotData] = React.useState([]);
-
-  const handleOpenPlotData = () => {
-    setOpenPlotData(true);
+  const handleExpandedChange = (panel) => (event, newExpanded) => {
+    setExpanded(newExpanded ? panel : false);
   };
 
-  const handleClosePlotData = () => {
+  React.useEffect(() => {
+    get(
+      "get-loaded-data",
+      (response) => setLoadedData(response),
+      (error) => console.error(error)
+    );
+  }, []);
+
+  React.useEffect(() => {
+    console.log(loadedData);
+  }, [loadedData]);
+
+  // Data
+  const [series, setSeries] = React.useState([]);
+
+  const addNewSeries = () => {
+    const uniqueId = uuid();
+    setSeries(series.concat(<Series key={ uniqueId } />));
+  };
+
+  const [plotData, setPlotData] = React.useState([]);
+
+  const fetchPlotData = () => {
     const cellData = [];
-    tableRows.forEach((row) => {
+    series.forEach((row) => {
       const cells = {
-        file: row.selectedFile,
-        x: row.selectedX,
-        y: row.selectedY,
+        file: row.file,
+        x: row.x,
+        y: row.y,
         name: row.name,
-        mode: row.selectedMode
+        mode: row.mode
       };
       cellData.push(cells);
     });
@@ -61,388 +88,265 @@ export default function PlotContainer() {
       (response) => console.error(response)
     );
 
-    setOpenPlotData(false);
   };
 
   // Layout
-  const [openLayoutOptions, setOpenLayoutOptions] = React.useState(false);
   const [title, setTitle] = React.useState("");
   const [xLabel, setXLabel] = React.useState("");
   const [yLabel, setYLabel] = React.useState("");
   const [legend, setLegend] = React.useState(true);
   const [majorGridlineChecked, setMajorGridlineChecked] = React.useState(true);
   const [minorGridlineChecked, setMinorGridlineChecked] = React.useState(true);
-  const [majorGridlineColor, setMajorGridlineColor] = React.useState("rgba(230, 230, 230, 1)");
-  const [minorGridlineColor, setMinorGridlineColor] = React.useState("rgba(216, 216, 216, 1)");
+  const [majorGridlineColor, setMajorGridlineColor] = React.useState(initialColors.majorGridline);
+  const [minorGridlineColor, setMinorGridlineColor] = React.useState(initialColors.minorGridline);
   const [majorLinestyle, setMajorLinestyle] = React.useState("solid");
   const [minorLinestyle, setMinorLinestyle] = React.useState("dot");
-  const [fontColor, setFontColor] = React.useState("#444");
-  const [paperBgcolor, setPaperBgcolor] = React.useState("rgba(255, 255, 255, 1)");
-  const [plotBgcolor, setPlotBgcolor] = React.useState("white");
+  const [fontColor, setFontColor] = React.useState(initialColors.font);
+  const [paperBgcolor, setPaperBgcolor] = React.useState(initialColors.plotBackground);
+  const [plotBgcolor, setPlotBgcolor] = React.useState(initialColors.plotBackground);
 
   const layout = {
-    width,
-    // height: height,
+    width: width - 20,
+    height,
     font: {
-      color: fontColor
+      color: rgbaToString(fontColor)
     },
     title: {
       text: title
     },
     xaxis: {
       title: xLabel,
-      gridcolor: majorGridlineColor,
+      gridcolor: rgbaToString(majorGridlineColor),
       griddash: majorLinestyle,
       gridwidth: 1,
       showgrid: majorGridlineChecked,
       minor: {
-        gridcolor: minorGridlineColor,
+        gridcolor: rgbaToString(minorGridlineColor),
         griddash: minorLinestyle,
         gridwidth: 1,
         showgrid: minorGridlineChecked
       }
     },
     yaxis: {
-      title: xLabel,
-      gridcolor: majorGridlineColor,
+      title: yLabel,
+      gridcolor: rgbaToString(majorGridlineColor),
       griddash: majorLinestyle,
       gridwidth: 1,
       showgrid: majorGridlineChecked,
       minor: {
-        gridcolor: minorGridlineColor,
+        gridcolor: rgbaToString(minorGridlineColor),
         griddash: minorLinestyle,
         gridwidth: 1,
         showgrid: minorGridlineChecked
       }
     },
     showlegend: legend,
-    paper_bgcolor: paperBgcolor,
-    plot_bgcolor: plotBgcolor
+    paper_bgcolor: rgbaToString(paperBgcolor),
+    plot_bgcolor: rgbaToString(plotBgcolor)
   };
 
-  // TODO: Add done/cancel buttons to each speed dialog window and only execute
-  //       update when done is selected and don't update state when cancel is
-  //       selected
-  const handleOpenLayoutOptions = () => {
-    setOpenLayoutOptions(true);
-  };
-
-  const handleCloseLayoutOptions = () => {
-    setOpenLayoutOptions(false);
-  };
-
-  const actions = [
-    {
-      icon: <DatasetIcon />,
-      name: "Data",
-      click: handleOpenPlotData
-    },
-    {
-      icon: <DashboardIcon />,
-      name: "Layout",
-      click: handleOpenLayoutOptions
-    },
-    {
-      icon: <SaveIcon />,
-      name: "Save"
-    //   click: handleOpenFileOptions,
-    },
-    {
-      icon: <DeleteIcon />,
-      name: "Delete"
-    //   click: deletePlot(plotId)
-    }
-  ];
+  const [isExpanded, setIsExpanded] = React.useState(false);
 
   return (
-    <div className={ styles["plot-container-body"] }>
-      <Box sx={ { textAlign: "center" } }>
-        {actions.map((action) => (
-          <Tooltip key={ action.name } title={ action.name }>
-            <IconButton key={ action.name } onClick={ action.click }>
-              {action.icon}
-            </IconButton>
-          </Tooltip>
-        ))}
-      </Box>
-      <Dialog
-        open={ openPlotData }
-        onClose={ handleClosePlotData }
-        fullWidth
-        maxWidth="lg"
+
+    <div className={ styles["plot-container"] }>
+      <div
+        ref={ ref }
+        className={ isExpanded ? styles["plot-container-left"] : styles["plot-container-left-expanded"] }
       >
-        <DialogTitle>Plot Data</DialogTitle>
-        <DialogContent>
-          <DataGridTable
-            rows={ tableRows }
-            setRows={ setTableRows }
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button variant="contained" onClick={ handleClosePlotData }>
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
-        open={ openLayoutOptions }
-        onClose={ handleCloseLayoutOptions }
-        fullWidth
-        maxWidth="lg"
-      >
-        <DialogTitle>Layout Options</DialogTitle>
-        <DialogContent>
-          <Box>
-            <Box
-              sx={ {
-                border: "2px solid black",
-                padding: "10px",
-                width: "50%",
-                marginBottom: "10px",
-                borderRadius: "10px"
-              } }
-            >
-              <FormControl fullWidth>
-                <FormLabel>Labels:</FormLabel>
-                <TextField
-                  margin="dense"
-                  id="x-label"
-                  label="X-Axis Label"
-                  type="input"
-                  variant="outlined"
-                  value={ xLabel }
-                  onChange={ (event) => setXLabel(event.target.value) }
-                />
-                <TextField
-                  margin="dense"
-                  id="y-label"
-                  label="Y-Axis Label"
-                  type="input"
-                  variant="outlined"
-                  value={ yLabel }
-                  onChange={ (event) => setYLabel(event.target.value) }
-                />
-                <TextField
-                  margin="dense"
-                  id="title-label"
-                  label="Plot Title"
-                  type="input"
-                  variant="outlined"
-                  value={ title }
-                  onChange={ (event) => setTitle(event.target.value) }
-                />
-              </FormControl>
-            </Box>
-            <Box
-              sx={ {
-                border: "2px solid black",
-                padding: "10px",
-                width: "50%",
-                marginBottom: "10px",
-                borderRadius: "10px"
-              } }
-            >
-              <FormControl fullWidth>
-                <FormLabel>Legend:</FormLabel>
-                <FormControlLabel
-                  control={ (
-                    <Checkbox
-                      checked={ legend }
-                      onClick={ () => setLegend(!legend) }
-                    />
-                  ) }
-                  label="On"
-                />
-              </FormControl>
-            </Box>
-            <Box
-              sx={ {
-                border: "2px solid black",
-                padding: "10px",
-                width: "50%",
-                marginBottom: "10px",
-                borderRadius: "10px"
-              } }
-            >
-              <FormControl fullWidth>
-                <FormLabel>Gridlines:</FormLabel>
-                <Box sx={ { display: "flex", alignItems: "baseline", justifyContent: "space-between" } }>
-                  <FormControlLabel
-                    control={ (
-                      <Checkbox
-                        checked={ majorGridlineChecked }
-                        onChange={ (event) => setMajorGridlineChecked(event.target.value) }
-                      />
-                    ) }
-                    label="Major"
-                  />
-                  <HtmlTooltip
-                    title={ (
-                      <React.Fragment>
-                        <Typography color="inherit">hex, rgb, rgba, or named colors</Typography>
-                      </React.Fragment>
-                    ) }
-                    placement="top-start"
-                    arrow
-                  >
-                    <TextField
-                      margin="dense"
-                      id="major-color"
-                      label="Color"
-                      type="input"
-                      variant="outlined"
-                      value={ majorGridlineColor }
-                      onChange={ (event) => setMajorGridlineColor(event.target.value) }
-                      sx={ { paddingRight: "10px" } }
-                    />
-                  </HtmlTooltip>
-                  <FormControl>
-                    <InputLabel id="major-linestyle-label-select">Linestyle</InputLabel>
-                    <Select labelId="major-linestyle-label-select" id="major-linestyle-select" label="Linestyle" value={ majorLinestyle } onChange={ (event) => setMajorLinestyle(event.target.value) } sx={ { width: "150px" } }>
-                      <MenuItem value="solid">solid</MenuItem>
-                      <MenuItem value="dot">dot</MenuItem>
-                      <MenuItem value="dash">dash</MenuItem>
-                      <MenuItem value="longdash">longdash</MenuItem>
-                      <MenuItem value="dashdot">dashdot</MenuItem>
-                      <MenuItem value="longdashdot">longdashdot</MenuItem>
-                    </Select>
-                  </FormControl>
+        <Plot layout={ layout } />
+        <button
+          type="button"
+          className={ styles["plot-container-handle"] }
+          onClick={ () => setIsExpanded(!isExpanded) }
+        >
+          {"<"}
+        </button>
+      </div>
+      <div className={ styles["plot-container-right"] }>
+        <Accordion expanded={ expanded === "series" } onChange={ handleExpandedChange("series") }>
+          <AccordionSummary aria-controls="series-content" id="series-header">
+            <Typography>Series</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {series.map((item, key) => {
+              return (
+                <Box key={ key } sx={ formatItemStyle }>
+                  {item}
                 </Box>
-                <Box sx={ { display: "flex", alignItems: "baseline", justifyContent: "space-between" } }>
-                  <FormControlLabel
-                    control={ (
-                      <Checkbox
-                        checked={ minorGridlineChecked }
-                        onChange={ (event) => setMinorGridlineChecked(event.target.value) }
-                      />
-                    ) }
-                    label="Minor"
-                  />
-                  <HtmlTooltip
-                    title={ (
-                      <React.Fragment>
-                        <Typography color="inherit">hex, rgb, rgba, or named colors</Typography>
-                      </React.Fragment>
-                    ) }
-                    placement="top-start"
-                    arrow
-                  >
-                    <TextField
-                      margin="dense"
-                      id="minor-color"
-                      label="Color"
-                      type="input"
-                      variant="outlined"
-                      value={ minorGridlineColor }
-                      onChange={ (event) => setMinorGridlineColor(event.target.value) }
-                      sx={ { paddingRight: "10px" } }
-                    />
-                  </HtmlTooltip>
-                  <FormControl>
-                    <InputLabel id="minor-linestyle-label-select">Linestyle</InputLabel>
-                    <Select
-                      labelId="minor-linestyle-label-select"
-                      id="minor-linestyle-select"
-                      label="Linestyle"
-                      value={ minorLinestyle }
-                      onChange={ (event) => setMinorLinestyle(event.target.value) }
-                      sx={ { width: "150px" } }
-                    >
-                      <MenuItem value="solid">solid</MenuItem>
-                      <MenuItem value="dot">dot</MenuItem>
-                      <MenuItem value="dash">dash</MenuItem>
-                      <MenuItem value="longdash">longdash</MenuItem>
-                      <MenuItem value="dashdot">dashdot</MenuItem>
-                      <MenuItem value="longdashdot">longdashdot</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
-              </FormControl>
+              );
+            })}
+            <Tooltip title="Add new series" placement="left">
+              <IconButton onClick={ addNewSeries }>
+                <AddCircleIcon />
+              </IconButton>
+            </Tooltip>
+            <Button variant="contained" size="small">Update plot</Button>
+          </AccordionDetails>
+        </Accordion>
+        <Accordion expanded={ expanded === "labels" } onChange={ handleExpandedChange("labels") }>
+          <AccordionSummary aria-controls="labels-content" id="labels-header">
+            <Typography>Labels</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={ formatItemStyle }>
+              <Typography>Title</Typography>
+              <TextField
+                margin="dense"
+                id="title-label"
+                type="input"
+                variant="outlined"
+                size="small"
+                fullWidth
+                value={ title }
+                onChange={ (event) => setTitle(event.target.value) }
+              />
             </Box>
-            <Box
-              sx={ {
-                border: "2px solid black",
-                padding: "10px",
-                width: "50%",
-                marginBottom: "10px",
-                borderRadius: "10px" } }
-            >
-              <FormControl fullWidth>
-                <FormLabel>Colors</FormLabel>
-                <HtmlTooltip
-                  title={ (
-                    <React.Fragment>
-                      <Typography color="inherit">hex, rgb, rgba, or named colors</Typography>
-                    </React.Fragment>
-                  ) }
-                  placement="top-start"
-                  arrow
-                >
-                  <TextField
-                    margin="dense"
-                    id="font-color"
-                    label="Font"
-                    type="input"
-                    variant="outlined"
-                    value={ fontColor }
-                    onChange={ (event) => setFontColor(event.target.value) }
-                    sx={ { paddingRight: "10px" } }
-                  />
-                </HtmlTooltip>
-                <HtmlTooltip
-                  title={ (
-                    <React.Fragment>
-                      <Typography color="inherit">hex, rgb, rgba, or named colors</Typography>
-                    </React.Fragment>
-                  ) }
-                  placement="top-start"
-                  arrow
-                >
-                  <TextField
-                    margin="dense"
-                    id="paper-bgcolor"
-                    label="Paper Background"
-                    type="input"
-                    variant="outlined"
-                    value={ paperBgcolor }
-                    onChange={ (event) => setPaperBgcolor(event.target.value) }
-                    sx={ { paddingRight: "10px" } }
-                  />
-                </HtmlTooltip>
-                <HtmlTooltip
-                  title={ (
-                    <React.Fragment>
-                      <Typography color="inherit">hex, rgb, rgba, or named colors</Typography>
-                    </React.Fragment>
-                  ) }
-                  placement="top-start"
-                  arrow
-                >
-                  <TextField
-                    margin="dense"
-                    id="plot-bgcolor"
-                    label="Plot Background"
-                    type="input"
-                    variant="outlined"
-                    value={ plotBgcolor }
-                    onChange={ (event) => setPlotBgcolor(event.target.value) }
-                    sx={ { paddingRight: "10px" } }
-                  />
-                </HtmlTooltip>
-              </FormControl>
+            <Box sx={ formatItemStyle }>
+              <Typography>X-Axis</Typography>
+              <TextField
+                margin="dense"
+                id="x-label"
+                type="input"
+                variant="outlined"
+                size="small"
+                fullWidth
+                value={ xLabel }
+                onChange={ (event) => setXLabel(event.target.value) }
+              />
             </Box>
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button variant="contained" onClick={ handleCloseLayoutOptions }>
-            Cancel
-          </Button>
-          <Button variant="contained" onClick={ handleCloseLayoutOptions }>
-            Done
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <ResizeablePlot data={ plotData } layout={ layout } />
+            <Box sx={ formatItemStyle }>
+              <Typography>Y-Axis</Typography>
+              <TextField
+                margin="dense"
+                id="y-label"
+                type="input"
+                variant="outlined"
+                size="small"
+                fullWidth
+                value={ yLabel }
+                onChange={ (event) => setYLabel(event.target.value) }
+              />
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+        <Accordion expanded={ expanded === "legend" } onChange={ handleExpandedChange("legend") }>
+          <AccordionSummary aria-controls="legend-content" id="legend-header">
+            <Typography>Legend</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={ formatItemStyle }>
+              <FormControlLabel
+                control={ (
+                  <Checkbox
+                    checked={ legend }
+                    onChange={ (event) => setLegend(event.target.checked) }
+                  />
+                ) }
+                label="Enable"
+              />
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+        <Accordion expanded={ expanded === "gridlines" } onChange={ handleExpandedChange("gridlines") }>
+          <AccordionSummary aria-controls="gridlines-content" id="gridlines-header">
+            <Typography>Gridlines</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={ formatItemStyle }>
+              <Typography>Major</Typography>
+              <FormControlLabel
+                control={ (
+                  <Checkbox
+                    checked={ majorGridlineChecked }
+                    onChange={ (event) => setMajorGridlineChecked(event.target.checked) }
+                  />
+                ) }
+                label="Enable"
+              />
+              <Typography>Color</Typography>
+              <ColorSelector initialColor={ initialColors.majorGridline } color={ majorGridlineColor } setColor={ setMajorGridlineColor } />
+              <Typography>Linestyle</Typography>
+              <Select
+                id="major-linestyle-select"
+                size="small"
+                value={ majorLinestyle }
+                onChange={ (event) => setMajorLinestyle(event.target.value) }
+                sx={ { width: "150px" } }
+              >
+                {lineStyles.map((item) => (
+                  <MenuItem value={ item }>{item}</MenuItem>
+                ))}
+              </Select>
+            </Box>
+            <Box sx={ formatItemStyle }>
+              <Typography>Minor</Typography>
+              <FormControlLabel
+                control={ (
+                  <Checkbox
+                    checked={ minorGridlineChecked }
+                    onChange={ (event) => setMinorGridlineChecked(event.target.checked) }
+                  />
+                ) }
+                label="Enable"
+              />
+              <Typography>Color</Typography>
+              <ColorSelector initialColor={ initialColors.minorGridline } color={ minorGridlineColor } setColor={ setMinorGridlineColor } />
+              <Typography>Linestyle</Typography>
+              <Select
+                id="minor-linestyle-select"
+                size="small"
+                value={ minorLinestyle }
+                onChange={ (event) => setMinorLinestyle(event.target.value) }
+                sx={ { width: "150px" } }
+              >
+                {lineStyles.map((item) => (
+                  <MenuItem value={ item }>{item}</MenuItem>
+                ))}
+              </Select>
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+        <Accordion expanded={ expanded === "axis" } onChange={ handleExpandedChange("axis") }>
+          <AccordionSummary aria-controls="axis-content" id="axis-header">
+            <Typography>Axis</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography>
+              Axis stuff
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
+        <Accordion expanded={ expanded === "chart" } onChange={ handleExpandedChange("chart") }>
+          <AccordionSummary aria-controls="chart-content" id="chart-header">
+            <Typography>Chart</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={ formatItemStyle }>
+              <Typography>Colors</Typography>
+              <Typography>Font</Typography>
+              <ColorSelector initialColor={ initialColors.font } color={ fontColor } setColor={ setFontColor } />
+              <Typography>Paper</Typography>
+              <ColorSelector initialColor={ initialColors.plotBackground } color={ paperBgcolor } setColor={ setPaperBgcolor } />
+              <Typography>Plot</Typography>
+              <ColorSelector initialColor={ initialColors.plotBackground } color={ plotBgcolor } setColor={ setPlotBgcolor } />
+            </Box>
+          </AccordionDetails>
+        </Accordion>
+        <Accordion expanded={ expanded === "settings" } onChange={ handleExpandedChange("settings") }>
+          <AccordionSummary aria-controls="settings-content" id="settings-header">
+            <Typography>Settings</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography>
+              Save options
+            </Typography>
+            <Typography>
+              Delete
+            </Typography>
+          </AccordionDetails>
+        </Accordion>
+      </div>
     </div>
   );
 }

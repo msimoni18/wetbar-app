@@ -6,6 +6,9 @@ SimpleFileContainer
 - Add option to delete loaded files
 
 Plots:
+- Make paper color the background color for the div so that there's
+  no white space where the collapse button is
+
 - Add done/cancel buttons to each speed dialog window and only execute
   update when done is selected and don't update state when cancel is
   selected
@@ -18,6 +21,11 @@ Plots:
 
 - Add css so only the last plot container has margin so the last
   plot can be resized down
+
+- Right now, if new data is loaded, any existing plots will not be able to access
+  it. Instead of getting whatever data is loaded when a new plot is added to the page,
+  add a dependency to the useEffect() to detect when new data is loaded, so all existing
+  plots will have access to the data.
 
 Backend:
 - Add list option to view contents of tar file
