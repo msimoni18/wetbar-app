@@ -15,6 +15,8 @@ import {
   Typography
 } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
+import DeleteIcon from "@mui/icons-material/Delete";
+import SaveIcon from "@mui/icons-material/Save";
 import { post, get } from "utils/requests";
 import { rgbaToString } from "utils/utilities";
 import ResizeablePlot from "components/containers/ResizeablePlot";
@@ -37,7 +39,8 @@ const initialColors = {
   plotBackground: { r: 255, g: 255, b: 255, a: 1 }
 };
 
-export default function PlotContainer() {
+export default function PlotContainer(props) {
+  const { plotId, handleDelete } = props;
   const { width, height, ref } = useResizeDetector();
   const [expanded, setExpanded] = React.useState("");
   const [loadedData, setLoadedData] = React.useState([]);
@@ -54,39 +57,58 @@ export default function PlotContainer() {
     );
   }, []);
 
-  React.useEffect(() => {
-    console.log(loadedData);
-  }, [loadedData]);
-
   // Data
   const [series, setSeries] = React.useState([]);
 
+  const deleteSeries = React.useCallback(
+    (id) => () => {
+      setSeries((prevRows) => prevRows.filter((row) => row.id !== id));
+    }, []
+  );
+
   const addNewSeries = () => {
     const uniqueId = uuid();
-    setSeries(series.concat(<Series key={ uniqueId } />));
+
+    const baseSeries = {
+      id: uniqueId,
+      file: "",
+      x: "",
+      y: "",
+      name: "",
+      mode: "lines"
+    };
+
+    setSeries((prevItems) => [...prevItems, baseSeries]);
   };
+
+  React.useEffect(() => {
+    console.log("series:");
+    series.forEach((row) => {
+      console.log(row);
+    });
+  }, [series]);
 
   const [plotData, setPlotData] = React.useState([]);
 
-  const fetchPlotData = () => {
-    const cellData = [];
-    series.forEach((row) => {
-      const cells = {
-        file: row.file,
-        x: row.x,
-        y: row.y,
-        name: row.name,
-        mode: row.mode
-      };
-      cellData.push(cells);
-    });
+  const updatePlot = () => {
+    // const cellData = []
+    // series.forEach((row) => {
+    //   const cells = {
+    //     file: row.file,
+    //     x: row.x,
+    //     y: row.y,
+    //     name: row.name,
+    //     mode: row.mode
+    //   };
+    //   cellData.push(cells);
+    // });
 
-    post(
-      JSON.stringify(cellData),
-      "get-plot-data",
-      (response) => setPlotData(response),
-      (response) => console.error(response)
-    );
+    // post(
+    //   JSON.stringify(cellData),
+    //   "get-plot-data",
+    //   (response) => setPlotData(response),
+    //   (response) => console.error(response)
+    // );
 
   };
 
@@ -169,19 +191,35 @@ export default function PlotContainer() {
             <Typography>Series</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            {series.map((item, key) => {
-              return (
-                <Box key={ key } sx={ formatItemStyle }>
-                  {item}
-                </Box>
-              );
-            })}
+            {series?.map((row) => (
+              <Box key={ row.id } sx={ formatItemStyle }>
+                <Series
+                  key={ row.id }
+                  id={ row.id }
+                  baseFile={ row.file }
+                  baseX={ row.x }
+                  baseY={ row.y }
+                  baseName={ row.name }
+                  baseMode={ row.mode }
+                  handleDelete={ deleteSeries }
+                  data={ loadedData.data }
+                  series={ series }
+                  setSeries={ setSeries }
+                />
+              </Box>
+            ))}
             <Tooltip title="Add new series" placement="left">
               <IconButton onClick={ addNewSeries }>
                 <AddCircleIcon />
               </IconButton>
             </Tooltip>
-            <Button variant="contained" size="small">Update plot</Button>
+            <Button
+              variant="contained"
+              size="small"
+              onClick={ updatePlot }
+            >
+              Update plot
+            </Button>
           </AccordionDetails>
         </Accordion>
         <Accordion expanded={ expanded === "labels" } onChange={ handleExpandedChange("labels") }>
@@ -274,8 +312,8 @@ export default function PlotContainer() {
                 onChange={ (event) => setMajorLinestyle(event.target.value) }
                 sx={ { width: "150px" } }
               >
-                {lineStyles.map((item) => (
-                  <MenuItem value={ item }>{item}</MenuItem>
+                {lineStyles.map((item, key) => (
+                  <MenuItem key={ key } value={ item }>{item}</MenuItem>
                 ))}
               </Select>
             </Box>
@@ -300,8 +338,8 @@ export default function PlotContainer() {
                 onChange={ (event) => setMinorLinestyle(event.target.value) }
                 sx={ { width: "150px" } }
               >
-                {lineStyles.map((item) => (
-                  <MenuItem value={ item }>{item}</MenuItem>
+                {lineStyles.map((item, key) => (
+                  <MenuItem key={ key } value={ item }>{item}</MenuItem>
                 ))}
               </Select>
             </Box>
@@ -338,12 +376,16 @@ export default function PlotContainer() {
             <Typography>Settings</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography>
-              Save options
-            </Typography>
-            <Typography>
-              Delete
-            </Typography>
+            <Tooltip title="Save plot" placement="top">
+              <IconButton>
+                <SaveIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete plot" placement="top">
+              <IconButton onClick={ handleDelete(plotId) }>
+                <DeleteIcon />
+              </IconButton>
+            </Tooltip>
           </AccordionDetails>
         </Accordion>
       </div>
