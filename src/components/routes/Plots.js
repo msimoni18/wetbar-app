@@ -39,16 +39,6 @@ export default function Plots() {
   const [delimiter, setDelimiter] = React.useState("");
   const [sheets, setSheets] = React.useState("");
   const [loading, setLoading] = React.useState(false);
-  // const [success, setSuccess] = React.useState(false);
-
-  //   const buttonSx = {
-  //     ...(success && {
-  //         bgcolor: green[500],
-  //         '&:hover': {
-  //             bgcolor: green[700]
-  //         }
-  //     })
-  //   }
 
   const handleOpenFileOptions = () => {
     setOpenFileOptions(true);
@@ -96,9 +86,21 @@ export default function Plots() {
 
   const [plotList, setPlotList] = React.useState([]);
 
+  const deletePlot = React.useCallback(
+    (id) => () => {
+      setPlotList((prevRows) => prevRows.filter((row) => row.props.plotId !== id));
+    }, []
+  );
+
   const handleAddNewPlot = () => {
     const uniqueId = uuid();
-    setPlotList(plotList.concat(<PlotContainer key={ uniqueId } />));
+    setPlotList(plotList.concat(
+      <PlotContainer
+        key={ uniqueId }
+        plotId={ uniqueId }
+        handleDelete={ deletePlot }
+      />
+    ));
   };
 
   const actions = [
