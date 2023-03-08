@@ -1,6 +1,20 @@
+General:
+- Try opening new BrowserWindow
+  - Useful for storing docs and opening on button click
+  - Useful for "popping out" plot containers of main window
+
 DragDropFileContainer:
 - Combine with SimpleFileContainer, passing props to disable
   certain features like drag/drop
+
+- Add get request in parent to show existing files and get rid
+  of SimpleFileContainer and option to view loaded files
+
+- Make icons smaller and color based on if file was loaded
+  successfully or not
+
+- Add delete icon that deletes loaded file from Backend
+
 
 SimpleFileContainer
 - Add option to delete loaded files
@@ -26,6 +40,11 @@ Plots:
   it. Instead of getting whatever data is loaded when a new plot is added to the page,
   add a dependency to the useEffect() to detect when new data is loaded, so all existing
   plots will have access to the data.
+
+- Add option to normalize plots to plot container
+
+- Add options for secondary (and more) x and y axis (include checkbox to
+  enable or disable secondary axes)
 
 Backend:
 - Add list option to view contents of tar file
