@@ -27,7 +27,7 @@ class Packager {
 
     const options = {
       build: [
-        "app",
+        "WETbar",
         "--extra-resource=./resources",
         "--icon ./public/favicon.ico",
         "--platform linux",
@@ -38,13 +38,13 @@ class Packager {
       ].join(" "),
 
       package: [
-        `--src ${path("../dist/linux/app-linux-x64/")}`,
-        "electron-react-python-template",
+        `--src ${path("../dist/linux/WETbar-linux-x64/")}`,
+        "WETbar",
         `--dest ${path("../dist/linux/setup")}`,
         "--arch amd64",
         `--icon ${path("../utilities/deb/images/icon.ico")}`,
         `--background ${path("../utilities/deb/images/background.png")}`,
-        "--title \"Example app\"",
+        "--title \"WETbar\"",
         "--overwrite"
       ].join(" "),
 
@@ -69,7 +69,7 @@ class Packager {
 
     const options = {
       build: [
-        "app",
+        "WETbar",
         "--extra-resource=./resources",
         "--icon ./public/favicon.ico",
         "--win32",
@@ -79,12 +79,12 @@ class Packager {
       ].join(" "),
 
       package: [
-        path("../dist/mac/app-darwin-x64/app.app"),
-        "electron-react-python-template",
+        path("../dist/mac/WETbar-darwin-x64/WETbar.app"),
+        "WETbar",
         `--out=${path("../dist/mac/setup")}`,
         `--icon=${path("../utilities/dmg/images/icon.icns")}`,
         `--background=${path("../utilities/dmg/images/background.png")}`,
-        "--title=\"Example app\"",
+        "--title=\"WETbar\"",
         "--overwrite"
       ].join(" "),
 
@@ -112,7 +112,7 @@ class Packager {
 
     const options = {
       app: [
-        "app",
+        "WETbar",
         "--asar",
         "--extra-resource=./resources/app",
         "--icon ./public/favicon.ico",
@@ -130,12 +130,12 @@ class Packager {
     const { MSICreator } = require("electron-wix-msi");
 
     const msiCreator = new MSICreator({
-      appDirectory: path("../dist/windows/app-win32-x64"),
+      appDirectory: path("../dist/windows/WETbar-win32-x64"),
       appIconPath: path("../utilities/msi/images/icon.ico"),
-      description: "Example app",
-      exe: "app",
+      description: "Work Enhancing Toolbar",
+      exe: "WETbar",
       manufacturer: "Example Manufacturer",
-      name: "electron-react-python-template",
+      name: "WETbar",
       outputDirectory: path("../dist/windows/setup"),
       ui: {
         chooseDirectory: true,
