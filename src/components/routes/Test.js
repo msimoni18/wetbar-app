@@ -1,8 +1,10 @@
 import * as React from "react";
 import { io } from "socket.io-client";
+import Button from "@mui/material/Button";
 import ResizeablePlot from "components/containers/ResizeablePlot";
 import styles from "components/App.module.scss";
 import TestSocketCounter from "components/containers/TestSocketCounter";
+import { app } from "utils/services";
 
 // Electron Inter Process Communication and dialog
 const { ipcRenderer } = window.require("electron");
@@ -33,6 +35,7 @@ export default function Test() {
 
   return (
     <div className={ styles["route-body"] }>
+      <Button onClick={ app.docs }>Open docs</Button>
       <h3>Resizable plot by clicking and dragging the bottom right</h3>
       <br />
       <ResizeablePlot data={ testData } layout={ testLayout } />

@@ -1,5 +1,5 @@
 // Electron Inter Process Communication and dialog
-const { ipcRenderer } = window.require('electron');
+const { ipcRenderer } = window.require("electron");
 
 /**
  * @namespace Services
@@ -10,8 +10,9 @@ const { ipcRenderer } = window.require('electron');
  * @property {function} unmaximize - Function to contract (unmaximize) the screen size of the program.
  */
 export const app = {
-  maximize: () => ipcRenderer.send('app-maximize'),
-  minimize: () => ipcRenderer.send('app-minimize'),
-  quit: () => ipcRenderer.send('app-quit'),
-  unmaximize: () => ipcRenderer.send('app-unmaximize')
+  maximize: () => ipcRenderer.send("app-maximize"),
+  minimize: () => ipcRenderer.send("app-minimize"),
+  quit: () => ipcRenderer.send("app-quit"),
+  unmaximize: () => ipcRenderer.send("app-unmaximize"),
+  docs: () => ipcRenderer.send("app-docs")
 };

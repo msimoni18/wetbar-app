@@ -18,6 +18,16 @@ const shutdown = (port) => {
   get(`http://localhost:${port}/quit`).then(app.quit).catch(app.quit);
 };
 
+const openDocs = () => {
+  const docsWindow = new BrowserWindow({
+    // parent: browserWindows.mainWindow,
+    height: 300,
+    width: 500
+  });
+  docsWindow.loadFile("docs/index.html");
+  docsWindow.show();
+};
+
 /**
  * @namespace BrowserWindow
  * @description - Electron browser windows.
@@ -127,6 +137,7 @@ const createMainWindow = (port) => {
   ipcMain.on("app-minimize", (_event, _arg) => mainWindow.minimize());
   ipcMain.on("app-quit", (_event, _arg) => shutdown(port));
   ipcMain.on("app-unmaximize", (_event, _arg) => mainWindow.unmaximize());
+  ipcMain.on("app-docs", (_event, _arg) => openDocs());
   ipcMain.on("get-port-number", (event, _arg) => {
     event.returnValue = port;
   });
@@ -204,6 +215,14 @@ app.whenReady().then(async () => {
       preload: path.join(app.getAppPath(), "preload.js")
     }
   });
+
+  // const docsWindow = new BrowserWindow({
+  //   // parent: browserWindows.mainWindow,
+  //   height: 300,
+  //   width: 500
+  // });
+  // docsWindow.loadFile("docs/Builder.html");
+  // docsWindow.show();
 
   /**
    * If not using in production, use the loading window
