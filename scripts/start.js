@@ -1,6 +1,6 @@
-const { spawn, spawnSync } = require('child_process');
-const getPort = require('get-port');
-const { get } = require('axios');
+const { spawn, spawnSync } = require("child_process");
+const getPort = require("get-port");
+const { get } = require("axios");
 
 /**
  * @namespace Starter
@@ -14,8 +14,8 @@ class Starter {
   developerMode = async () => {
     // Child spawn options for console
     const spawnOptions = {
-      hideLogs: { detached: false, shell: true, stdio: 'pipe' },
-      showLogs: { detached: false, shell: true, stdio: 'inherit' }
+      hideLogs: { detached: false, shell: true, stdio: "pipe" },
+      showLogs: { detached: false, shell: true, stdio: "inherit" }
     };
 
     /**
@@ -28,18 +28,18 @@ class Starter {
     });
 
     // Kill anything that might using required React port
-    spawnSync('npx kill-port 3000', spawnOptions.hideLogs);
+    spawnSync("npx kill-port 3000", spawnOptions.hideLogs);
 
     // Start & identify React & Electron processes
-    spawn('cross-env BROWSER=none react-scripts start', spawnOptions.showLogs);
-    spawn('electron .', spawnOptions.showLogs);
+    spawn("cross-env BROWSER=none react-scripts start", spawnOptions.showLogs);
+    spawn("electron .", spawnOptions.showLogs);
 
     // Kill processes on exit
     const exitOnEvent = (event) => {
       process.once(event, () => {
         try {
           // These errors are expected since the connection is closing
-          const expectedErrors = ['ECONNRESET', 'ECONNREFUSED'];
+          const expectedErrors = ["ECONNRESET", "ECONNREFUSED"];
 
           // Send command to Flask server to quit and close
           get(`http://localhost:${port}/quit`).catch(
@@ -47,19 +47,19 @@ class Starter {
           );
         } catch (error) {
           // This errors is expected since the process is closing
-          if (error.code !== 'ESRCH') console.error(error);
+          if (error.code !== "ESRCH") console.error(error);
         }
       });
     };
 
     // Set exit event handlers
     [
-      'exit',
-      'SIGINT',
-      'SIGTERM',
-      'SIGUSR1',
-      'SIGUSR2',
-      'uncaughtException'
+      "exit",
+      "SIGINT",
+      "SIGTERM",
+      "SIGUSR1",
+      "SIGUSR2",
+      "uncaughtException"
     ].forEach(exitOnEvent);
   };
 }

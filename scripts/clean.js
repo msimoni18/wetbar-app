@@ -4,7 +4,7 @@ const {
   rmdirSync,
   statSync,
   unlinkSync
-} = require('fs');
+} = require("fs");
 
 /**
  * @namespace Cleaner
