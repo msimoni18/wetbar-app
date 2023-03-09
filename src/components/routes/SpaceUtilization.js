@@ -3,11 +3,12 @@ import { post, socketIO } from "utils/requests";
 import { formatBytes, addCommaToNumber } from "utils/utilities";
 import Plot from "react-plotly.js";
 import { useResizeDetector } from "react-resize-detector";
-import { Box, TextField, Slider, Grid, Typography } from "@mui/material";
+import { Box, Slider, Grid, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { v4 as uuid } from "uuid";
 import Header from "components/containers/Header";
 import RunButton from "components/buttons/RunButton";
+import DragDropTextField from "components/containers/DragDropTextField";
 import styles from "components/App.module.scss";
 import { number } from "prop-types";
 
@@ -213,16 +214,7 @@ export default function SpaceUtilization() {
         heading="Space Utilization"
         description="Figure out how much space your taking up."
       />
-      <Box sx={ { marginBottom: "2%" } }>
-        <TextField
-          required
-          fullWidth
-          label="Directory"
-          variant="outlined"
-          value={ directory }
-          onChange={ (event) => setDirectory(event.target.value) }
-        />
-      </Box>
+      <DragDropTextField item={ directory } setItem={ setDirectory } />
       <Box sx={ { paddingBottom: "5%" } }>
         <Grid container spacing={ 6 } alignItems="center">
           <Grid item xs={ 3 }>
