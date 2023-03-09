@@ -9,10 +9,9 @@ General:
 - Display version somewhere in main window and try to add to folder
   created when packaging app
 
-DragDropFileContainer:
-- Combine with SimpleFileContainer, passing props to disable
-  certain features like drag/drop
+- Replace table with AG grid tables
 
+DragDropFileContainer:
 - Add get request in parent to show existing files and get rid
   of SimpleFileContainer and option to view loaded files
 
@@ -21,26 +20,17 @@ DragDropFileContainer:
 
 - Add delete icon that deletes loaded file from Backend
 
-
 SimpleFileContainer
-- Add option to delete loaded files
+- Delete after updating DragDropFileContainer
 
 Plots:
 - Make paper color the background color for the div so that there's
   no white space where the collapse button is
 
-- Add done/cancel buttons to each speed dialog window and only execute
-  update when done is selected and don't update state when cancel is
-  selected
-
 - Add color picker for line colors
 
-- Change X and Y select components to autocomplete components
-
-- Add plot container controls on the side instead of the top
-
-- Add css so only the last plot container has margin so the last
-  plot can be resized down
+- Limit the number of items that show in the X and Y parameter
+  select components with scroll
 
 - Right now, if new data is loaded, any existing plots will not be able to access
   it. Instead of getting whatever data is loaded when a new plot is added to the page,
