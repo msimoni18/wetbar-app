@@ -3,6 +3,12 @@ General:
   - Useful for storing docs and opening on button click
   - Useful for "popping out" plot containers of main window
 
+- Add .db file to track who is using the wetbar and how many
+  times they've used it.
+
+- Display version somewhere in main window and try to add to folder
+  created when packaging app
+
 DragDropFileContainer:
 - Combine with SimpleFileContainer, passing props to disable
   certain features like drag/drop
@@ -45,6 +51,8 @@ Plots:
 
 - Add options for secondary (and more) x and y axis (include checkbox to
   enable or disable secondary axes)
+
+- Add options for vertical and horizontal lines, shapes, annotations, etc
 
 Backend:
 - Add list option to view contents of tar file
