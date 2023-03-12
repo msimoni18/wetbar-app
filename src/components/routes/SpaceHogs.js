@@ -1,17 +1,19 @@
 import * as React from "react";
 import Plot from "react-plotly.js";
 import { useResizeDetector } from "react-resize-detector";
-
 import {
-  Box,
   FormControl,
   FormControlLabel,
+  FormLabel,
+  Grid,
   Radio,
   RadioGroup
 } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-
+import { AgGridReact } from "ag-grid-react";
 import Header from "components/containers/Header";
+import StatCard from "components/containers/StatCard";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
 import styles from "components/App.module.scss";
 import hogStyles from "./SpaceHogs.module.scss";
 
@@ -21,15 +23,6 @@ const { ipcRenderer } = window.require("electron");
 // Dynamically generated TCP (open) port between 3000-3999
 const port = ipcRenderer.sendSync("get-port-number");
 
-const columns = [
-  { field: "user", headerName: "User", width: 200 },
-  { field: "size", headerName: "User", type: "number", width: 200 },
-  { field: "util", headerName: "User", type: "number", width: 200 },
-  { field: "size_gt_year", headerName: "User", type: "number", width: 200 },
-  { field: "util_gt_year", headerName: "User", type: "number", width: 200 },
-  { field: "split_gt_year", headerName: "User", type: "number", width: 200 }
-];
-
 export default function SpaceHogs() {
   const { width, height, ref } = useResizeDetector();
   const [site, setSite] = React.useState("Knolls");
@@ -37,9 +30,18 @@ export default function SpaceHogs() {
   const [rows, setRows] = React.useState([]);
   const [plotData, setPlotData] = React.useState([]);
 
+  const [columnDefs] = React.useState([
+    { field: "user", headerName: "User" },
+    { field: "size", headerName: "Size" },
+    { field: "util", headerName: "Utilization" },
+    { field: "size_gt_year", headerName: "Size (> 1 year)" },
+    { field: "util_gt_year", headerName: "Utilization (> 1 year)" },
+    { field: "split_gt_year", headerName: "Split (> 1 year)" }
+  ]);
+
   const plotLayout = {
     width,
-    // height: 500,
+    height: 500,
     xaxis: {
       tickangle: -45
     },
@@ -61,6 +63,14 @@ export default function SpaceHogs() {
     ]
   };
 
+  const defaultColDef = React.useMemo(() => {
+    return {
+      flex: 1,
+      sortable: true,
+      resizable: true
+    };
+  }, []);
+
   React.useEffect(() => {
     fetch(`http://localhost:${port}/space-hogs`, {
       method: "POST",
@@ -76,17 +86,9 @@ export default function SpaceHogs() {
     if (Object.keys(data).length > 0) {
       setRows(data.stats);
 
-      const name = [];
-      const stat = [];
-      const util = [];
-      data.stats.map((item) => {
-        if (item.user !== "s1b_rp") {
-          name.push(item.user);
-          stat.push(item.size);
-          util.push(item.util);
-        }
-      });
-
+      const name = data.stats.map((item) => (item.user !== "s1b_rp" ? item.user : null));
+      const stat = data.stats.map((item) => (item.user !== "s1b_rp" ? item.size : null));
+      const util = data.stats.map((item) => (item.user !== "s1b_rp" ? item.util : null));
       const colors = util.map((val) => (val >= 12 ? "red" : "blue"));
 
       setPlotData([
@@ -106,55 +108,51 @@ export default function SpaceHogs() {
         heading="Space Hogs"
         description="See what coworkers are hogging all of the shared space."
       />
-      <div className={ hogStyles.form }>
-        <FormControl>
-          <RadioGroup
-            aria-labelledby="radio-buttons-group-label"
-            defaultValue="Knolls"
-            name="site-buttons-group"
-            row
-          >
-            <FormControlLabel
-              value="Knolls"
-              control={ <Radio /> }
-              label="Knolls"
-              sx={ { marginRight: "25px" } }
-              onChange={ (event) => setSite(event.target.value) }
+      <Grid container spacing={ 2 }>
+        <Grid item xs={ 12 } sm={ 4 } sx={ { textAlign: "center" } }>
+          <FormControl>
+            <FormLabel id="site-radio-buttons-label">Site</FormLabel>
+            <RadioGroup
+              aria-labelledby="site-radio-buttons-label"
+              defaultValue="Knolls"
+              name="site-buttons-group"
+            >
+              <FormControlLabel
+                value="Knolls"
+                control={ <Radio /> }
+                label="Knolls"
+                onChange={ (event) => setSite(event.target.value) }
+              />
+              <FormControlLabel
+                value="Bettis"
+                control={ <Radio /> }
+                label="Bettis"
+                onChange={ (event) => setSite(event.target.value) }
+              />
+            </RadioGroup>
+          </FormControl>
+        </Grid>
+        <Grid item xs={ 12 } sm={ 4 }>
+          <StatCard title="Total allocation" stat={ `${data.allocation} GB` } />
+        </Grid>
+        <Grid item xs={ 12 } sm={ 4 }>
+          <StatCard title="Last updated" stat={ data.last_update } />
+        </Grid>
+        <Grid item xs={ 12 }>
+          <div className="ag-theme-alpine" style={ { height: 500 } }>
+            <AgGridReact
+              rowData={ rows }
+              columnDefs={ columnDefs }
+              defaultColDef={ defaultColDef }
             />
-            <FormControlLabel
-              value="Bettis"
-              control={ <Radio /> }
-              label="Bettis"
-              sx={ { marginLeft: "25px" } }
-              onChange={ (event) => setSite(event.target.value) }
-            />
-          </RadioGroup>
-        </FormControl>
-      </div>
-      <div className={ hogStyles.output }>
-        <div className={ hogStyles.info }>
-          <p>
-            <b>Site: </b>
-            {data.site}
-          </p>
-          <p>
-            <b>Total Allocation (GB): </b>
-            {data.allocation}
-          </p>
-          <p>
-            <b>Last Updated: </b>
-            {data.last_update}
-          </p>
-        </div>
-        <div className={ hogStyles.table }>
-          <Box sx={ { height: 400 } }>
-            <DataGrid rows={ rows } columns={ columns } disableSelectionOnClick />
-          </Box>
-        </div>
-        <div ref={ ref } className={ hogStyles.plot }>
-          <Plot data={ plotData } layout={ plotLayout } />
-        </div>
-      </div>
+          </div>
+        </Grid>
+        <Grid item xs={ 12 }>
+          <div ref={ ref } className={ hogStyles.plot }>
+            <Plot data={ plotData } layout={ plotLayout } />
+          </div>
+        </Grid>
+      </Grid>
     </div>
   );
 }
