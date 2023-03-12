@@ -3,99 +3,15 @@ import { post, socketIO } from "utils/requests";
 import { formatBytes, addCommaToNumber } from "utils/utilities";
 import Plot from "react-plotly.js";
 import { useResizeDetector } from "react-resize-detector";
-import { Box, Slider, Grid, Typography } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-import { v4 as uuid } from "uuid";
+import { Box, Grid } from "@mui/material";
 import Header from "components/containers/Header";
 import RunButton from "components/buttons/RunButton";
 import DragDropTextField from "components/containers/DragDropTextField";
+import StatCard from "components/containers/StatCard";
+import { AgGridReact } from "ag-grid-react";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
 import styles from "components/App.module.scss";
-import { number } from "prop-types";
-
-const marks = [
-  {
-    label: "-1",
-    value: -1
-  },
-  {
-    label: "2",
-    value: 2
-  },
-  {
-    label: "3",
-    value: 3
-  },
-  {
-    label: "4",
-    value: 4
-  },
-  {
-    label: "5",
-    value: 5
-  },
-  {
-    label: "6",
-    value: 6
-  },
-  {
-    label: "7",
-    value: 7
-  },
-  {
-    label: "8",
-    value: 8
-  }
-];
-
-const columns = [
-  {
-    field: "extension",
-    headerName: "Extension",
-    flex: 1,
-    minWidth: 125
-  },
-  {
-    field: "bytes",
-    type: number,
-    headerName: "Bytes",
-    valueFormatter: (params) => {
-      if (params.value == null) {
-        return "";
-      }
-
-      const formattedValue = formatBytes(params.value);
-
-      return `${formattedValue}`;
-    }
-  },
-  {
-    field: "perc_bytes",
-    type: number,
-    headerName: "% Bytes",
-    valueFormatter: (params) => {
-      if (params.value == null) {
-        return "";
-      }
-      return `${params.value}%`;
-    }
-  },
-  {
-    field: "count",
-    type: number,
-    headerName: "Files"
-  },
-  {
-    field: "perc_count",
-    type: number,
-    headerName: "% Files",
-    valueFormatter: (params) => {
-      if (params.value == null) {
-        return "";
-      }
-      return `${params.value}%`;
-    }
-  }
-];
 
 export default function SpaceUtilization() {
   const { width, height, ref } = useResizeDetector();
@@ -107,8 +23,49 @@ export default function SpaceUtilization() {
     fileCount: 0,
     directoryCount: 0
   });
-  const [depth, setDepth] = React.useState(2);
+  const [depth] = React.useState(-1);
   const [active, setActive] = React.useState(false);
+
+  const [columnDefs] = React.useState([
+    {
+      field: "extension",
+      headerName: "Extension"
+    },
+    {
+      field: "bytes",
+      headerName: "Bytes",
+      valueFormatter: (params) => {
+        if (params.value == null) {
+          return "";
+        }
+        const formattedValue = formatBytes(params.value);
+        return `${formattedValue}`;
+      }
+    },
+    {
+      field: "perc_bytes",
+      headerName: "% Bytes",
+      valueFormatter: (params) => (`${params.value}%`)
+    },
+    {
+      field: "count",
+      headerName: "Files"
+    },
+    {
+      field: "perc_count",
+      headerName: "% Files",
+      valueFormatter: (params) => (`${params.value}%`)
+    }
+  ]);
+
+  const defaultColDef = React.useMemo(() => {
+    return {
+      flex: 1,
+      minWidth: 100,
+      sortable: true,
+      resizable: true
+    };
+  }, []);
 
   const [connected, setConnected] = React.useState(false);
 
@@ -140,7 +97,7 @@ export default function SpaceUtilization() {
 
   const plotLayout = {
     width,
-    height: "500px",
+    height: 500,
     margin: {
       t: "25",
       r: "25",
@@ -152,11 +109,6 @@ export default function SpaceUtilization() {
   const handlePlotData = (response) => {
     const dir = response.directory;
     const ext = response.extensions;
-    // const stat = {
-    //   ...response.stats,
-    //   "total_size": formatBytes(response.stats.total_size)
-    // };
-    // setStats(stat);
 
     const formattedBytes = dir.values.map((value) =>
       formatBytes(value));
@@ -181,11 +133,7 @@ export default function SpaceUtilization() {
 
     setData(newData);
 
-    const newExtensions = ext.map((row) => {
-      const uniqueId = uuid();
-      return { ...row, id: uniqueId };
-    });
-    setExtensionData(newExtensions);
+    setExtensionData(ext);
 
     setActive(false);
   };
@@ -202,12 +150,6 @@ export default function SpaceUtilization() {
     );
   };
 
-  React.useEffect(() => {
-    const [prevObject] = data;
-    const prevData = { ...prevObject, maxdepth: depth };
-    setData([prevData]);
-  }, [depth]);
-
   return (
     <div className={ styles["route-body"] }>
       <Header
@@ -215,54 +157,34 @@ export default function SpaceUtilization() {
         description="Figure out how much space your taking up."
       />
       <DragDropTextField item={ directory } setItem={ setDirectory } />
-      <Box sx={ { paddingBottom: "5%" } }>
-        <Grid container spacing={ 6 } alignItems="center">
-          <Grid item xs={ 3 }>
+      <Grid container spacing={ 2 }>
+        <Grid item xs={ 12 } sm={ 6 } md={ 4 } sx={ { margin: "auto" } }>
+          <Box sx={ { margin: "1rem" } }>
             <RunButton active={ active } handleClick={ handleButtonClick } />
-          </Grid>
-          <Grid item xs={ 5 }>
-            <Typography gutterBottom>Depth</Typography>
-            <Slider
-              aria-label="Depth"
-              value={ depth }
-              valueLabelDisplay="auto"
-              marks={ marks }
-              step={ null }
-              min={ -1 }
-              max={ 8 }
-              onChange={ (event) => setDepth(event.target.value) }
-            />
-          </Grid>
-          <Grid item xs={ 4 }>
-            <div style={ { display: "flex" } }>
-              <div style={ { marginRight: "5px", textAlign: "right" } }>
-                <p><b>Total size:</b></p>
-                <p><b>File count:</b></p>
-                <p><b>Directory count:</b></p>
-              </div>
-              <div>
-                <p>{stats.totalSize}</p>
-                <p>{stats.fileCount}</p>
-                <p>{stats.directoryCount}</p>
-              </div>
-            </div>
-          </Grid>
+          </Box>
+          <Box sx={ { margin: "1rem" } }>
+            <StatCard title="Total size" stat={ stats.totalSize } />
+          </Box>
+          <Box sx={ { margin: "1rem" } }>
+            <StatCard title="File count" stat={ stats.fileCount } />
+          </Box>
+          <Box sx={ { margin: "1rem" } }>
+            <StatCard title="Directory count" stat={ stats.directoryCount } />
+          </Box>
         </Grid>
-      </Box>
-      <Grid container spacing={ 2 } alignItems="center">
-        <Grid item xs={ 12 } sm={ 12 } md={ 6 }>
+        <Grid item xs={ 12 } sm={ 6 } md={ 8 }>
+          <div className="ag-theme-alpine" style={ { height: 500 } }>
+            <AgGridReact
+              rowData={ extensionData }
+              columnDefs={ columnDefs }
+              defaultColDef={ defaultColDef }
+            />
+          </div>
+        </Grid>
+        <Grid item xs={ 12 }>
           <div ref={ ref }>
             <Plot data={ data } layout={ plotLayout } />
           </div>
-        </Grid>
-        <Grid item xs={ 12 } sm={ 12 } md={ 6 }>
-          <Box sx={ { height: "500px" } }>
-            <DataGrid
-              rows={ extensionData }
-              columns={ columns }
-              disableSelectionOnClick
-            />
-          </Box>
         </Grid>
       </Grid>
     </div>
