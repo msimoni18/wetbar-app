@@ -15,7 +15,6 @@ import StatCard from "components/containers/StatCard";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import styles from "components/App.module.scss";
-import hogStyles from "./SpaceHogs.module.scss";
 
 // Electron inter process communcation and dialog
 const { ipcRenderer } = window.require("electron");
@@ -148,7 +147,7 @@ export default function SpaceHogs() {
           </div>
         </Grid>
         <Grid item xs={ 12 }>
-          <div ref={ ref } className={ hogStyles.plot }>
+          <div ref={ ref }>
             <Plot data={ plotData } layout={ plotLayout } />
           </div>
         </Grid>
