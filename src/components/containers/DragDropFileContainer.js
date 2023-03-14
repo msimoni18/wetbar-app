@@ -88,7 +88,7 @@ export default function DragDropFileContainer(props) {
           ) }
         >
           <ListItemAvatar>
-            <Avatar>
+            <Avatar sx={ { width: 35, height: 35 } }>
               <FolderIcon />
             </Avatar>
           </ListItemAvatar>

@@ -5,7 +5,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import SendIcon from "@mui/icons-material/Send";
 
 export default function RunButton(props) {
-  const { active, handleClick } = props;
+  const { active = false, handleClick } = props;
 
   return (
     <Box sx={ { display: "flex", alignItems: "center" } }>
