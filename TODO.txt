@@ -9,7 +9,7 @@ General:
 - Display version somewhere in main window and try to add to folder
   created when packaging app
 
-- Replace table with AG grid tables
+- Prevent switching routes if code is running
 
 DragDropFileContainer:
 - Add get request in parent to show existing files and get rid
@@ -24,6 +24,10 @@ SimpleFileContainer
 - Delete after updating DragDropFileContainer
 
 Plots:
+
+- Redo how plot containers are rendered. Do something similar to how
+  Series is rendered.
+
 - Make paper color the background color for the div so that there's
   no white space where the collapse button is
 
@@ -43,6 +47,35 @@ Plots:
   enable or disable secondary axes)
 
 - Add options for vertical and horizontal lines, shapes, annotations, etc
+
+SpaceUtilization:
+
+- Figure out why Plot component keeps rendering while code is running.
+  Some of the functions, like update(), log to console. Could be
+  because of the sockets updating the text. Probably need to use
+  useMemo or something to avoid the plot rendering when the sockets
+  update the text.
+
+- If treemap fails, use row grouping in a table to display folders
+  searched, and everything under it.
+
+- Consider adding checkbox to table that allow the user to
+  delete extensions after code has run so they don't have to
+  go to File Cleanup, find the files again, then delete them.
+  This would remove one extra step.
+
+- Add loading spinner to plot that appears after data has been loaded
+  to indicate the plot is rendering
+
+- Add folder name to hover text on plotly plot
+
+- Incorporate multiprocessing on child folders
+
+Cleanup:
+
+- Incorporate multiprocessing if more than one folder exists
+
+- Add option for deleting empty folders
 
 Backend:
 - Add list option to view contents of tar file
