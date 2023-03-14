@@ -13,6 +13,7 @@ from flask_socketio import emit
 from api.utils import Worker, str2bool, read_file, sort_nicely, winapi_path
 from api.archives import  create_archive, extract_files
 from api.utilization import DirectorySize
+from api.cleanup import find_files_and_delete, delete_files
 from entry import app, app_config, socketio
 
 
@@ -322,55 +323,27 @@ def delete_loaded_data():
 @app.route('/cleanup', methods=['POST'])
 def cleanup():
     if request.method == 'POST':
-        dry_run = request.json['dry_run']
+        option = request.json['option']
+        folders = [folder['path'] for folder in request.json['folders']]
+        files = request.json['files']
+        extensions = [extension['file'] for extension in request.json['extensions']]
 
-        folders = []
-        for folder in request.json['folders']:
-            folders.append(folder['path'])
+        if option == "dryRun":
+            files = find_files_and_delete(
+                folders=folders,
+                extensions=extensions,
+                dry_run=True
+                )
+        elif option == "deleteAfterDryRun":
+            delete_files(files)
+        elif option == "deleteNoDryRun":
+            files = find_files_and_delete(
+                folders=folders,
+                extensions=extensions,
+                dry_run=False
+                )
 
-        extensions = []
-        for extension in request.json['extensions']:
-            if extension['checked']:
-                extensions.append(extension['file'])
-
-        dirs = 0
-        files = collections.defaultdict(int)
-
-        # Start timer.
-        t0 = time.time()
-
-        for folder in folders:
-            for i, (dirpath, dirnames, filenames) in enumerate(os.walk(folder), 1):
-                dirs += 1
-
-                if filenames:
-                    for filename in filenames:
-                        fpath = os.path.join(dirpath, filename)
-                        if any(fnmatch.fnmatch(fpath, ext) for ext in extensions) and fpath not in files:
-                            try:
-                                files[fpath] = os.path.getsize(fpath)
-                            except FileNotFoundError:
-                                fpath = winapi_path(fpath)
-                                files[fpath] = os.path.getsize(fpath)
-
-                            # Skip removing files if dry run checkbox is checked
-                            if not dry_run:
-                                try:
-                                    Path(fpath).unlink()
-                                except FileNotFoundError:
-                                    pass
-
-                t1 = time.time()
-                hours, minutes, seconds = str(datetime.timedelta(seconds=(t1-t0))).split(':')
-
-                socketio.emit("cleanup", {
-                    'directory': dirs,
-                    'size': sum(files.values()),
-                    'files': len(files),
-                    'time': f'{hours}:{minutes}:{round(float(seconds), 1)}'
-                    })
-
-        return jsonify({'files': sort_nicely(list(files.keys()))})
+        return jsonify({'files': files})
 
 
 #### Test function for socketio
