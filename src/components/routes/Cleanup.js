@@ -5,17 +5,26 @@ import { post } from "utils/requests";
 import { formatBytes } from "utils/utilities";
 import {
   Box,
-  Button,
-  FormGroup,
+  FormControl,
   FormControlLabel,
-  Checkbox
+  FormLabel,
+  Grid,
+  IconButton,
+  Radio,
+  RadioGroup,
+  Tooltip,
+  Typography
 } from "@mui/material";
-import { DataGrid, GridActionsCellItem } from "@mui/x-data-grid";
-import DeleteIcon from "@mui/icons-material/Delete";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 import Header from "components/containers/Header";
 import DragDropFileContainer from "components/containers/DragDropFileContainer";
 import ListContainer from "components/containers/ListContainer";
 import RunButton from "components/buttons/RunButton";
+import DeleteTableRow from "components/buttons/DeleteTableRow";
+import StatCard from "components/containers/StatCard";
+import { AgGridReact } from "ag-grid-react";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
 import styles from "components/App.module.scss";
 
 // Electron Inter Process Communication and dialog
@@ -24,32 +33,17 @@ const { ipcRenderer } = window.require("electron");
 // Dynamically generated TCP (open) port between 3000-3999
 const port = ipcRenderer.sendSync("get-port-number");
 
-const defaultTableData = [
-  { id: uuid(), file: "*.taskinfo", checked: true },
-  { id: uuid(), file: "*.tasklog", checked: true },
-  { id: uuid(), file: "*.screen", checked: true },
-  { id: uuid(), file: "*CARPET*.h5", checked: false },
-  { id: uuid(), file: "*PCO*.h5", checked: false },
-  { id: uuid(), file: "*SS_Plots*.xlsx", checked: false },
-  { id: uuid(), file: "*SS_Plots*.png", checked: false },
-  { id: uuid(), file: "*TR_DPR_Plots*.xlsx", checked: false },
-  { id: uuid(), file: "*TR_DPR_Plots*.png", checked: false }
-];
-
 export default function Cleanup() {
   const [items, setItems] = React.useState([]);
-  const [dryRun, setDryRun] = React.useState(true);
+  const [runOption, setRunOption] = React.useState("dryRun");
+  const [filesToDelete, setFilesToDelete] = React.useState([]);
+
   const [directoryCount, setDirectoryCount] = React.useState(0);
   const [fileCount, setFileCount] = React.useState(0);
   const [spaceReduction, setSpaceReduction] = React.useState("0");
   const [totalTime, setTotalTime] = React.useState(0);
-  const [deleteExistingFiles, setDeleteExistingFiles] = React.useState(false);
-  const [tableRows, setTableRows] = React.useState(defaultTableData);
-  const [selectionModel, setSelectionModel] = React.useState(
-    () => tableRows.filter((row) => row.checked === true).map((r) => r.id)
-    // tableRows.map((row) => row.id)
-  );
-  const [filesToDelete, setFilesToDelete] = React.useState([]);
+
+  const [active, setActive] = React.useState(false);
 
   const [connected, setConnected] = React.useState(false);
 
@@ -88,73 +82,83 @@ export default function Cleanup() {
     }
   }, []);
 
-  const deleteRow = React.useCallback(
-    (id) => () => {
-      setTimeout(() => {
-        setTableRows((prevRows) => prevRows.filter((row) => row.id !== id));
-      });
-    },
-    []
-  );
+  const gridRef = React.useRef();
+  // const containerStyle = React.useMemo(() => ({ width: '100%', height: '100%' }), []);
+  const gridStyle = React.useMemo(() => ({ height: 400 }), []);
+  const [rowData] = React.useState([
+    { id: uuid(), file: "*.taskinfo" },
+    { id: uuid(), file: "*.tasklog" },
+    { id: uuid(), file: "*.screen" },
+    { id: uuid(), file: "*CARPET*.h5" },
+    { id: uuid(), file: "*PCO*.h5" },
+    { id: uuid(), file: "*SS_Plots*.xlsx" },
+    { id: uuid(), file: "*SS_Plots*.png" },
+    { id: uuid(), file: "*TR_DPR_Plots*.xlsx" },
+    { id: uuid(), file: "*TR_DPR_Plots*.png" }
+  ]);
 
-  const columns = [
+  const [columnDefs] = React.useState([
+    {
+      field: "checkbox",
+      headerName: "",
+      headerCheckboxSelection: true,
+      checkboxSelection: true,
+      pinned: true,
+      maxWidth: 50
+    },
+    { field: "id", hide: true },
     {
       field: "file",
       headerName: "File",
-      editable: true,
-      flex: 1
+      editable: true
     },
     {
-      field: "actions",
+      field: "delete",
       headerName: "Delete",
-      type: "actions",
-      width: 80,
-      getActions: (params) => [
-        <GridActionsCellItem
-          icon={ <DeleteIcon /> }
-          label="Delete"
-          onClick={ deleteRow(params.id) }
-        />
-      ]
+      maxWidth: 80,
+      cellRenderer: DeleteTableRow
     }
-  ];
+  ]);
+
+  const defaultColDef = React.useMemo(() => {
+    return {
+      flex: 1,
+      minWidth: 100,
+      sortable: true,
+      resizable: true
+    };
+  });
 
   const addRow = () => {
-    const newRow = { id: uuid(), file: "", checked: false };
-    setTableRows((prevRows) => [...prevRows, newRow]);
-  };
-
-  React.useEffect(() => {
-    setTableRows((prevRows) =>
-      prevRows.map((row) =>
-        (selectionModel.includes(row.id)
-          ? { ...row, checked: true }
-          : { ...row, checked: false })));
-  }, [selectionModel]);
-
-  const commitCellEdit = (props) => {
-    const { field, id, value } = props;
-    setTableRows((prevRows) =>
-      prevRows.map((row) => (row.id === id ? { ...row, [field]: value } : row)));
+    gridRef.current.api.applyTransaction({ add: [{ id: uuid(), file: "" }] });
   };
 
   const handleResponse = (response) => {
     setFilesToDelete(response.files);
+    setActive(false);
   };
 
   const handleClick = () => {
-    const checkedRows = tableRows.filter((row) => row.checked === true);
-    setFilesToDelete([]);
-    post(
-      JSON.stringify({
-        folders: items,
-        extensions: checkedRows,
-        dry_run: dryRun
-      }),
-      "cleanup",
-      (response) => handleResponse(response),
-      (error) => console.error(error)
-    );
+    const selectedRows = gridRef.current.api.getSelectedRows();
+
+    if ((runOption === "dryRun" || runOption === "deleteNoDryRun") && (items.length === 0 || selectedRows.length === 0)) {
+      alert("Folders must be provided and rows must be checked in the table before cleaning up files.");
+    } else if (runOption === "deleteAfterDryRun" && filesToDelete.length === 0) {
+      alert("No files were found during the previous dry run.");
+    } else {
+      setActive(true);
+      post(
+        JSON.stringify({
+          option: runOption,
+          folders: items,
+          files: filesToDelete,
+          extensions: selectedRows
+        }),
+        "cleanup",
+        (response) => handleResponse(response),
+        (error) => console.error(error)
+      );
+    }
   };
 
   return (
@@ -163,73 +167,75 @@ export default function Cleanup() {
         heading="Cleanup"
         description="Easily delete unwanted files to clear shared space for your coworkers."
       />
-      <DragDropFileContainer files={ items } setFiles={ setItems } />
-      <Box
-        sx={ {
-          display: "flex",
-          border: "1px solid black",
-          width: "100%"
-        } }
-      >
-        <Box sx={ { width: "50%" } }>
-          <FormControlLabel
-            control={ (
-              <Checkbox
-                checked={ dryRun }
-                onChange={ () => setDryRun(!dryRun) }
-                inputProps={ { "aria-label": "controlled" } }
+      <Grid container spacing={ 2 }>
+        <Grid item xs={ 12 }>
+          <DragDropFileContainer files={ items } setFiles={ setItems } />
+        </Grid>
+        <Grid item xs={ 12 } sm={ 6 }>
+          <StatCard title="Directories searched" stat={ directoryCount } />
+          <StatCard title="Files deleted" stat={ fileCount } />
+          <StatCard title="Total space reduction" stat={ spaceReduction } />
+          <StatCard title="Time elapsed (H:M:S)" stat={ totalTime } />
+        </Grid>
+        <Grid item xs={ 12 } sm={ 6 }>
+          <Box>
+            <div className="ag-theme-alpine" style={ gridStyle }>
+              <AgGridReact
+                ref={ gridRef }
+                rowData={ rowData }
+                columnDefs={ columnDefs }
+                defaultColDef={ defaultColDef }
+                rowSelection="multiple"
+                suppressRowClickSelection
+                animateRows
               />
-            ) }
-            label="Dry Run"
-          />
-          <FormGroup>
-            <FormControlLabel
-              control={ (
-                <Checkbox
-                  checked={ deleteExistingFiles }
-                  onChange={ () => setDeleteExistingFiles(!deleteExistingFiles) }
-                  inputProps={ { "aria-label": "controlled" } }
+            </div>
+            <Tooltip title="Add new row" placement="right">
+              <IconButton onClick={ addRow }>
+                <AddCircleIcon />
+              </IconButton>
+            </Tooltip>
+          </Box>
+        </Grid>
+        <Grid item xs={ 12 }>
+          <Box sx={ { display: "flex", alignItems: "center", justifyContent: "space-around" } }>
+            <FormControl>
+              <FormLabel id="options-group-label">Options</FormLabel>
+              <RadioGroup
+                aria-labelledby="options-group-label"
+                value={ runOption }
+                name="options-group"
+              >
+                <FormControlLabel
+                  value="dryRun"
+                  control={ <Radio /> }
+                  label="Dry run"
+                  onChange={ (event) => setRunOption(event.target.value) }
                 />
-              ) }
-              label="Delete files found during dry run"
-            />
-          </FormGroup>
-          <RunButton handleClick={ handleClick } />
-        </Box>
-        <Box sx={ { width: "50%" } }>
-          <Button variant="contained" onClick={ addRow }>
-            Add row
-          </Button>
-          <div style={ { height: 400 } }>
-            <DataGrid
-              rows={ tableRows }
-              columns={ columns }
-              checkboxSelection
-              disableSelectionOnClick
-              onCellEditCommit={ commitCellEdit }
-              selectionModel={ selectionModel }
-              onSelectionModelChange={ setSelectionModel }
-            />
-          </div>
-        </Box>
-      </Box>
-      <Box
-        sx={ {
-          display: "flex",
-          justifyContent: "space-around",
-          marginTop: "2%",
-          marginBottom: "2%",
-          padding: "2%",
-          border: "1px solid black"
-        } }
-      >
-        <p># of directories searched: {directoryCount}</p>
-        <p># of files deleted: {fileCount}</p>
-        <p>Total space reduction: {spaceReduction}</p>
-        <p>Time elapsed (H:M:S): {totalTime}</p>
-      </Box>
-      <p>Files to be deleted:</p>
-      <ListContainer files={ filesToDelete } />
+                <FormControlLabel
+                  value="deleteAfterDryRun"
+                  control={ <Radio /> }
+                  label="Delete files found after dry run"
+                  onChange={ (event) => setRunOption(event.target.value) }
+                />
+                <FormControlLabel
+                  value="deleteNoDryRun"
+                  control={ <Radio /> }
+                  label="Delete files, no dry run"
+                  onChange={ (event) => setRunOption(event.target.value) }
+                />
+              </RadioGroup>
+            </FormControl>
+            <RunButton active={ active } handleClick={ handleClick } />
+          </Box>
+        </Grid>
+        <Grid item xs={ 12 }>
+          {runOption === "dryRun"
+            ? <Typography>Files found after dry run:</Typography>
+            : <Typography>Files deleted:</Typography>}
+          <ListContainer files={ filesToDelete } />
+        </Grid>
+      </Grid>
     </div>
   );
 }
