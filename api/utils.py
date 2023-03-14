@@ -112,7 +112,7 @@ def winapi_path(dos_path, encoding=None):
 
     path = os.path.abspath(dos_path)
 
-    if platform != 'window':
+    if platform != 'win32':
         return path
 
     if path.startswith(u'\\\\'):
