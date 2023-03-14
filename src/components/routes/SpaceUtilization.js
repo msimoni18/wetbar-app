@@ -26,6 +26,7 @@ export default function SpaceUtilization() {
   const [depth] = React.useState(-1);
   const [active, setActive] = React.useState(false);
 
+  const gridRef = React.useRef();
   const [columnDefs] = React.useState([
     {
       field: "extension",
@@ -158,23 +159,16 @@ export default function SpaceUtilization() {
       />
       <DragDropTextField item={ directory } setItem={ setDirectory } />
       <Grid container spacing={ 2 }>
-        <Grid item xs={ 12 } sm={ 6 } md={ 4 } sx={ { margin: "auto" } }>
-          <Box sx={ { margin: "1rem" } }>
-            <RunButton active={ active } handleClick={ handleButtonClick } />
-          </Box>
-          <Box sx={ { margin: "1rem" } }>
-            <StatCard title="Total size" stat={ stats.totalSize } />
-          </Box>
-          <Box sx={ { margin: "1rem" } }>
-            <StatCard title="File count" stat={ stats.fileCount } />
-          </Box>
-          <Box sx={ { margin: "1rem" } }>
-            <StatCard title="Directory count" stat={ stats.directoryCount } />
-          </Box>
+        <Grid item xs={ 12 } sm={ 6 } md={ 4 }>
+          <RunButton active={ active } handleClick={ handleButtonClick } />
+          <StatCard title="Total size" stat={ stats.totalSize } />
+          <StatCard title="File count" stat={ stats.fileCount } />
+          <StatCard title="Directory count" stat={ stats.directoryCount } />
         </Grid>
         <Grid item xs={ 12 } sm={ 6 } md={ 8 }>
           <div className="ag-theme-alpine" style={ { height: 500 } }>
             <AgGridReact
+              ref={ gridRef }
               rowData={ extensionData }
               columnDefs={ columnDefs }
               defaultColDef={ defaultColDef }
