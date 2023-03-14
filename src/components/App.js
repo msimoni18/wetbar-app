@@ -27,7 +27,6 @@ export default function App() {
             <Route path="/archive" element={ <Archive /> } />
             <Route path="/utilization" element={ <SpaceUtilization /> } />
             <Route path="/plots" element={ <Plots /> } />
-            {/* <Route path="/" element={ <Plots /> } /> */}
             <Route path="/flamingo" element={ <Flamingo /> } />
             <Route path="/settings" element={ <Settings /> } />
             <Route path="/test" element={ <Test /> } />
