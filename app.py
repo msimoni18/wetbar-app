@@ -145,7 +145,7 @@ def archive_files():
             output_directory = request.json['output_directory']
 
             if request.json['extract_option'] == 'files':
-                search_criteria = request.json['search_criteria'].split('\n')
+                search_criteria = request.json['search_criteria']
             else:
                 search_criteria = None
 
