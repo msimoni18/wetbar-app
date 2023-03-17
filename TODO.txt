@@ -17,9 +17,6 @@ Plots:
 
 - Confirm loading spinner stops if error occurs when reading files
 
-- Redo how plot containers are rendered. Do something similar to how
-  Series is rendered.
-
 - Make paper color the background color for the div so that there's
   no white space where the collapse button is
 

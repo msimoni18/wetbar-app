@@ -99,19 +99,13 @@ export default function Plots() {
 
   const deletePlot = React.useCallback(
     (id) => () => {
-      setPlotList((prevRows) => prevRows.filter((row) => row.props.plotId !== id));
+      setPlotList((prevRows) => prevRows.filter((row) => row !== id));
     }, []
   );
 
   const handleAddNewPlot = () => {
     const uniqueId = uuid();
-    setPlotList(plotList.concat(
-      <PlotContainer
-        key={ uniqueId }
-        plotId={ uniqueId }
-        handleDelete={ deletePlot }
-      />
-    ));
+    setPlotList((prevItems) => [...prevItems, uniqueId]);
   };
 
   const actions = [
@@ -282,7 +276,13 @@ export default function Plots() {
           </Box>
         </DialogActions>
       </Dialog>
-      {plotList}
+      {plotList.map((item) => (
+        <PlotContainer
+          key={ item }
+          plotId={ item }
+          handleDelete={ deletePlot }
+        />
+      ))}
     </div>
   );
 }

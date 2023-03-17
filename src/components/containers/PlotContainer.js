@@ -51,7 +51,7 @@ export default function PlotContainer(props) {
 
   React.useEffect(() => {
     get(
-      "get-loaded-data",
+      "load-files",
       (response) => setLoadedData(response),
       (error) => console.error(error)
     );
@@ -81,35 +81,27 @@ export default function PlotContainer(props) {
     setSeries((prevItems) => [...prevItems, baseSeries]);
   };
 
-  React.useEffect(() => {
-    console.log("series:");
-    series.forEach((row) => {
-      console.log(row);
-    });
-  }, [series]);
-
   const [plotData, setPlotData] = React.useState([]);
 
   const updatePlot = () => {
-    // const cellData = []
-    // series.forEach((row) => {
-    //   const cells = {
-    //     file: row.file,
-    //     x: row.x,
-    //     y: row.y,
-    //     name: row.name,
-    //     mode: row.mode
-    //   };
-    //   cellData.push(cells);
-    // });
+    const cellData = [];
+    series.forEach((row) => {
+      const cells = {
+        file: row.file,
+        x: row.x,
+        y: row.y,
+        name: row.name,
+        mode: row.mode
+      };
+      cellData.push(cells);
+    });
 
-    // post(
-    //   JSON.stringify(cellData),
-    //   "get-plot-data",
-    //   (response) => setPlotData(response),
-    //   (response) => console.error(response)
-    // );
-
+    post(
+      JSON.stringify(cellData),
+      "get-plot-data",
+      (response) => setPlotData(response),
+      (response) => console.error(response)
+    );
   };
 
   // Layout
@@ -176,7 +168,7 @@ export default function PlotContainer(props) {
         ref={ ref }
         className={ isExpanded ? styles["plot-container-left"] : styles["plot-container-left-expanded"] }
       >
-        <Plot layout={ layout } />
+        <Plot data={ plotData } layout={ layout } />
         <button
           type="button"
           className={ styles["plot-container-handle"] }
@@ -363,11 +355,23 @@ export default function PlotContainer(props) {
             <Box sx={ formatItemStyle }>
               <Typography>Colors</Typography>
               <Typography>Font</Typography>
-              <ColorSelector initialColor={ initialColors.font } color={ fontColor } setColor={ setFontColor } />
+              <ColorSelector
+                initialColor={ initialColors.font }
+                color={ fontColor }
+                setColor={ setFontColor }
+              />
               <Typography>Paper</Typography>
-              <ColorSelector initialColor={ initialColors.plotBackground } color={ paperBgcolor } setColor={ setPaperBgcolor } />
+              <ColorSelector
+                initialColor={ initialColors.plotBackground }
+                color={ paperBgcolor }
+                setColor={ setPaperBgcolor }
+              />
               <Typography>Plot</Typography>
-              <ColorSelector initialColor={ initialColors.plotBackground } color={ plotBgcolor } setColor={ setPlotBgcolor } />
+              <ColorSelector
+                initialColor={ initialColors.plotBackground }
+                color={ plotBgcolor }
+                setColor={ setPlotBgcolor }
+              />
             </Box>
           </AccordionDetails>
         </Accordion>
