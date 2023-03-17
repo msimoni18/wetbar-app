@@ -21,10 +21,10 @@ const shutdown = (port) => {
 const openDocs = () => {
   const docsWindow = new BrowserWindow({
     // parent: browserWindows.mainWindow,
-    height: 300,
-    width: 500
+    height: 600,
+    width: 1000
   });
-  docsWindow.loadFile("docs/index.html");
+  docsWindow.loadFile("sphinx/build/html/index.html");
   docsWindow.show();
 };
 

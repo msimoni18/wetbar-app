@@ -1,7 +1,16 @@
 import * as React from "react";
+import { app } from "utils/services";
 import { MemoryRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { Box, Drawer, List, ListItem, ListItemButton, Tooltip } from "@mui/material";
+import {
+  Box,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  Tooltip
+} from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
+import ArticleIcon from "@mui/icons-material/Article";
 
 const drawerWidth = 60;
 
@@ -151,6 +160,19 @@ export default function Sidebar() {
               </ListItem>
             </Tooltip>
           </Link>
+          <Tooltip title="Docs" placement="right" arrow>
+            <ListItem disablePadding>
+              <ListItemButton
+                sx={ buttonStyle }
+                onClick={ app.docs }
+              >
+                <ArticleIcon />
+                {/* <span role="img" aria-label="documentation">
+                  📄
+                </span> */}
+              </ListItemButton>
+            </ListItem>
+          </Tooltip>
         </List>
       </Drawer>
     </Box>

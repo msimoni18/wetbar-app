@@ -1,7 +1,5 @@
 General:
-- Try opening new BrowserWindow
-  - Useful for storing docs and opening on button click
-  - Useful for "popping out" plot containers of main window
+- Try opening new BrowserWindow to "pop out" plot containers of main window
 
 - Add .db file to track who is using the wetbar and how many
   times they've used it.
@@ -11,9 +9,9 @@ General:
 
 - Prevent switching routes if code is running
 
-SimpleFileContainer
+Docs:
 
-- Add dense and full file path checkboxes
+- Update docs
 
 Plots:
 
@@ -72,6 +70,7 @@ Cleanup:
 - Add option for deleting empty folders
 
 Backend:
+
 - Add list option to view contents of tar file
 
 - Add sockets to emit progress (use flask-socketio package)
