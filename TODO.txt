@@ -11,19 +11,13 @@ General:
 
 - Prevent switching routes if code is running
 
-DragDropFileContainer:
-- Add get request in parent to show existing files and get rid
-  of SimpleFileContainer and option to view loaded files
-
-- Make icons smaller and color based on if file was loaded
-  successfully or not
-
-- Add delete icon that deletes loaded file from Backend
-
 SimpleFileContainer
-- Delete after updating DragDropFileContainer
+
+- Add dense and full file path checkboxes
 
 Plots:
+
+- Confirm loading spinner stops if error occurs when reading files
 
 - Redo how plot containers are rendered. Do something similar to how
   Series is rendered.

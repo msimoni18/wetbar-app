@@ -181,7 +181,7 @@ def archive_files():
     return jsonify('Archiving complete.')
 
 
-@app.route('/load-files', methods=['POST'])
+@app.route('/load-files', methods=['GET', 'POST'])
 def load_files():
     """
     POST Parameters
@@ -261,24 +261,18 @@ def load_files():
                 df = read_file(f, **kwargs)
                 data.DATA[f] = {'df': df.to_dict(orient='list'), 'parameters': df.columns.tolist()}
 
-        # Remove loaded data if files exist in loaded data, but not request
-        data.DATA = {f: data.DATA[f] for f in files}
-
-        files_and_parameters = [{'file': f, 'parameters': data.DATA[f]['parameters']} for f in data.DATA]
-
         result['status'] = True
         result['message'] = 'success'
-        result['data'] = files_and_parameters
+        result['data'] = [{
+            'file': f,
+            'parameters': data.DATA[f]['parameters']
+            } for f in sorted(data.DATA)
+        ]
 
-        # TODO: Confirm loading button stops loading if error occurs while
-        #       loading files.
         return jsonify(result)
 
-
-@app.route('/get-loaded-data')
-def get_loaded_data():
+    # GET request
     if data.DATA:
-
         new_data = [{
             'file': f,
             'parameters': data.DATA[f]['parameters']
@@ -315,7 +309,13 @@ def get_plot_data():
 @app.route('/delete-loaded-data', methods=['POST'])
 def delete_loaded_data():
     if request.method == 'POST':
-        data.DATA = {f: data.DATA[f] for f in request.json['paths']}
+        keep_files = []
+        for f in data.DATA:
+            if f != request.json:
+                keep_files.append(f)
+
+        data.DATA = {f: data.DATA[f] for f in keep_files}
+
         return jsonify(sorted(list(data.DATA.keys())))
 
 
