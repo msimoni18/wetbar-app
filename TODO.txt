@@ -32,8 +32,11 @@ Plots:
 
 - Add option to normalize plots to plot container
 
-- Add options for secondary (and more) x and y axis (include checkbox to
-  enable or disable secondary axes)
+- Add option to Series for chart type (bar, scatter, etc)
+
+- Add options for secondary x axis (mainly for bar/scatter overlay)
+
+- Add options for more than two x or y axes
 
 - Add options for vertical and horizontal lines, shapes, annotations, etc
 

@@ -301,7 +301,8 @@ def get_plot_data():
                 'y': data.DATA[row['file']]['df'][row['y']],
                 'name': row['name'],
                 'type': 'scatter',
-                'mode': row['mode']
+                'mode': row['mode'],
+                'yaxis': row['yaxis']
             })
         return jsonify(plot_data)
 

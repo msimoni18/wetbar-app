@@ -248,9 +248,6 @@ export default function Plots() {
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Button variant="contained" onClick={ handleCloseFileOptions }>
-            Cancel
-          </Button>
           <Box sx={ { m: 1, position: "relative" } }>
             <Button
               variant="contained"
@@ -274,6 +271,9 @@ export default function Plots() {
               />
             )}
           </Box>
+          <Button variant="contained" onClick={ handleCloseFileOptions }>
+            Close
+          </Button>
         </DialogActions>
       </Dialog>
       {plotList.map((item) => (

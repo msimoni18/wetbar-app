@@ -1,6 +1,9 @@
 import React from "react";
 import {
   Box,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
   IconButton,
   MenuItem,
   Select,
@@ -19,6 +22,7 @@ export default function Series(props) {
   const [y, setY] = React.useState(baseY || "");
   const [name, setName] = React.useState(baseName || "");
   const [mode, setMode] = React.useState(baseMode || "lines");
+  const [y2, setY2] = React.useState(false);
 
   React.useEffect(() => {
     const item = data.filter((row) => row.file === file);
@@ -66,6 +70,17 @@ export default function Series(props) {
     const newSeries = series.map((row) => (row.id === id ? { ...row, mode: newMode } : row));
     setSeries(newSeries);
   };
+
+  React.useEffect(() => {
+    if (y2) {
+      const newSeries = series.map((row) => (row.id === id ? { ...row, yaxis: "y2" } : row));
+      setSeries(newSeries);
+    } else if (!y2) {
+      const newSeries = series.map((row) => (row.id === id ? { ...row, yaxis: "y" } : row));
+      setSeries(newSeries);
+    }
+  }, [y2]);
+
 
   return (
     <Box>
@@ -128,11 +143,31 @@ export default function Series(props) {
         <MenuItem value="lines+markers">lines+markers</MenuItem>
         <MenuItem value="markers">markers</MenuItem>
       </Select>
-      <Tooltip title="Delete series" placement="right">
-        <IconButton onClick={ handleDelete(id) }>
-          <DeleteIcon />
-        </IconButton>
-      </Tooltip>
+      <FormGroup>
+        <FormControlLabel
+          control={ (
+            <Checkbox />
+          ) }
+          label="Enable secondary x-axis"
+          disabled
+        />
+        <FormControlLabel
+          control={ (
+            <Checkbox
+              checked={ y2 }
+              onChange={ (event) => setY2(event.target.checked) }
+            />
+          ) }
+          label="Enable secondary y-axis"
+        />
+      </FormGroup>
+      <Box sx={ { width: "100%", textAlign: "right" } }>
+        <Tooltip title="Delete series" placement="right">
+          <IconButton onClick={ handleDelete(id) }>
+            <DeleteIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
     </Box>
 
   );

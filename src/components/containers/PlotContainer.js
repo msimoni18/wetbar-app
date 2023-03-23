@@ -10,6 +10,7 @@ import {
   IconButton,
   MenuItem,
   Select,
+  Slider,
   TextField,
   Tooltip,
   Typography
@@ -41,8 +42,9 @@ const initialColors = {
 
 export default function PlotContainer(props) {
   const { plotId, handleDelete } = props;
-  const { width, height, ref } = useResizeDetector();
+  const { width, ref } = useResizeDetector();
   const [expanded, setExpanded] = React.useState("");
+  const [isExpanded, setIsExpanded] = React.useState(false);
   const [loadedData, setLoadedData] = React.useState([]);
 
   const handleExpandedChange = (panel) => (event, newExpanded) => {
@@ -75,7 +77,8 @@ export default function PlotContainer(props) {
       x: "",
       y: "",
       name: "",
-      mode: "lines"
+      mode: "lines",
+      yaxis: "y"
     };
 
     setSeries((prevItems) => [...prevItems, baseSeries]);
@@ -91,7 +94,8 @@ export default function PlotContainer(props) {
         x: row.x,
         y: row.y,
         name: row.name,
-        mode: row.mode
+        mode: row.mode,
+        yaxis: row.yaxis
       };
       cellData.push(cells);
     });
@@ -105,10 +109,16 @@ export default function PlotContainer(props) {
   };
 
   // Layout
+  const [height, setHeight] = React.useState(400);
+  const [xDomain, setXDomain] = React.useState([0, 1]);
   const [title, setTitle] = React.useState("");
+  const [fontSize, setFontSize] = React.useState(12);
   const [xLabel, setXLabel] = React.useState("");
   const [yLabel, setYLabel] = React.useState("");
-  const [legend, setLegend] = React.useState(true);
+  const [enableYAxis2, setEnableYAxis2] = React.useState(false);
+  const [yLabel2, setYLabel2] = React.useState("");
+  const [yLabel2Position, setYLabel2Position] = React.useState(1);
+  const [legend, setLegend] = React.useState(false);
   const [majorGridlineChecked, setMajorGridlineChecked] = React.useState(true);
   const [minorGridlineChecked, setMinorGridlineChecked] = React.useState(true);
   const [majorGridlineColor, setMajorGridlineColor] = React.useState(initialColors.majorGridline);
@@ -118,18 +128,24 @@ export default function PlotContainer(props) {
   const [fontColor, setFontColor] = React.useState(initialColors.font);
   const [paperBgcolor, setPaperBgcolor] = React.useState(initialColors.plotBackground);
   const [plotBgcolor, setPlotBgcolor] = React.useState(initialColors.plotBackground);
+  const [bottomMargin, setBottomMargin] = React.useState(80);
+  const [leftMargin, setLeftMargin] = React.useState(80);
+  const [topMargin, setTopMargin] = React.useState(80);
+  const [rightMargin, setRightMargin] = React.useState(80);
 
-  const layout = {
+  const [layout, setLayout] = React.useState({
     width: width - 20,
     height,
     font: {
-      color: rgbaToString(fontColor)
+      color: rgbaToString(fontColor),
+      size: fontSize
     },
     title: {
       text: title
     },
     xaxis: {
       title: xLabel,
+      domain: xDomain,
       gridcolor: rgbaToString(majorGridlineColor),
       griddash: majorLinestyle,
       gridwidth: 1,
@@ -156,14 +172,130 @@ export default function PlotContainer(props) {
     },
     showlegend: legend,
     paper_bgcolor: rgbaToString(paperBgcolor),
-    plot_bgcolor: rgbaToString(plotBgcolor)
-  };
+    plot_bgcolor: rgbaToString(plotBgcolor),
+    margin: {
+      b: bottomMargin,
+      l: leftMargin,
+      t: topMargin,
+      r: rightMargin
+    }
+  });
 
-  const [isExpanded, setIsExpanded] = React.useState(false);
+  React.useEffect(() => {
+    setLayout((prevLayout) => (
+      {
+        ...prevLayout,
+        width: width - 20,
+        height,
+        showlegend: legend,
+        paper_bgcolor: rgbaToString(paperBgcolor),
+        plot_bgcolor: rgbaToString(plotBgcolor)
+      }));
+  }, [width, height, legend, paperBgcolor, plotBgcolor]);
+
+  React.useEffect(() => {
+    setLayout((prevLayout) => (
+      {
+        ...prevLayout,
+        font: {
+          color: rgbaToString(fontColor),
+          size: fontSize
+        }
+      }));
+  }, [fontColor, fontSize]);
+
+  React.useEffect(() => {
+    setLayout((prevLayout) => (
+      {
+        ...prevLayout,
+        title: {
+          text: title
+        }
+      }));
+  }, [title]);
+
+  React.useEffect(() => {
+    setLayout((prevLayout) => (
+      {
+        ...prevLayout,
+        xaxis: {
+          title: xLabel,
+          domain: xDomain,
+          gridcolor: rgbaToString(majorGridlineColor),
+          griddash: majorLinestyle,
+          gridwidth: 1,
+          showgrid: majorGridlineChecked,
+          minor: {
+            gridcolor: rgbaToString(minorGridlineColor),
+            griddash: minorLinestyle,
+            gridwidth: 1,
+            showgrid: minorGridlineChecked
+          }
+        },
+        yaxis: {
+          title: yLabel,
+          gridcolor: rgbaToString(majorGridlineColor),
+          griddash: majorLinestyle,
+          gridwidth: 1,
+          showgrid: majorGridlineChecked,
+          minor: {
+            gridcolor: rgbaToString(minorGridlineColor),
+            griddash: minorLinestyle,
+            gridwidth: 1,
+            showgrid: minorGridlineChecked
+          }
+        }
+      }));
+  }, [
+    xLabel, yLabel, xDomain,
+    majorGridlineChecked, majorGridlineColor, majorLinestyle,
+    minorGridlineChecked, minorGridlineColor, minorLinestyle
+  ]);
+
+  React.useEffect(() => {
+    setLayout((prevLayout) => (
+      {
+        ...prevLayout,
+        margin: {
+          b: bottomMargin,
+          l: leftMargin,
+          t: topMargin,
+          r: rightMargin
+        }
+      }));
+  }, [bottomMargin, leftMargin, topMargin, rightMargin]);
+
+  React.useEffect(() => {
+    if (enableYAxis2) {
+      setLayout((prevLayout) => ({
+        ...prevLayout,
+        xaxis: {
+          ...prevLayout.xaxis
+        },
+        yaxis2: {
+          title: yLabel2,
+          showgrid: false,
+          minor: {
+            showgrid: false
+          },
+          anchor: "free",
+          overlaying: "y",
+          side: "right",
+          position: yLabel2Position
+        } }));
+    } else if (!enableYAxis2) {
+      setLayout((prevLayout) => ({
+        ...prevLayout,
+        xaxis: {
+          ...prevLayout.xaxis
+        },
+        yaxis2: {}
+      }));
+    }
+  }, [yLabel2, yLabel2Position, enableYAxis2]);
 
   return (
-
-    <div className={ styles["plot-container"] }>
+    <div className={ styles["plot-container"] } style={ { height } }>
       <div
         ref={ ref }
         className={ isExpanded ? styles["plot-container-left"] : styles["plot-container-left-expanded"] }
@@ -200,18 +332,20 @@ export default function PlotContainer(props) {
                 />
               </Box>
             ))}
-            <Tooltip title="Add new series" placement="left">
-              <IconButton onClick={ addNewSeries }>
-                <AddCircleIcon />
-              </IconButton>
-            </Tooltip>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={ updatePlot }
-            >
-              Update plot
-            </Button>
+            <Box sx={ { display: "flex", justifyContent: "space-evenly" } }>
+              <Tooltip title="Add new series" placement="left">
+                <IconButton onClick={ addNewSeries }>
+                  <AddCircleIcon />
+                </IconButton>
+              </Tooltip>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={ updatePlot }
+              >
+                Update plot
+              </Button>
+            </Box>
           </AccordionDetails>
         </Accordion>
         <Accordion expanded={ expanded === "labels" } onChange={ handleExpandedChange("labels") }>
@@ -257,6 +391,54 @@ export default function PlotContainer(props) {
                 value={ yLabel }
                 onChange={ (event) => setYLabel(event.target.value) }
               />
+            </Box>
+            <Box sx={ formatItemStyle }>
+              <FormControlLabel
+                control={ (
+                  <Checkbox
+                    checked={ enableYAxis2 }
+                    onChange={ (event) => setEnableYAxis2(event.target.checked) }
+                  />
+                ) }
+                label="Enable secondary y-axis"
+              />
+              {enableYAxis2
+              && (
+                <Box>
+                  <Typography>Text</Typography>
+                  <TextField
+                    disabled={ !enableYAxis2 }
+                    margin="dense"
+                    id="y-label2"
+                    type="input"
+                    variant="outlined"
+                    size="small"
+                    fullWidth
+                    value={ yLabel2 }
+                    onChange={ (event) => setYLabel2(event.target.value) }
+                  />
+                  <Typography>Position</Typography>
+                  <Slider
+                    value={ yLabel2Position }
+                    min={ 0 }
+                    max={ 1 }
+                    step={ 0.01 }
+                    getAriaLabel={ () => "ylabel-2-position-slider" }
+                    valueLabelDisplay="auto"
+                    onChange={ (event, newValue) => setYLabel2Position(newValue) }
+                  />
+                  <Typography>X-Axis Domain</Typography>
+                  <Slider
+                    value={ xDomain }
+                    min={ 0 }
+                    max={ 1 }
+                    step={ 0.01 }
+                    getAriaLabel={ () => "x-domain-slider" }
+                    valueLabelDisplay="auto"
+                    onChange={ (event, newValue) => setXDomain(newValue) }
+                  />
+                </Box>
+              )}
             </Box>
           </AccordionDetails>
         </Accordion>
@@ -347,11 +529,87 @@ export default function PlotContainer(props) {
             </Typography>
           </AccordionDetails>
         </Accordion>
+        <Accordion expanded={ expanded === "normalize" } onChange={ handleExpandedChange("normalize") }>
+          <AccordionSummary aria-controls="normalize-content" id="normalize-header">
+            <Typography>Normalize</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box sx={ formatItemStyle }>
+              <FormControlLabel
+                control={ (
+                  <Checkbox />
+                ) }
+                label="Enable"
+              />
+            </Box>
+          </AccordionDetails>
+        </Accordion>
         <Accordion expanded={ expanded === "chart" } onChange={ handleExpandedChange("chart") }>
           <AccordionSummary aria-controls="chart-content" id="chart-header">
             <Typography>Chart</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <Box sx={ formatItemStyle }>
+              <Typography>Height</Typography>
+              <Slider
+                value={ height }
+                min={ 200 }
+                max={ 800 }
+                aria-label="height-slider"
+                valueLabelDisplay="auto"
+                onChange={ (event, newValue) => setHeight(newValue) }
+              />
+            </Box>
+            <Box sx={ formatItemStyle }>
+              <Typography>Font Size</Typography>
+              <Slider
+                value={ fontSize }
+                min={ 8 }
+                max={ 32 }
+                aria-label="font-size-slider"
+                valueLabelDisplay="auto"
+                onChange={ (event, newValue) => setFontSize(newValue) }
+              />
+            </Box>
+            <Box sx={ formatItemStyle }>
+              <Typography>Margin</Typography>
+              <Typography>Top</Typography>
+              <Slider
+                value={ topMargin }
+                min={ 0 }
+                max={ 200 }
+                aria-label="top-margin-slider"
+                valueLabelDisplay="auto"
+                onChange={ (event, newValue) => setTopMargin(newValue) }
+              />
+              <Typography>Bottom</Typography>
+              <Slider
+                value={ bottomMargin }
+                min={ 0 }
+                max={ 200 }
+                aria-label="bottom-margin-slider"
+                valueLabelDisplay="auto"
+                onChange={ (event, newValue) => setBottomMargin(newValue) }
+              />
+              <Typography>Left</Typography>
+              <Slider
+                value={ leftMargin }
+                min={ 0 }
+                max={ 200 }
+                aria-label="left-margin-slider"
+                valueLabelDisplay="auto"
+                onChange={ (event, newValue) => setLeftMargin(newValue) }
+              />
+              <Typography>Right</Typography>
+              <Slider
+                value={ rightMargin }
+                min={ 0 }
+                max={ 200 }
+                aria-label="right-margin-slider"
+                valueLabelDisplay="auto"
+                onChange={ (event, newValue) => setRightMargin(newValue) }
+              />
+            </Box>
             <Box sx={ formatItemStyle }>
               <Typography>Colors</Typography>
               <Typography>Font</Typography>
@@ -373,6 +631,18 @@ export default function PlotContainer(props) {
                 setColor={ setPlotBgcolor }
               />
             </Box>
+          </AccordionDetails>
+        </Accordion>
+        <Accordion expanded={ expanded === "annotate" } onChange={ handleExpandedChange("annotate") }>
+          <AccordionSummary aria-controls="annotate-content" id="annotate-header">
+            <Typography>Annotate</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography>Vertical line options</Typography>
+            <Typography>Horizontal line options</Typography>
+            <Typography>Custom (diagonal) line options</Typography>
+            <Typography>Vertical rectangle options</Typography>
+            <Typography>Horizontal rectangle options</Typography>
           </AccordionDetails>
         </Accordion>
         <Accordion expanded={ expanded === "settings" } onChange={ handleExpandedChange("settings") }>
