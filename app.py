@@ -259,7 +259,8 @@ def load_files():
         for f in files:
             if f not in data.DATA:
                 df = read_file(f, **kwargs)
-                data.DATA[f] = {'df': df.to_dict(orient='list'), 'parameters': df.columns.tolist()}
+                # data.DATA[f] = {'df': df.to_dict(orient='list'), 'parameters': df.columns.tolist()}
+                data.DATA[f] = {'df': df, 'parameters': df.columns.tolist()}
 
         result['status'] = True
         result['message'] = 'success'
@@ -296,9 +297,21 @@ def get_plot_data():
     if request.method == 'POST':
         plot_data = []
         for row in request.json:
+            df = data.DATA[row['file']]['df']
+            x_data = df[row['x']]
+            y_data = df[row['y']]
+
+            # Normalize data if enabled
+            if row['normalize']['type']:
+                norm_data = df[row['normalize']['parameter']]
+                if row['normalize']['type'] == 'min':
+                    x_data = x_data - x_data[norm_data.idxmin()]
+                elif row['normalize']['type'] == 'max':
+                    x_data = x_data - x_data[norm_data.idxmax()]
+
             plot_data.append({
-                'x': data.DATA[row['file']]['df'][row['x']],
-                'y': data.DATA[row['file']]['df'][row['y']],
+                'x': x_data.tolist(),
+                'y': y_data.tolist(),
                 'name': row['name'],
                 'type': 'scatter',
                 'mode': row['mode'],

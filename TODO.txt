@@ -1,3 +1,25 @@
+NEXT UPDATES:
+
+- Add option to Series for chart type (bar, scatter, etc)
+
+- Express service feature
+
+- Right now, if new data is loaded, any existing plots will not be able to access
+  it. Instead of getting whatever data is loaded when a new plot is added to the page,
+  add a dependency to the useEffect() to detect when new data is loaded, so all existing
+  plots will have access to the data.
+
+- Add options for vertical and horizontal lines, shapes, annotations, etc
+
+- File Options: Add radio buttons for file select
+  and add presets for skiprows etc when different
+  files are selected. Show/hide additional options
+  that are applicable.
+
+- Add options for secondary x axis (mainly for bar/scatter overlay)
+
+- Add button to open dev tools on sidebar
+
 General:
 - Try opening new BrowserWindow to "pop out" plot containers of main window
 
@@ -25,20 +47,7 @@ Plots:
 - Limit the number of items that show in the X and Y parameter
   select components with scroll
 
-- Right now, if new data is loaded, any existing plots will not be able to access
-  it. Instead of getting whatever data is loaded when a new plot is added to the page,
-  add a dependency to the useEffect() to detect when new data is loaded, so all existing
-  plots will have access to the data.
-
-- Add option to normalize plots to plot container
-
-- Add option to Series for chart type (bar, scatter, etc)
-
-- Add options for secondary x axis (mainly for bar/scatter overlay)
-
 - Add options for more than two x or y axes
-
-- Add options for vertical and horizontal lines, shapes, annotations, etc
 
 SpaceUtilization:
 

@@ -271,7 +271,7 @@ export default function Plots() {
               />
             )}
           </Box>
-          <Button variant="contained" onClick={ handleCloseFileOptions }>
+          <Button variant="outlined" onClick={ handleCloseFileOptions }>
             Close
           </Button>
         </DialogActions>

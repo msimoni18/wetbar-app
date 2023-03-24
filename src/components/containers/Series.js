@@ -6,12 +6,16 @@ import {
   FormGroup,
   IconButton,
   MenuItem,
+  Radio,
+  RadioGroup,
   Select,
   TextField,
   Tooltip,
   Typography
 } from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { HtmlTooltip } from "./tooltips/HtmlTooltip";
 
 export default function Series(props) {
   const { id, baseFile, baseX, baseY, baseName, baseMode, handleDelete, data, series, setSeries } = props;
@@ -23,6 +27,10 @@ export default function Series(props) {
   const [name, setName] = React.useState(baseName || "");
   const [mode, setMode] = React.useState(baseMode || "lines");
   const [y2, setY2] = React.useState(false);
+  const [normalize, setNormalize] = React.useState(false);
+  const [normalizeType, setNormalizeType] = React.useState("min");
+  const [useNewNormalizeParameter, setUseNewNormalizeParameter] = React.useState(false);
+  const [normalizeParameter, setNormalizeParameter] = React.useState("");
 
   React.useEffect(() => {
     const item = data.filter((row) => row.file === file);
@@ -30,6 +38,9 @@ export default function Series(props) {
     setXAvailable(item[0]?.parameters);
     setYAvailable(item[0]?.parameters);
   }, [file]);
+
+  // TODO: Change map functions to forEach based on
+  // https://stackoverflow.com/questions/51519149/how-to-return-a-spread-operator-in-a-map-arrow-function-in-one-line
 
   const handleFileChange = (event) => {
     const newFile = event.target.value;
@@ -51,7 +62,22 @@ export default function Series(props) {
     const newY = event.target.value;
     setY(newY);
 
-    const newSeries = series.map((row) => (row.id === id ? { ...row, y: newY } : row));
+    let newSeries;
+    if (!useNewNormalizeParameter) {
+      setNormalizeParameter(newY);
+      newSeries = series.map((row) => (row.id === id
+        ? {
+          ...row,
+          y: newY,
+          normalize: {
+            ...row.normalize,
+            parameter: newY
+          }
+        } : row));
+    } else {
+      newSeries = series.map((row) => (row.id === id ? { ...row, y: newY } : row));
+    }
+
     setSeries(newSeries);
   };
 
@@ -81,6 +107,33 @@ export default function Series(props) {
     }
   }, [y2]);
 
+  React.useEffect(() => {
+    if (normalize) {
+      const newSeries = series.map((row) => (row.id === id
+        ? {
+          ...row,
+          normalize: {
+            ...row.normalize,
+            type: normalizeType,
+            parameter: normalizeParameter
+          } }
+        : row
+      ));
+      setSeries(newSeries);
+    } else if (!normalize) {
+      const newSeries = series.map((row) => (row.id === id
+        ? { ...row, normalize: { ...row.normalize, type: "", parameter: y } }
+        : row
+      ));
+      setSeries(newSeries);
+    }
+  }, [normalize, normalizeType, normalizeParameter, y]);
+
+  React.useEffect(() => {
+    if (!useNewNormalizeParameter) {
+      setNormalizeParameter(y);
+    }
+  }, [useNewNormalizeParameter]);
 
   return (
     <Box>
@@ -143,12 +196,13 @@ export default function Series(props) {
         <MenuItem value="lines+markers">lines+markers</MenuItem>
         <MenuItem value="markers">markers</MenuItem>
       </Select>
+      <Typography>Secondary Axis</Typography>
       <FormGroup>
         <FormControlLabel
           control={ (
             <Checkbox />
           ) }
-          label="Enable secondary x-axis"
+          label="Enable x-axis"
           disabled
         />
         <FormControlLabel
@@ -158,9 +212,71 @@ export default function Series(props) {
               onChange={ (event) => setY2(event.target.checked) }
             />
           ) }
-          label="Enable secondary y-axis"
+          label="Enable y-axis"
         />
       </FormGroup>
+      <Typography>Normalize</Typography>
+      <FormControlLabel
+        control={ (
+          <Checkbox
+            checked={ normalize }
+            onChange={ (event) => setNormalize(event.target.checked) }
+          />
+        ) }
+        label="Enable"
+      />
+      {normalize
+        && (
+          <Box>
+            <RadioGroup
+              aria-labelledby="demo-radio-buttons-group-label"
+              value={ normalizeType }
+              name="normalize-buttons-group"
+              onChange={ (event) => setNormalizeType(event.target.value) }
+              row
+            >
+              <FormControlLabel value="min" control={ <Radio /> } label="Min" />
+              <FormControlLabel value="max" control={ <Radio /> } label="Max" />
+              <FormControlLabel
+                disabled
+                value="cb_times"
+                control={ <Radio /> }
+                label={ (
+                  <Box sx={ { display: "flex", alignItems: "center", gap: 2 } }>
+                    <Typography>Use CutbackTimes</Typography>
+                    <HtmlTooltip
+                      title="Use the parameter CutbackTimes if it exists in the selected file"
+                      placement="top"
+                    >
+                      <InfoIcon fontSize="small" color="action" />
+                    </HtmlTooltip>
+                  </Box>
+                ) }
+              />
+            </RadioGroup>
+            <FormControlLabel
+              control={ (
+                <Checkbox
+                  checked={ useNewNormalizeParameter }
+                  onChange={ (event) => setUseNewNormalizeParameter(event.target.checked) }
+                />
+              ) }
+              label="Use different parameter"
+            />
+            <Select
+              id="normalize-select"
+              size="small"
+              fullWidth
+              value={ normalizeParameter }
+              onChange={ (event) => setNormalizeParameter(event.target.value) }
+              disabled={ !useNewNormalizeParameter }
+            >
+              {yAvailable?.map((item) => (
+                <MenuItem key={ item } value={ item }>{item}</MenuItem>
+              ))}
+            </Select>
+          </Box>
+        )}
       <Box sx={ { width: "100%", textAlign: "right" } }>
         <Tooltip title="Delete series" placement="right">
           <IconButton onClick={ handleDelete(id) }>

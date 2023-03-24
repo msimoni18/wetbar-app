@@ -78,7 +78,11 @@ export default function PlotContainer(props) {
       y: "",
       name: "",
       mode: "lines",
-      yaxis: "y"
+      yaxis: "y",
+      normalize: {
+        type: "",
+        parameter: ""
+      }
     };
 
     setSeries((prevItems) => [...prevItems, baseSeries]);
@@ -95,7 +99,8 @@ export default function PlotContainer(props) {
         y: row.y,
         name: row.name,
         mode: row.mode,
-        yaxis: row.yaxis
+        yaxis: row.yaxis,
+        normalize: row.normalize
       };
       cellData.push(cells);
     });
@@ -513,21 +518,6 @@ export default function PlotContainer(props) {
             <Typography>
               Axis stuff
             </Typography>
-          </AccordionDetails>
-        </Accordion>
-        <Accordion expanded={ expanded === "normalize" } onChange={ handleExpandedChange("normalize") }>
-          <AccordionSummary aria-controls="normalize-content" id="normalize-header">
-            <Typography>Normalize</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <Box sx={ formatItemStyle }>
-              <FormControlLabel
-                control={ (
-                  <Checkbox />
-                ) }
-                label="Enable"
-              />
-            </Box>
           </AccordionDetails>
         </Accordion>
         <Accordion expanded={ expanded === "chart" } onChange={ handleExpandedChange("chart") }>
