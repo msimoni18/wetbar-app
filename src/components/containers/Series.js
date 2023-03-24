@@ -18,14 +18,15 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { HtmlTooltip } from "./tooltips/HtmlTooltip";
 
 export default function Series(props) {
-  const { id, baseFile, baseX, baseY, baseName, baseMode, handleDelete, data, series, setSeries } = props;
+  const { id, handleDelete, data, series, setSeries } = props;
   const [xAvailable, setXAvailable] = React.useState([]);
   const [yAvailable, setYAvailable] = React.useState([]);
-  const [file, setFile] = React.useState(baseFile || "");
-  const [x, setX] = React.useState(baseX || "");
-  const [y, setY] = React.useState(baseY || "");
-  const [name, setName] = React.useState(baseName || "");
-  const [mode, setMode] = React.useState(baseMode || "lines");
+  const [file, setFile] = React.useState("");
+  const [x, setX] = React.useState("");
+  const [y, setY] = React.useState("");
+  const [name, setName] = React.useState("");
+  const [type, setType] = React.useState("scatter");
+  const [mode, setMode] = React.useState("lines");
   const [y2, setY2] = React.useState(false);
   const [normalize, setNormalize] = React.useState(false);
   const [normalizeType, setNormalizeType] = React.useState("min");
@@ -135,8 +136,26 @@ export default function Series(props) {
     }
   }, [useNewNormalizeParameter]);
 
+  const handleTypeChange = (event) => {
+    const newType = event.target.value;
+    setType(newType);
+    const newSeries = series.map((row) => (row.id === id ? { ...row, type: newType } : row));
+    setSeries(newSeries);
+  };
+
   return (
     <Box>
+      <Typography>Chart Type</Typography>
+      <RadioGroup
+        aria-labelledby="plot-type-radio-buttons-group-label"
+        value={ type }
+        name="plot-type-buttons-group"
+        onChange={ handleTypeChange }
+        row
+      >
+        <FormControlLabel value="scatter" control={ <Radio /> } label="Scatter" />
+        <FormControlLabel value="bar" control={ <Radio /> } label="Bar" />
+      </RadioGroup>
       <Typography>File</Typography>
       <Select
         id="file-select"
@@ -229,7 +248,7 @@ export default function Series(props) {
         && (
           <Box>
             <RadioGroup
-              aria-labelledby="demo-radio-buttons-group-label"
+              aria-labelledby="normalize-radio-buttons-group-label"
               value={ normalizeType }
               name="normalize-buttons-group"
               onChange={ (event) => setNormalizeType(event.target.value) }

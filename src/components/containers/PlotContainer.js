@@ -9,6 +9,8 @@ import {
   FormControlLabel,
   IconButton,
   MenuItem,
+  Radio,
+  RadioGroup,
   Select,
   Slider,
   TextField,
@@ -77,6 +79,7 @@ export default function PlotContainer(props) {
       x: "",
       y: "",
       name: "",
+      type: "scatter",
       mode: "lines",
       yaxis: "y",
       normalize: {
@@ -90,14 +93,20 @@ export default function PlotContainer(props) {
 
   const [plotData, setPlotData] = React.useState([]);
 
+  const handleUpdatePlotResponse = (response) => {
+    setPlotData(response);
+  };
+
   const updatePlot = () => {
     const cellData = [];
     series.forEach((row) => {
       const cells = {
+        id: row.id,
         file: row.file,
         x: row.x,
         y: row.y,
         name: row.name,
+        type: row.type,
         mode: row.mode,
         yaxis: row.yaxis,
         normalize: row.normalize
@@ -108,7 +117,7 @@ export default function PlotContainer(props) {
     post(
       JSON.stringify(cellData),
       "get-plot-data",
-      (response) => setPlotData(response),
+      (response) => handleUpdatePlotResponse(response),
       (response) => console.error(response)
     );
   };
@@ -136,6 +145,9 @@ export default function PlotContainer(props) {
   const [leftMargin, setLeftMargin] = React.useState(80);
   const [topMargin, setTopMargin] = React.useState(80);
   const [rightMargin, setRightMargin] = React.useState(80);
+  const [barMode, setBarMode] = React.useState("group");
+  const [enableBarOptions, setEnableBarOptions] = React.useState(false);
+  const [enableBarLabels, setEnableBarLabels] = React.useState(false);
 
   const [layout, setLayout] = React.useState({
     width: width - 20,
@@ -182,7 +194,8 @@ export default function PlotContainer(props) {
       l: leftMargin,
       t: topMargin,
       r: rightMargin
-    }
+    },
+    barmode: barMode
   });
 
   React.useEffect(() => {
@@ -193,9 +206,10 @@ export default function PlotContainer(props) {
         height,
         showlegend: legend,
         paper_bgcolor: rgbaToString(paperBgcolor),
-        plot_bgcolor: rgbaToString(plotBgcolor)
+        plot_bgcolor: rgbaToString(plotBgcolor),
+        barmode: barMode
       }));
-  }, [width, height, legend, paperBgcolor, plotBgcolor]);
+  }, [width, height, legend, paperBgcolor, plotBgcolor, barMode]);
 
   React.useEffect(() => {
     setLayout((prevLayout) => (
@@ -295,6 +309,32 @@ export default function PlotContainer(props) {
     }
   }, [yLabel2, yLabel2Position, enableYAxis2]);
 
+  React.useEffect(() => {
+    const newPlotData = [];
+    if (enableBarLabels) {
+      plotData.forEach((item) => {
+        if (item.type === "bar") {
+          newPlotData.push({
+            ...item,
+            text: item.y.map(String),
+            textposition: "auto"
+          });
+        } else {
+          newPlotData.push(item);
+        }
+      });
+    } else {
+      plotData.forEach((item) => {
+        if (item.type === "bar") {
+          delete item.text;
+          delete item.textposition;
+        }
+        newPlotData.push(item);
+      });
+    }
+    setPlotData(newPlotData);
+  }, [enableBarLabels]);
+
   return (
     <div className={ styles["plot-container"] } style={ { height } }>
       <div
@@ -321,11 +361,6 @@ export default function PlotContainer(props) {
                 <Series
                   key={ row.id }
                   id={ row.id }
-                  baseFile={ row.file }
-                  baseX={ row.x }
-                  baseY={ row.y }
-                  baseName={ row.name }
-                  baseMode={ row.mode }
                   handleDelete={ deleteSeries }
                   data={ loadedData.data }
                   series={ series }
@@ -525,6 +560,43 @@ export default function PlotContainer(props) {
             <Typography>Chart</Typography>
           </AccordionSummary>
           <AccordionDetails>
+            <Box sx={ formatItemStyle }>
+              <FormControlLabel
+                control={ (
+                  <Checkbox
+                    checked={ enableBarOptions }
+                    onChange={ (event) => setEnableBarOptions(event.target.checked) }
+                  />
+                ) }
+                label="Enable bar chart options"
+              />
+              {enableBarOptions
+              && (
+                <Box>
+                  <Typography>Mode</Typography>
+                  <RadioGroup
+                    aria-labelledby="barmode-radio-buttons-group-label"
+                    value={ barMode }
+                    name="barmode-buttons-group"
+                    onChange={ (event) => setBarMode(event.target.value) }
+                    row
+                  >
+                    <FormControlLabel value="group" control={ <Radio /> } label="Group" />
+                    <FormControlLabel value="stack" control={ <Radio /> } label="Stack" />
+                    <FormControlLabel value="relative" control={ <Radio /> } label="Relative" />
+                  </RadioGroup>
+                  <FormControlLabel
+                    control={ (
+                      <Checkbox
+                        checked={ enableBarLabels }
+                        onChange={ (event) => setEnableBarLabels(event.target.checked) }
+                      />
+                    ) }
+                    label="Add bar labels"
+                  />
+                </Box>
+              )}
+            </Box>
             <Box sx={ formatItemStyle }>
               <Typography>Height</Typography>
               <Slider

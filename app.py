@@ -310,10 +310,11 @@ def get_plot_data():
                     x_data = x_data - x_data[norm_data.idxmax()]
 
             plot_data.append({
+                'id': row['id'],
                 'x': x_data.tolist(),
                 'y': y_data.tolist(),
                 'name': row['name'],
-                'type': 'scatter',
+                'type': row['type'],
                 'mode': row['mode'],
                 'yaxis': row['yaxis']
             })
