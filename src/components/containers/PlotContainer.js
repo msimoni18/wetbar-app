@@ -110,7 +110,6 @@ export default function PlotContainer(props) {
 
   // Layout
   const [height, setHeight] = React.useState(400);
-  const [xDomain, setXDomain] = React.useState([0, 1]);
   const [title, setTitle] = React.useState("");
   const [fontSize, setFontSize] = React.useState(12);
   const [xLabel, setXLabel] = React.useState("");
@@ -145,7 +144,7 @@ export default function PlotContainer(props) {
     },
     xaxis: {
       title: xLabel,
-      domain: xDomain,
+      domain: [0, 1],
       gridcolor: rgbaToString(majorGridlineColor),
       griddash: majorLinestyle,
       gridwidth: 1,
@@ -220,15 +219,12 @@ export default function PlotContainer(props) {
         ...prevLayout,
         xaxis: {
           title: xLabel,
-          domain: xDomain,
           gridcolor: rgbaToString(majorGridlineColor),
           griddash: majorLinestyle,
-          gridwidth: 1,
           showgrid: majorGridlineChecked,
           minor: {
             gridcolor: rgbaToString(minorGridlineColor),
             griddash: minorLinestyle,
-            gridwidth: 1,
             showgrid: minorGridlineChecked
           }
         },
@@ -236,18 +232,16 @@ export default function PlotContainer(props) {
           title: yLabel,
           gridcolor: rgbaToString(majorGridlineColor),
           griddash: majorLinestyle,
-          gridwidth: 1,
           showgrid: majorGridlineChecked,
           minor: {
             gridcolor: rgbaToString(minorGridlineColor),
             griddash: minorLinestyle,
-            gridwidth: 1,
             showgrid: minorGridlineChecked
           }
         }
       }));
   }, [
-    xLabel, yLabel, xDomain,
+    xLabel, yLabel,
     majorGridlineChecked, majorGridlineColor, majorLinestyle,
     minorGridlineChecked, minorGridlineColor, minorLinestyle
   ]);
@@ -270,7 +264,8 @@ export default function PlotContainer(props) {
       setLayout((prevLayout) => ({
         ...prevLayout,
         xaxis: {
-          ...prevLayout.xaxis
+          ...prevLayout.xaxis,
+          domain: [0, yLabel2Position]
         },
         yaxis2: {
           title: yLabel2,
@@ -287,7 +282,8 @@ export default function PlotContainer(props) {
       setLayout((prevLayout) => ({
         ...prevLayout,
         xaxis: {
-          ...prevLayout.xaxis
+          ...prevLayout.xaxis,
+          domain: [0, 1]
         },
         yaxis2: {}
       }));
@@ -426,16 +422,6 @@ export default function PlotContainer(props) {
                     getAriaLabel={ () => "ylabel-2-position-slider" }
                     valueLabelDisplay="auto"
                     onChange={ (event, newValue) => setYLabel2Position(newValue) }
-                  />
-                  <Typography>X-Axis Domain</Typography>
-                  <Slider
-                    value={ xDomain }
-                    min={ 0 }
-                    max={ 1 }
-                    step={ 0.01 }
-                    getAriaLabel={ () => "x-domain-slider" }
-                    valueLabelDisplay="auto"
-                    onChange={ (event, newValue) => setXDomain(newValue) }
                   />
                 </Box>
               )}
