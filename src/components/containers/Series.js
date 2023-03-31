@@ -155,6 +155,9 @@ export default function Series(props) {
       >
         <FormControlLabel value="scatter" control={ <Radio /> } label="Scatter" />
         <FormControlLabel value="bar" control={ <Radio /> } label="Bar" />
+        <FormControlLabel disabled value="contour" control={ <Radio /> } label="Contour" />
+        <FormControlLabel disabled value="surface3d" control={ <Radio /> } label="3D Surface" />
+        <FormControlLabel disabled value="scatter3d" control={ <Radio /> } label="3D Scatter" />
       </RadioGroup>
       <Typography>File</Typography>
       <Select

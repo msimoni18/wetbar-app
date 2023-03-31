@@ -1,18 +1,14 @@
 import os
 import sys
 import glob
-import json
 import time
-import datetime
-import fnmatch
-import collections
 from pathlib import Path
 from flask import jsonify, request
 from flask_socketio import emit
 # from api.hogs import SpaceUsage
-from api.utils import Worker, str2bool, read_file, sort_nicely, winapi_path
+from api.utils import Worker, str2bool, read_file
 from api.archives import  create_archive, extract_files
-from api.utilization import DirectorySize
+from api.utilization import TreeStructure, DirectorySize
 from api.cleanup import find_files_and_delete, delete_files
 from entry import app, app_config, socketio
 
@@ -52,13 +48,15 @@ def space_hogs():
 @app.route('/space-utilization', methods=['POST'])
 def space_utilization():
     if request.method == 'POST':
+        # directory = TreeStructure(request.json)
         directory = DirectorySize(request.json)
         df = directory.get_dataframe()
         print('Space utilization complete...')
         return jsonify({
             'directory': directory.get_plotdata(df),
             'extensions': directory.extensions,
-            'stats': directory.stats
+            # 'stats': directory.statistics
+            'stats': directory._stats
             })
 
 

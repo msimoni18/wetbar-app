@@ -1,74 +1,35 @@
 import * as React from "react";
 import { post, socketIO } from "utils/requests";
 import { formatBytes, addCommaToNumber } from "utils/utilities";
-import Plot from "react-plotly.js";
-import { useResizeDetector } from "react-resize-detector";
-import { Box, Grid } from "@mui/material";
+import {
+  Box,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem
+} from "@mui/material";
 import Header from "components/containers/Header";
 import RunButton from "components/buttons/RunButton";
 import DragDropTextField from "components/containers/DragDropTextField";
 import StatCard from "components/containers/StatCard";
-import { AgGridReact } from "ag-grid-react";
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
+import TreemapPlot from "components/plots/TreemapPlot";
+import SpaceUtilizationTable from "components/tables/SpaceUtilizationTable";
 import styles from "components/App.module.scss";
 
 export default function SpaceUtilization() {
-  const { width, height, ref } = useResizeDetector();
+  const [connected, setConnected] = React.useState(false);
+  const [active, setActive] = React.useState(false);
   const [directory, setDirectory] = React.useState("");
-  const [data, setData] = React.useState([]);
+  const [data, setData] = React.useState({});
+  const [plotData, setPlotData] = React.useState([]);
   const [extensionData, setExtensionData] = React.useState([]);
   const [stats, setStats] = React.useState({
     totalSize: 0,
     fileCount: 0,
     directoryCount: 0
   });
-  const [depth] = React.useState(-1);
-  const [active, setActive] = React.useState(false);
-
-  const gridRef = React.useRef();
-  const [columnDefs] = React.useState([
-    {
-      field: "extension",
-      headerName: "Extension"
-    },
-    {
-      field: "bytes",
-      headerName: "Bytes",
-      valueFormatter: (params) => {
-        if (params.value == null) {
-          return "";
-        }
-        const formattedValue = formatBytes(params.value);
-        return `${formattedValue}`;
-      }
-    },
-    {
-      field: "perc_bytes",
-      headerName: "% Bytes",
-      valueFormatter: (params) => (`${params.value}%`)
-    },
-    {
-      field: "count",
-      headerName: "Files"
-    },
-    {
-      field: "perc_count",
-      headerName: "% Files",
-      valueFormatter: (params) => (`${params.value}%`)
-    }
-  ]);
-
-  const defaultColDef = React.useMemo(() => {
-    return {
-      flex: 1,
-      minWidth: 100,
-      sortable: true,
-      resizable: true
-    };
-  }, []);
-
-  const [connected, setConnected] = React.useState(false);
+  const [depth, setDepth] = React.useState(-1);
 
   React.useEffect(() => {
     if (connected === false) {
@@ -93,62 +54,84 @@ export default function SpaceUtilization() {
         });
       });
     }
-
   });
 
-  const plotLayout = {
-    width,
-    height: 500,
-    margin: {
-      t: "25",
-      r: "25",
-      b: "25",
-      l: "25"
-    }
-  };
-
-  const handlePlotData = (response) => {
-    const dir = response.directory;
-    const ext = response.extensions;
-
-    const formattedBytes = dir.values.map((value) =>
-      formatBytes(value));
-
-    const newData = [
-      {
-        branchvalues: "total",
-        ids: dir.ids,
-        labels: dir.labels,
-        parents: dir.parents,
-        values: dir.values,
-        maxdepth: depth,
-        type: "treemap",
-        text: formattedBytes,
-        hovertemplate: "<b>%{text}</b><extra></extra>",
-        textinfo: "label",
-        root: {
-          color: "lightgrey"
-        }
-      }
-    ];
-
-    setData(newData);
-
-    setExtensionData(ext);
-
+  const handleResponse = (response) => {
+    console.log("handleResponse");
+    setData(response);
     setActive(false);
   };
 
   const handleButtonClick = () => {
     setActive(true);
+    setPlotData([]);
+    setExtensionData([]);
+    setStats({
+      totalSize: 0,
+      fileCount: 0,
+      directoryCount: 0
+    });
 
     post(
       JSON.stringify(directory),
       "space-utilization",
-      // (response) => alert(response),
-      (response) => handlePlotData(response),
+      (response) => handleResponse(response),
       (error) => console.error(error)
     );
+  };
+
+  React.useEffect(() => {
+    if (Object.keys(data).length > 0) {
+      console.log("useEffect - setExtensionData");
+      setExtensionData(data.extensions);
+    }
+  }, [data]);
+
+  React.useEffect(() => {
+    if (extensionData.length > 0) {
+      const timer = setTimeout(() => {
+        console.log("useEffect - setPlotData");
+        const dir = data.directory;
+        const formattedBytes = dir.values?.map((value) => formatBytes(value));
+
+        const hovertext = [];
+        formattedBytes.forEach((item, num) => {
+          const textLabel = `${dir.labels[num]}<br>${item}`;
+          hovertext.push(textLabel);
+        });
+
+        const newData = [
+          {
+            branchvalues: "total",
+            ids: dir.ids,
+            labels: dir.labels,
+            parents: dir.parents,
+            values: dir.values,
+            maxdepth: depth,
+            type: "treemap",
+            text: hovertext,
+            hovertemplate: "<b>%{text}</b><extra></extra>",
+            textinfo: "label",
+            root: {
+              color: "lightgrey"
+            }
+          }
+        ];
+        setPlotData(newData);
+
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [extensionData]);
+
+  const handleDepthChange = (event) => {
+    console.log(
+      "Start spinner on depth change."
+    );
+    const newDepth = event.target.value;
+    const newData = plotData[0];
+    setDepth(newDepth);
+    setPlotData([{ ...newData, maxdepth: newDepth }]);
   };
 
   return (
@@ -166,18 +149,36 @@ export default function SpaceUtilization() {
           <StatCard title="Directory count" stat={ stats.directoryCount } />
         </Grid>
         <Grid item xs={ 12 } sm={ 6 } md={ 8 }>
-          <div className="ag-theme-alpine" style={ { height: 500 } }>
-            <AgGridReact
-              ref={ gridRef }
-              rowData={ extensionData }
-              columnDefs={ columnDefs }
-              defaultColDef={ defaultColDef }
-            />
-          </div>
+          <SpaceUtilizationTable data={ extensionData } />
         </Grid>
         <Grid item xs={ 12 }>
-          <div ref={ ref }>
-            <Plot data={ data } layout={ plotLayout } />
+          <Box sx={ { display: "flex", justifyContent: "center" } }>
+            {plotData.length > 0 && (
+              <FormControl sx={ { m: 1, minWidth: 120 } } size="small">
+                <InputLabel id="depth-select-label">Depth</InputLabel>
+                <Select
+                  labelId="depth-select-label"
+                  id="depth-select-small"
+                  value={ depth }
+                  label="Depth"
+                  onChange={ handleDepthChange }
+                >
+                  <MenuItem value={ -1 }>All</MenuItem>
+                  <MenuItem value={ 2 }>2</MenuItem>
+                  <MenuItem value={ 3 }>3</MenuItem>
+                  <MenuItem value={ 4 }>4</MenuItem>
+                  <MenuItem value={ 5 }>5</MenuItem>
+                  <MenuItem value={ 6 }>6</MenuItem>
+                  <MenuItem value={ 7 }>7</MenuItem>
+                  <MenuItem value={ 8 }>8</MenuItem>
+                  <MenuItem value={ 9 }>9</MenuItem>
+                  <MenuItem value={ 10 }>10</MenuItem>
+                </Select>
+              </FormControl>
+            )}
+          </Box>
+          <div style={ { display: "flex", justifyContent: "center" } }>
+            <TreemapPlot data={ plotData } />
           </div>
         </Grid>
       </Grid>

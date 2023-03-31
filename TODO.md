@@ -1,6 +1,8 @@
 NEXT UPDATES
 ============
 
+- Add contour plot, 3d surface, 3d scatter options
+
 - Express service feature
 
 - Add options for vertical and horizontal lines, shapes,
@@ -32,6 +34,8 @@ KNOWN ISSUES
 General
 =======
 
+- Move connect/disconnect sockets to top level of App
+
 - Try opening new BrowserWindow to "pop out" plot containers
   of main window
 
@@ -41,7 +45,11 @@ General
 - Display version somewhere in main window and try to add to
   folder created when packaging app
 
-- Prevent switching routes if code is running
+- Prevent switching routes if code is running, might be able to use
+  Context API for determine when app is running or Redux
+
+- Consider incorporating Context API for managing state when
+  switching routes, or use Redux. See these videos https://fluor.udemy.com/course/react-tutorial-and-projects-course/learn/lecture/36180334#overview
 
 Docs
 ====
@@ -67,24 +75,20 @@ Plots
 SpaceUtilization
 ================
 
-- Figure out why Plot component keeps rendering while code is
-  running. Some of the functions, like update(), log to console.
-  Could be because of the sockets updating the text. Probably
-  need to use useMemo or something to avoid the plot rendering
-  when the sockets update the text.
+- Figure out how to delay rendering of plot.
 
-- If treemap fails, use row grouping in a table to display folders
-  searched, and everything under it.
+  - When the depth changes, the items don't disappear until
+    the plot is rendered. 
+
+- Add loading spinner to plot that appears after data has been
+  loaded to indicate the plot is rendering. Also include spinner
+  when depth changes or folder is clicked to indicated a new plot
+  is rendering.
 
 - Consider adding checkbox to table that allow the user to
   delete extensions after code has run so they don't have to
   go to File Cleanup, find the files again, then delete them.
   This would remove one extra step.
-
-- Add loading spinner to plot that appears after data has been
-  loaded to indicate the plot is rendering
-
-- Add folder name to hover text on plotly plot
 
 - Incorporate multiprocessing on child folders
 
