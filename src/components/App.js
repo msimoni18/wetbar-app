@@ -12,6 +12,7 @@ import Settings from "components/routes/Settings";
 import Test from "components/routes/Test";
 import { ThemeProvider } from "@mui/material";
 import theme from "../theme/theme";
+import styles from "./App.module.scss";
 
 export default function App() {
   return (
@@ -20,16 +21,18 @@ export default function App() {
         <Router>
           <Titlebar />
           <Sidebar />
-          <Routes>
-            <Route path="/" element={ <SpaceHogs /> } />
-            <Route path="/cleanup" element={ <Cleanup /> } />
-            <Route path="/archive" element={ <Archive /> } />
-            <Route path="/utilization" element={ <SpaceUtilization /> } />
-            <Route path="/plots" element={ <Plots /> } />
-            <Route path="/flamingo" element={ <Flamingo /> } />
-            <Route path="/settings" element={ <Settings /> } />
-            <Route path="/test" element={ <Test /> } />
-          </Routes>
+          <div className={ styles["route-body"] }>
+            <Routes>
+              <Route path="/" element={ <SpaceHogs /> } />
+              <Route path="/cleanup" element={ <Cleanup /> } />
+              <Route path="/archive" element={ <Archive /> } />
+              <Route path="/utilization" element={ <SpaceUtilization /> } />
+              <Route path="/plots" element={ <Plots /> } />
+              <Route path="/flamingo" element={ <Flamingo /> } />
+              <Route path="/settings" element={ <Settings /> } />
+              <Route path="/test" element={ <Test /> } />
+            </Routes>
+          </div>
         </Router>
       </ThemeProvider>
     </React.Fragment>

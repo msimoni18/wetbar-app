@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import SettingsIcon from "@mui/icons-material/Settings";
 import ArticleIcon from "@mui/icons-material/Article";
+import "./Sidebar.module.scss";
 
 const drawerWidth = 60;
 

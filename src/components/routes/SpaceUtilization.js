@@ -15,7 +15,6 @@ import DragDropTextField from "components/containers/DragDropTextField";
 import StatCard from "components/containers/StatCard";
 import TreemapPlot from "components/plots/TreemapPlot";
 import SpaceUtilizationTable from "components/tables/SpaceUtilizationTable";
-import styles from "components/App.module.scss";
 
 export default function SpaceUtilization() {
   const [connected, setConnected] = React.useState(false);
@@ -135,7 +134,7 @@ export default function SpaceUtilization() {
   };
 
   return (
-    <div className={ styles["route-body"] }>
+    <React.Fragment>
       <Header
         heading="Space Utilization"
         description="Figure out how much space your taking up."
@@ -182,6 +181,6 @@ export default function SpaceUtilization() {
           </div>
         </Grid>
       </Grid>
-    </div>
+    </React.Fragment>
   );
 }

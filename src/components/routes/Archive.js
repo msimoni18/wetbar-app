@@ -27,7 +27,6 @@ import DeleteTableRow from "components/buttons/DeleteTableRow";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import styles from "components/App.module.scss";
 
 function TabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -159,7 +158,7 @@ export default function Archive() {
   };
 
   return (
-    <div className={ styles["route-body"] }>
+    <React.Fragment>
       <Header
         heading="Archives"
         description="Create archive files or extract from existing archives."
@@ -299,6 +298,6 @@ export default function Archive() {
           </Grid>
         </Grid>
       </Grid>
-    </div>
+    </React.Fragment>
   );
 }

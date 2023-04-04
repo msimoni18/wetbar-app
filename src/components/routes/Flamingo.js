@@ -13,7 +13,6 @@ import {
 } from "@mui/material";
 import Header from "components/containers/Header";
 import RunButton from "components/buttons/RunButton";
-import styles from "components/App.module.scss";
 
 const forms = {
   width: "250px",
@@ -34,7 +33,7 @@ export default function Flamingo() {
   };
 
   return (
-    <div className={ styles["route-body"] }>
+    <React.Fragment>
       <Header
         heading="Flamingo"
         description="User interface for running flamingo."
@@ -114,6 +113,6 @@ export default function Flamingo() {
         </Box>
       </Box>
       <RunButton active={ active } handleClick={ handleButtonClick } />
-    </div>
+    </React.Fragment>
   );
 }

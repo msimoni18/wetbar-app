@@ -25,7 +25,6 @@ import StatCard from "components/containers/StatCard";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import styles from "components/App.module.scss";
 
 // Electron Inter Process Communication and dialog
 const { ipcRenderer } = window.require("electron");
@@ -162,7 +161,7 @@ export default function Cleanup() {
   };
 
   return (
-    <div className={ styles["route-body"] }>
+    <React.Fragment>
       <Header
         heading="Cleanup"
         description="Easily delete unwanted files to clear shared space for your coworkers."
@@ -236,6 +235,6 @@ export default function Cleanup() {
           <ListContainer files={ filesToDelete } />
         </Grid>
       </Grid>
-    </div>
+    </React.Fragment>
   );
 }

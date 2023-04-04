@@ -1,6 +1,5 @@
 import * as React from "react";
 import ResizeablePlot from "components/containers/ResizeablePlot";
-import styles from "components/App.module.scss";
 import TestSocketCounter from "components/containers/TestSocketCounter";
 
 export default function Test() {
@@ -25,7 +24,7 @@ export default function Test() {
   };
 
   return (
-    <div className={ styles["route-body"] }>
+    <React.Fragment>
       <h3>Resizable plot by clicking and dragging the bottom right</h3>
       <br />
       <ResizeablePlot data={ testData } layout={ testLayout } />
@@ -37,6 +36,6 @@ export default function Test() {
       <TestSocketCounter />
       <br />
       <hr />
-    </div>
+    </React.Fragment>
   );
 }

@@ -28,7 +28,6 @@ import Header from "components/containers/Header";
 import DragDropFileContainer from "components/containers/DragDropFileContainer";
 import SimpleFileContainer from "components/containers/SimpleFileContainer";
 import PlotContainer from "components/containers/PlotContainer";
-import styles from "components/App.module.scss";
 
 export default function Plots() {
   // File Options
@@ -122,7 +121,7 @@ export default function Plots() {
   ];
 
   return (
-    <div className={ styles["route-body"] }>
+    <React.Fragment>
       <Header
         heading="Plots"
         description="Build interactive plots with ease."
@@ -283,6 +282,6 @@ export default function Plots() {
           handleDelete={ deletePlot }
         />
       ))}
-    </div>
+    </React.Fragment>
   );
 }

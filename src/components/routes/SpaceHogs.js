@@ -14,7 +14,6 @@ import Header from "components/containers/Header";
 import StatCard from "components/containers/StatCard";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import styles from "components/App.module.scss";
 
 // Electron inter process communcation and dialog
 const { ipcRenderer } = window.require("electron");
@@ -102,7 +101,7 @@ export default function SpaceHogs() {
   }, [data]);
 
   return (
-    <div className={ styles["route-body"] }>
+    <React.Fragment>
       <Header
         heading="Space Hogs"
         description="See what coworkers are hogging all of the shared space."
@@ -152,6 +151,6 @@ export default function SpaceHogs() {
           </div>
         </Grid>
       </Grid>
-    </div>
+    </React.Fragment>
   );
 }
