@@ -26,7 +26,7 @@ import ResizeablePlot from "components/containers/ResizeablePlot";
 import ColorSelector from "./ColorSelector";
 import Series from "./Series";
 import { Accordion, AccordionSummary, AccordionDetails } from "./CustomComponents";
-import { lineStyles } from "../../utils/utilities";
+import { linestyles, colorscales } from "../../utils/utilities";
 import styles from "./PlotContainer.module.scss";
 
 const formatItemStyle = {
@@ -78,6 +78,10 @@ export default function PlotContainer(props) {
       file: "",
       x: "",
       y: "",
+      z: "",
+      aggregate: "min",
+      colorscale: "Jet",
+      reversescale: true,
       name: "",
       type: "scatter",
       mode: "lines",
@@ -105,6 +109,10 @@ export default function PlotContainer(props) {
         file: row.file,
         x: row.x,
         y: row.y,
+        z: row.z,
+        aggregate: row.aggregate,
+        colorscale: row.colorscale,
+        reversescale: row.reversescale,
         name: row.name,
         type: row.type,
         mode: row.mode,
@@ -148,6 +156,9 @@ export default function PlotContainer(props) {
   const [barMode, setBarMode] = React.useState("group");
   const [enableBarOptions, setEnableBarOptions] = React.useState(false);
   const [enableBarLabels, setEnableBarLabels] = React.useState(false);
+  const [enableContourOptions, setEnableContourOptions] = React.useState(false);
+  const [colorscale, setColorscale] = React.useState("Jet");
+  const [enableReverseColorscale, setEnableReverseColorscale] = React.useState(true);
 
   const [layout, setLayout] = React.useState({
     width: width - 20,
@@ -335,6 +346,16 @@ export default function PlotContainer(props) {
     setPlotData(newPlotData);
   }, [enableBarLabels]);
 
+  React.useEffect(() => {
+    const newPlotData = [{
+      ...plotData[0],
+      colorscale,
+      reversescale: enableReverseColorscale
+    }];
+
+    setPlotData(newPlotData);
+  }, [colorscale, enableReverseColorscale]);
+
   return (
     <div className={ styles["plot-container"] } style={ { height } }>
       <div
@@ -512,7 +533,7 @@ export default function PlotContainer(props) {
                 onChange={ (event) => setMajorLinestyle(event.target.value) }
                 sx={ { width: "150px" } }
               >
-                {lineStyles.map((item, key) => (
+                {linestyles.map((item, key) => (
                   <MenuItem key={ key } value={ item }>{item}</MenuItem>
                 ))}
               </Select>
@@ -538,7 +559,7 @@ export default function PlotContainer(props) {
                 onChange={ (event) => setMinorLinestyle(event.target.value) }
                 sx={ { width: "150px" } }
               >
-                {lineStyles.map((item, key) => (
+                {linestyles.map((item, key) => (
                   <MenuItem key={ key } value={ item }>{item}</MenuItem>
                 ))}
               </Select>
@@ -593,6 +614,43 @@ export default function PlotContainer(props) {
                       />
                     ) }
                     label="Add bar labels"
+                  />
+                </Box>
+              )}
+            </Box>
+            <Box sx={ formatItemStyle }>
+              <FormControlLabel
+                control={ (
+                  <Checkbox
+                    checked={ enableContourOptions }
+                    onChange={ (event) => setEnableContourOptions(event.target.checked) }
+                  />
+                ) }
+                label="Enable contour chart options"
+              />
+              {enableContourOptions
+              && (
+                <Box>
+                  <Typography>Colorscale</Typography>
+                  <Select
+                    id="colorscale-select"
+                    size="small"
+                    value={ colorscale }
+                    onChange={ (event) => setColorscale(event.target.value) }
+                    sx={ { width: "150px" } }
+                  >
+                    {colorscales.map((item, key) => (
+                      <MenuItem key={ key } value={ item }>{item}</MenuItem>
+                    ))}
+                  </Select>
+                  <FormControlLabel
+                    control={ (
+                      <Checkbox
+                        checked={ enableReverseColorscale }
+                        onChange={ () => setEnableReverseColorscale(!enableReverseColorscale) }
+                      />
+                    ) }
+                    label="Reverse colorscale"
                   />
                 </Box>
               )}

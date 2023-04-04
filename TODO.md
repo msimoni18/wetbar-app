@@ -1,7 +1,12 @@
 NEXT UPDATES
 ============
 
-- Add contour plot, 3d surface, 3d scatter options
+- Additional contour options:
+
+  - z axis label
+  - min, max, and interval of colorbar
+
+- Add 3d surface, 3d scatter options
 
 - Express service feature
 

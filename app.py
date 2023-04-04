@@ -3,6 +3,7 @@ import sys
 import glob
 import time
 from pathlib import Path
+import pandas as pd
 from flask import jsonify, request
 from flask_socketio import emit
 # from api.hogs import SpaceUsage
@@ -296,6 +297,24 @@ def get_plot_data():
         plot_data = []
         for row in request.json:
             df = data.DATA[row['file']]['df']
+
+            if row['type'] in ('contour'):
+                # Ensure only one x and y value
+                if row['aggregate'] == 'max':
+                    df_contour = df.groupby([row['x'], row['y']])[row['z']].max().reset_index()
+                else:
+                    df_contour = df.groupby([row['x'], row['y']])[row['z']].min().reset_index()
+                
+                return jsonify([{
+                    'id': row['id'],
+                    'x': df_contour[row['x']].tolist(),
+                    'y': df_contour[row['y']].tolist(),
+                    'z': df_contour[row['z']].tolist(),
+                    'type': row['type'],
+                    'colorscale': row['colorscale'],
+                    'reversescale': row['reversescale'],
+                }])
+            
             x_data = df[row['x']]
             y_data = df[row['y']]
 

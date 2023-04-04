@@ -19,11 +19,11 @@ import { HtmlTooltip } from "./tooltips/HtmlTooltip";
 
 export default function Series(props) {
   const { id, handleDelete, data, series, setSeries } = props;
-  const [xAvailable, setXAvailable] = React.useState([]);
-  const [yAvailable, setYAvailable] = React.useState([]);
+  const [availableParams, setAvailableParams] = React.useState([]);
   const [file, setFile] = React.useState("");
   const [x, setX] = React.useState("");
   const [y, setY] = React.useState("");
+  const [z, setZ] = React.useState("");
   const [name, setName] = React.useState("");
   const [type, setType] = React.useState("scatter");
   const [mode, setMode] = React.useState("lines");
@@ -32,12 +32,11 @@ export default function Series(props) {
   const [normalizeType, setNormalizeType] = React.useState("min");
   const [useNewNormalizeParameter, setUseNewNormalizeParameter] = React.useState(false);
   const [normalizeParameter, setNormalizeParameter] = React.useState("");
+  const [aggregateType, setAggregateType] = React.useState("min");
 
   React.useEffect(() => {
     const item = data.filter((row) => row.file === file);
-
-    setXAvailable(item[0]?.parameters);
-    setYAvailable(item[0]?.parameters);
+    setAvailableParams(item[0]?.parameters);
   }, [file]);
 
   // TODO: Change map functions to forEach based on
@@ -79,6 +78,22 @@ export default function Series(props) {
       newSeries = series.map((row) => (row.id === id ? { ...row, y: newY } : row));
     }
 
+    setSeries(newSeries);
+  };
+
+  const handleZChange = (event) => {
+    const newZ = event.target.value;
+    setZ(newZ);
+
+    const newSeries = series.map((row) => (row.id === id ? { ...row, z: newZ } : row));
+    setSeries(newSeries);
+  };
+
+  const handleAggregateChange = (event) => {
+    const newAgg = event.target.value;
+    setAggregateType(newAgg);
+
+    const newSeries = series.map((row) => (row.id === id ? { ...row, aggregate: newAgg } : row));
     setSeries(newSeries);
   };
 
@@ -155,7 +170,7 @@ export default function Series(props) {
       >
         <FormControlLabel value="scatter" control={ <Radio /> } label="Scatter" />
         <FormControlLabel value="bar" control={ <Radio /> } label="Bar" />
-        <FormControlLabel disabled value="contour" control={ <Radio /> } label="Contour" />
+        <FormControlLabel value="contour" control={ <Radio /> } label="Contour" />
         <FormControlLabel disabled value="surface3d" control={ <Radio /> } label="3D Surface" />
         <FormControlLabel disabled value="scatter3d" control={ <Radio /> } label="3D Scatter" />
       </RadioGroup>
@@ -179,7 +194,7 @@ export default function Series(props) {
         value={ x }
         onChange={ handleXChange }
       >
-        {xAvailable?.map((item) => (
+        {availableParams?.map((item) => (
           <MenuItem key={ item } value={ item }>{item}</MenuItem>
         ))}
       </Select>
@@ -191,10 +206,38 @@ export default function Series(props) {
         value={ y }
         onChange={ handleYChange }
       >
-        {yAvailable?.map((item) => (
+        {availableParams?.map((item) => (
           <MenuItem key={ item } value={ item }>{item}</MenuItem>
         ))}
       </Select>
+      {type === "contour"
+        && (
+          <React.Fragment>
+            <Typography>Z Parameter</Typography>
+            <Select
+              id="z-parameter-select"
+              size="small"
+              fullWidth
+              value={ z }
+              onChange={ handleZChange }
+            >
+              {availableParams?.map((item) => (
+                <MenuItem key={ item } value={ item }>{item}</MenuItem>
+              ))}
+            </Select>
+            <Typography>Aggregate Type</Typography>
+            <RadioGroup
+              aria-labelledby="aggregate-radio-buttons-group-label"
+              value={ aggregateType }
+              name="aggregate-buttons-group"
+              onChange={ handleAggregateChange }
+              row
+            >
+              <FormControlLabel value="min" control={ <Radio /> } label="Min" />
+              <FormControlLabel value="max" control={ <Radio /> } label="Max" />
+            </RadioGroup>
+          </React.Fragment>
+        )}
       <Typography>Name</Typography>
       <TextField
         margin="dense"
@@ -249,7 +292,7 @@ export default function Series(props) {
       />
       {normalize
         && (
-          <Box>
+          <React.Fragment>
             <RadioGroup
               aria-labelledby="normalize-radio-buttons-group-label"
               value={ normalizeType }
@@ -293,11 +336,11 @@ export default function Series(props) {
               onChange={ (event) => setNormalizeParameter(event.target.value) }
               disabled={ !useNewNormalizeParameter }
             >
-              {yAvailable?.map((item) => (
+              {availableParams?.map((item) => (
                 <MenuItem key={ item } value={ item }>{item}</MenuItem>
               ))}
             </Select>
-          </Box>
+          </React.Fragment>
         )}
       <Box sx={ { width: "100%", textAlign: "right" } }>
         <Tooltip title="Delete series" placement="right">

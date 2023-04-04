@@ -20,4 +20,32 @@ export function rgbaToString(rgba) {
   return `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a})`;
 }
 
-export const lineStyles = ["solid", "dot", "dash", "longdash", "dashdot", "longdashdot"];
+export const linestyles = [
+  "solid",
+  "dot",
+  "dash",
+  "longdash",
+  "dashdot",
+  "longdashdot"
+];
+
+export const colorscales = [
+  "Blackbody",
+  "Bluered",
+  "Blues",
+  "Cividis",
+  "Earth",
+  "Electric",
+  "Greens",
+  "Greys",
+  "Hot",
+  "Jet",
+  "Picnic",
+  "Portland",
+  "Rainbow",
+  "RdBu",
+  "Reds",
+  "Viridis",
+  "YlGnBu",
+  "YlOrRd"
+];
