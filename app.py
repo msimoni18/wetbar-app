@@ -298,7 +298,7 @@ def get_plot_data():
         for row in request.json:
             df = data.DATA[row['file']]['df']
 
-            if row['type'] in ('contour'):
+            if row['type'] in ('contour', 'surface', 'scatter3d'):
                 # Ensure only one x and y value
                 if row['aggregate'] == 'max':
                     df_contour = df.groupby([row['x'], row['y']])[row['z']].max().reset_index()

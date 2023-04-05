@@ -171,8 +171,8 @@ export default function Series(props) {
         <FormControlLabel value="scatter" control={ <Radio /> } label="Scatter" />
         <FormControlLabel value="bar" control={ <Radio /> } label="Bar" />
         <FormControlLabel value="contour" control={ <Radio /> } label="Contour" />
-        <FormControlLabel disabled value="surface3d" control={ <Radio /> } label="3D Surface" />
-        <FormControlLabel disabled value="scatter3d" control={ <Radio /> } label="3D Scatter" />
+        <FormControlLabel disabled value="surface" control={ <Radio /> } label="3D Surface" />
+        <FormControlLabel value="scatter3d" control={ <Radio /> } label="3D Scatter" />
       </RadioGroup>
       <Typography>File</Typography>
       <Select
@@ -210,7 +210,7 @@ export default function Series(props) {
           <MenuItem key={ item } value={ item }>{item}</MenuItem>
         ))}
       </Select>
-      {type === "contour"
+      {["contour", "surface", "scatter3d"].includes(type)
         && (
           <React.Fragment>
             <Typography>Z Parameter</Typography>

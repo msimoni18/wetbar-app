@@ -6,7 +6,7 @@ NEXT UPDATES
   - z axis label
   - min, max, and interval of colorbar
 
-- Add 3d surface, 3d scatter options
+- Add 3d surface options
 
 - Express service feature
 
@@ -112,3 +112,11 @@ Backend
 - Add sockets to emit progress (use flask-socketio package)
 
 - Test all parts of code that use winapi_path to make sure it works
+
+File Options
+============
+
+- Allow user to preview data based on inputs so they can check if their
+  inputs are correct
+
+- Allow user to preview Excel sheets available
