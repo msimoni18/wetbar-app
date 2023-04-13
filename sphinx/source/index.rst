@@ -8,15 +8,9 @@ WETbar
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
-   spacehogs
-   cleanup
-   archive
-   spaceutilization
-   plots
-   flamingo
-   settings
+   issues
+   features
 
 
 Indices and tables
