@@ -1,6 +1,8 @@
 import * as React from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { post, socketIO } from "utils/requests";
 import { formatBytes, addCommaToNumber } from "utils/utilities";
+import { setIsRunning, setIsNotRunning } from "components/appSlice";
 import {
   Box,
   Grid,
@@ -12,14 +14,15 @@ import {
 import Header from "components/containers/Header";
 import RunButton from "components/buttons/RunButton";
 import DragDropTextField from "components/containers/DragDropTextField";
-import StatCard from "components/containers/StatCard";
+import StatCard from "components/cards/StatCard";
 import TreemapPlot from "components/plots/TreemapPlot";
 import SpaceUtilizationTable from "components/tables/SpaceUtilizationTable";
+import { changeFolder } from "./spaceUtilizationSlice";
 
 export default function SpaceUtilization() {
+  const dispatch = useDispatch();
+  const { folder } = useSelector((state) => state.spaceutilization);
   const [connected, setConnected] = React.useState(false);
-  const [active, setActive] = React.useState(false);
-  const [directory, setDirectory] = React.useState("");
   const [data, setData] = React.useState({});
   const [plotData, setPlotData] = React.useState([]);
   const [extensionData, setExtensionData] = React.useState([]);
@@ -53,16 +56,16 @@ export default function SpaceUtilization() {
         });
       });
     }
-  });
+  }, []);
 
   const handleResponse = (response) => {
     console.log("handleResponse");
     setData(response);
-    setActive(false);
+    dispatch(setIsNotRunning());
   };
 
   const handleButtonClick = () => {
-    setActive(true);
+    dispatch(setIsRunning());
     setPlotData([]);
     setExtensionData([]);
     setStats({
@@ -72,7 +75,7 @@ export default function SpaceUtilization() {
     });
 
     post(
-      JSON.stringify(directory),
+      JSON.stringify(folder),
       "space-utilization",
       (response) => handleResponse(response),
       (error) => console.error(error)
@@ -139,15 +142,23 @@ export default function SpaceUtilization() {
         heading="Space Utilization"
         description="Figure out how much space your taking up."
       />
-      <DragDropTextField item={ directory } setItem={ setDirectory } />
       <Grid container spacing={ 2 }>
-        <Grid item xs={ 12 } sm={ 6 } md={ 4 }>
-          <RunButton active={ active } handleClick={ handleButtonClick } />
+        <Grid item xs={ 12 }>
+          <DragDropTextField item={ folder } setItem={ changeFolder } />
+        </Grid>
+        <Grid item xs={ 12 } sx={ { display: "flex", justifyContent: "center" } }>
+          <RunButton handleClick={ handleButtonClick } />
+        </Grid>
+        <Grid item xs={ 4 }>
           <StatCard title="Total size" stat={ stats.totalSize } />
+        </Grid>
+        <Grid item xs={ 4 }>
           <StatCard title="File count" stat={ stats.fileCount } />
+        </Grid>
+        <Grid item xs={ 4 }>
           <StatCard title="Directory count" stat={ stats.directoryCount } />
         </Grid>
-        <Grid item xs={ 12 } sm={ 6 } md={ 8 }>
+        <Grid item xs={ 12 }>
           <SpaceUtilizationTable data={ extensionData } />
         </Grid>
         <Grid item xs={ 12 }>

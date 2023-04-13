@@ -7,7 +7,7 @@ import pandas as pd
 from flask import jsonify, request
 from flask_socketio import emit
 # from api.hogs import SpaceUsage
-from api.utils import Worker, str2bool, read_file
+from api.utils import Worker, str2bool, read_file, sort_nicely
 from api.archives import  create_archive, extract_files
 from api.utilization import TreeStructure, DirectorySize
 from api.cleanup import find_files_and_delete, delete_files
@@ -28,14 +28,24 @@ def space_hogs():
     if request.method == 'POST':
         site = request.json
 
-        dummy_last_update = '12/12/2022 (Sun) at 0832'
-        dummy_allocation = 20000
-        dummy_stats = [
-            {'id': 0, 'user': 'Person 1', 'size': '100', 'util': '10', 'size_gt_year': '15', 'util_gt_year': '1', 'split_gt_year': '8'},
-            {'id': 1, 'user': 'Person 2', 'size': '500', 'util': '12', 'size_gt_year': '19', 'util_gt_year': '4', 'split_gt_year': '23'},
-            {'id': 2, 'user': 'Person 3', 'size': '232', 'util': '11.8', 'size_gt_year': '29', 'util_gt_year': '9', 'split_gt_year': '32'},
-            {'id': 3, 'user': 'Person 4', 'size': '1000', 'util': '16', 'size_gt_year': '6', 'util_gt_year': '10', 'split_gt_year': '50'},
-            ]
+        if site == 'Knolls':
+            dummy_last_update = '12/12/2022 (Sun) at 0832'
+            dummy_allocation = 20000
+            dummy_stats = [
+                {'id': 0, 'user': 'Person 1', 'size': '100', 'util': '10', 'size_gt_year': '15', 'util_gt_year': '1', 'split_gt_year': '8'},
+                {'id': 1, 'user': 'Person 2', 'size': '500', 'util': '12', 'size_gt_year': '19', 'util_gt_year': '4', 'split_gt_year': '23'},
+                {'id': 2, 'user': 'Person 3', 'size': '232', 'util': '11.8', 'size_gt_year': '29', 'util_gt_year': '9', 'split_gt_year': '32'},
+                {'id': 3, 'user': 'Person 4', 'size': '1000', 'util': '16', 'size_gt_year': '6', 'util_gt_year': '10', 'split_gt_year': '50'},
+                ]
+        else:
+            dummy_last_update = '12/12/2022 (Mon) at 0700'
+            dummy_allocation = 28200
+            dummy_stats = [
+                {'id': 0, 'user': 'Person 1', 'size': '200', 'util': '11', 'size_gt_year': '13', 'util_gt_year': '1', 'split_gt_year': '8'},
+                {'id': 1, 'user': 'Person 2', 'size': '300', 'util': '13', 'size_gt_year': '14', 'util_gt_year': '4', 'split_gt_year': '23'},
+                {'id': 2, 'user': 'Person 3', 'size': '132', 'util': '12', 'size_gt_year': '30', 'util_gt_year': '9', 'split_gt_year': '32'},
+                {'id': 3, 'user': 'Person 4', 'size': '9000', 'util': '11.8', 'size_gt_year': '9', 'util_gt_year': '10', 'split_gt_year': '50'},
+                ]
 
         return jsonify({
             'site': site,
@@ -258,13 +268,13 @@ def load_files():
         for f in files:
             if f not in data.DATA:
                 df = read_file(f, **kwargs)
-                # data.DATA[f] = {'df': df.to_dict(orient='list'), 'parameters': df.columns.tolist()}
                 data.DATA[f] = {'df': df, 'parameters': df.columns.tolist()}
 
         result['status'] = True
         result['message'] = 'success'
         result['data'] = [{
             'file': f,
+            'name': str(Path(f).name),
             'parameters': data.DATA[f]['parameters']
             } for f in sorted(data.DATA)
         ]
@@ -275,6 +285,7 @@ def load_files():
     if data.DATA:
         new_data = [{
             'file': f,
+            'name': str(Path(f).name),
             'parameters': data.DATA[f]['parameters']
             } for f in sorted(data.DATA)]
 
@@ -346,7 +357,7 @@ def delete_loaded_data():
             if f != request.json:
                 keep_files.append(f)
 
-        data.DATA = {f: data.DATA[f] for f in keep_files}
+        data.DATA = {f: data.DATA[f] for f in sort_nicely(keep_files)}
 
         return jsonify(sorted(list(data.DATA.keys())))
 
@@ -376,6 +387,18 @@ def cleanup():
                 )
 
         return jsonify({'files': files})
+
+
+@app.route('/flamingo', methods=['POST'])
+def flamingo():
+    if request.method == 'POST':
+        for key, value in request.json.items():
+            print(key, value)
+
+        # Dummy delay
+        time.sleep(5)
+
+        return jsonify({'message': 'Flamingo is complete!'})
 
 
 #### Test function for socketio

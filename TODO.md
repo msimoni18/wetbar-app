@@ -1,6 +1,8 @@
 NEXT UPDATES
 ============
 
+- Make sure file lists are sorted nicely
+
 - Additional contour options:
 
   - z axis label
@@ -50,12 +52,6 @@ General
 - Display version somewhere in main window and try to add to
   folder created when packaging app
 
-- Prevent switching routes if code is running, might be able to use
-  Context API for determine when app is running or Redux
-
-- Consider incorporating Context API for managing state when
-  switching routes, or use Redux. See these videos https://fluor.udemy.com/course/react-tutorial-and-projects-course/learn/lecture/36180334#overview
-
 Docs
 ====
 
@@ -63,6 +59,8 @@ Docs
 
 Plots
 =====
+
+- Add scale factor
 
 - Confirm loading spinner stops if error occurs when reading
   files
@@ -79,6 +77,8 @@ Plots
 
 SpaceUtilization
 ================
+
+- Add plot and table data to redux state.
 
 - Figure out how to delay rendering of plot.
 
@@ -120,3 +120,15 @@ File Options
   inputs are correct
 
 - Allow user to preview Excel sheets available
+
+Settings
+========
+
+- Allow people to customize certain options and always load
+  their custom options.
+
+  - Default output directory
+
+  - Default file extension to search when extract files
+
+  - Default files to delete when cleaning up files

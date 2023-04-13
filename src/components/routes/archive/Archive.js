@@ -1,7 +1,8 @@
 import * as React from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { post } from "utils/requests";
+import { str2bool } from "utils/utilities";
 import { v4 as uuid } from "uuid";
-import PropTypes from "prop-types";
 import {
   Box,
   Grid,
@@ -25,52 +26,26 @@ import DragDropFileContainer from "components/containers/DragDropFileContainer";
 import RunButton from "components/buttons/RunButton";
 import DeleteTableRow from "components/buttons/DeleteTableRow";
 import { AgGridReact } from "ag-grid-react";
+import { setIsRunning, setIsNotRunning } from "components/appSlice";
+import {
+  addItems,
+  deleteItem,
+  changeExtension,
+  changeRemoveDir,
+  changeFormat,
+  changeType,
+  changeOutputDir
+} from "./archiveSlice";
+import { TabPanel, allyProps } from "./TabPanel";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={ value !== index }
-      id={ `tabpanel-${index}` }
-      { ...other }
-    >
-      {value === index && (
-        <Box sx={ { marginLeft: "1%", marginTop: "1%" } }>{children}</Box>
-      )}
-    </div>
-  );
-}
-
-TabPanel.propTypes = {
-  children: PropTypes.node,
-  index: PropTypes.number.isRequired,
-  value: PropTypes.number.isRequired
-};
-
-function allyProps(index) {
-  return {
-    "id": `tab-${index}`,
-    "aria-controls": `tabpanel-${index}`
-  };
-}
-
-const numProcessors = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-
 export default function Archive() {
-  const [items, setItems] = React.useState([]);
+  const dispatch = useDispatch();
+  const { items, create, extract } = useSelector((state) => state.archive);
   const [activeTab, setActiveTab] = React.useState(0);
-  const [active, setActive] = React.useState(false);
+  const [processors, setProcessors] = React.useState(1);
 
-  // Create options
-  const [fileExtension, setFileExtension] = React.useState(".tar.gz");
-  const [removeDirectory, setRemoveDirectory] = React.useState(false);
-  const [archiveFormat, setArchiveFormat] = React.useState("PAX");
-
-  // Extract options
   const gridRef = React.useRef();
   const gridStyle = React.useMemo(() => ({ height: 300 }), []);
   const [rowData] = React.useState([
@@ -111,29 +86,27 @@ export default function Archive() {
     gridRef.current.api.applyTransaction({ add: [{ id: uuid(), criteria: "" }] });
   };
 
-  const [extractType, setExtractType] = React.useState("all");
-  const [outputDirectory, setOutputDirectory] = React.useState("");
   const [toggleCriteria, setToggleCriteria] = React.useState();
 
   React.useEffect(() => {
-    setToggleCriteria(extractType !== "all");
-  }, [extractType]);
-
-  const [processors, setProcessors] = React.useState(1);
+    setToggleCriteria(extract.type !== "all");
+  }, [extract.type]);
 
   const handleChange = (event, newValue) => {
     setActiveTab(newValue);
   };
 
   const handleResponse = (response) => {
-    setActive(false);
-    alert(response);
+    dispatch(setIsNotRunning());
+    alert(response); // eslint-disable-line no-alert
   };
 
   const handleButtonClick = () => {
 
+    dispatch(setIsRunning());
+
     const searchCriteria = [];
-    if (extractType === "files") {
+    if (extract.type === "files") {
       gridRef.current.api.forEachNode((row) => {
         searchCriteria.push(row.data.criteria);
       });
@@ -143,12 +116,12 @@ export default function Archive() {
       JSON.stringify({
         active_tab: activeTab,
         paths: items,
-        file_extension: fileExtension,
-        remove_directory: removeDirectory,
-        archive_format: archiveFormat,
-        extract_option: extractType,
-        search_criteria: searchCriteria,
-        output_directory: outputDirectory,
+        file_extension: create.extension,
+        remove_directory: create.removeDir,
+        archive_format: create.format,
+        extract_option: extract.type,
+        search_criteria: extract.criteria,
+        output_directory: extract.outputDir,
         processors
       }),
       "archive-files",
@@ -165,7 +138,7 @@ export default function Archive() {
       />
       <Grid container spacing={ 2 }>
         <Grid item xs={ 12 }>
-          <DragDropFileContainer files={ items } setFiles={ setItems } />
+          <DragDropFileContainer items={ items } setItems={ addItems } deleteItem={ deleteItem } />
         </Grid>
         <Grid item xs={ 12 }>
           <Box sx={ { borderBottom: 1, borderColor: "divider" } }>
@@ -182,8 +155,8 @@ export default function Archive() {
                   <RadioGroup
                     aria-labelledby="radio-buttons-group-label"
                     name="file-type-radio-buttons-group"
-                    value={ fileExtension }
-                    onChange={ (event) => setFileExtension(event.target.value) }
+                    value={ create.extension }
+                    onChange={ (event) => dispatch(changeExtension(event.target.value)) }
                     row
                   >
                     <FormControlLabel value=".tar" control={ <Radio /> } label=".tar" />
@@ -197,8 +170,8 @@ export default function Archive() {
                   <RadioGroup
                     aria-labelledby="radio-buttons-group-label"
                     name="archive-format-radio-buttons-group"
-                    value={ archiveFormat }
-                    onChange={ (event) => setArchiveFormat(event.target.value) }
+                    value={ create.format }
+                    onChange={ (event) => dispatch(changeFormat(event.target.value)) }
                     row
                   >
                     <FormControlLabel value="PAX" control={ <Radio /> } label="PAX" />
@@ -212,8 +185,8 @@ export default function Archive() {
                   <RadioGroup
                     aria-labelledby="radio-buttons-group-label"
                     name="remove-directory-radio-buttons-group"
-                    value={ removeDirectory }
-                    onChange={ (event) => setRemoveDirectory(event.target.value) }
+                    value={ create.removeDir }
+                    onChange={ (event) => dispatch(changeRemoveDir(str2bool(event.target.value))) }
                     row
                   >
                     <FormControlLabel value control={ <Radio /> } label="Yes" />
@@ -231,8 +204,8 @@ export default function Archive() {
                   <RadioGroup
                     aria-labelledby="radio-buttons-group-label"
                     name="extract-type-radio-buttons-group"
-                    value={ extractType }
-                    onChange={ (event) => setExtractType(event.target.value) }
+                    value={ extract.type }
+                    onChange={ (event) => dispatch(changeType(event.target.value)) }
                   >
                     <FormControlLabel value="all" control={ <Radio /> } label="Entire File" />
                     <FormControlLabel value="files" control={ <Radio /> } label="Specific Files" />
@@ -245,8 +218,8 @@ export default function Archive() {
                   fullWidth
                   label="Output Directory"
                   variant="outlined"
-                  value={ outputDirectory }
-                  onChange={ (event) => setOutputDirectory(event.target.value) }
+                  value={ extract.outputDir }
+                  onChange={ (event) => dispatch(changeOutputDir(event.target.value)) }
                 />
               </Grid>
               <Grid item xs={ 12 }>
@@ -274,7 +247,7 @@ export default function Archive() {
             </Grid>
           </TabPanel>
         </Grid>
-        <Grid container item alignItems="center" justifyContent="center" spacing={ 2 } sx={ { marginTop: "1rem" } }>
+        <Grid container item alignItems="center" justifyContent="center" spacing={ 2 } sx={ { marginTop: "1rem", marginBottom: "2rem" } }>
           <Grid item xs={ 6 } sm={ 2 }>
             <FormControl sx={ { width: 100 } }>
               <InputLabel id="processor-select-label">Processors</InputLabel>
@@ -285,7 +258,7 @@ export default function Archive() {
                 value={ processors }
                 onChange={ (event) => setProcessors(event.target.value) }
               >
-                {numProcessors?.map((item, index) => (
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((item, index) => (
                   <MenuItem key={ index } value={ item }>
                     {item}
                   </MenuItem>
@@ -294,7 +267,7 @@ export default function Archive() {
             </FormControl>
           </Grid>
           <Grid item xs={ 6 } sm={ 2 }>
-            <RunButton active={ active } handleClick={ handleButtonClick } />
+            <RunButton handleClick={ handleButtonClick } />
           </Grid>
         </Grid>
       </Grid>

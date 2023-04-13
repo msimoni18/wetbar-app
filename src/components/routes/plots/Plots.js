@@ -24,14 +24,17 @@ import {
 import { grey } from "@mui/material/colors";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ArticleIcon from "@mui/icons-material/Article";
+import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 import Header from "components/containers/Header";
 import DragDropFileContainer from "components/containers/DragDropFileContainer";
 import SimpleFileContainer from "components/containers/SimpleFileContainer";
 import PlotContainer from "components/containers/PlotContainer";
+import ExpressService from "components/containers/ExpressService";
 
 export default function Plots() {
   // File Options
   const [openFileOptions, setOpenFileOptions] = React.useState(false);
+  const [openExpressOptions, setOpenExpressOptions] = React.useState(false);
   const [items, setItems] = React.useState([]);
   const [searchCriteria, setSearchCriteria] = React.useState("folder");
   const [regex, setRegex] = React.useState("*.xlsx");
@@ -40,6 +43,7 @@ export default function Plots() {
   const [sheets, setSheets] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [loadedData, setLoadedData] = React.useState({});
+  const [plotList, setPlotList] = React.useState([]);
 
   const handleOpenFileOptions = () => {
     get(
@@ -94,8 +98,6 @@ export default function Plots() {
     );
   };
 
-  const [plotList, setPlotList] = React.useState([]);
-
   const deletePlot = React.useCallback(
     (id) => () => {
       setPlotList((prevRows) => prevRows.filter((row) => row !== id));
@@ -105,6 +107,14 @@ export default function Plots() {
   const handleAddNewPlot = () => {
     const uniqueId = uuid();
     setPlotList((prevItems) => [...prevItems, uniqueId]);
+  };
+
+  const handleOpenExpressOptions = () => {
+    setOpenExpressOptions(true);
+  };
+
+  const handleCloseExpressOptions = () => {
+    setOpenExpressOptions(false);
   };
 
   const actions = [
@@ -117,6 +127,11 @@ export default function Plots() {
       icon: <AddCircleIcon fontSize="large" />,
       name: "Add New Plot",
       click: handleAddNewPlot
+    },
+    {
+      icon: <ElectricBoltIcon fontSize="large" />,
+      name: "Express Service",
+      click: handleOpenExpressOptions
     }
   ];
 
@@ -275,6 +290,11 @@ export default function Plots() {
           </Button>
         </DialogActions>
       </Dialog>
+      <ExpressService
+        files={ loadedData.data }
+        open={ openExpressOptions }
+        handleClose={ handleCloseExpressOptions }
+      />
       {plotList.map((item) => (
         <PlotContainer
           key={ item }

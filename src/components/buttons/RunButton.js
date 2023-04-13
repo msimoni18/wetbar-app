@@ -1,11 +1,10 @@
 import React from "react";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
+import { useSelector } from "react-redux";
+import { Box, Button, CircularProgress } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 
-export default function RunButton(props) {
-  const { active = false, handleClick } = props;
+export default function RunButton({ handleClick }) {
+  const { isRunning } = useSelector((store) => store.app);
 
   return (
     <Box sx={ { display: "flex", alignItems: "center" } }>
@@ -14,13 +13,13 @@ export default function RunButton(props) {
           variant="contained"
           size="large"
           color="primary"
-          disabled={ active }
+          disabled={ isRunning }
           onClick={ handleClick }
           endIcon={ <SendIcon /> }
         >
           Run
         </Button>
-        {active && (
+        {isRunning && (
           <CircularProgress
             size={ 24 }
             sx={ {

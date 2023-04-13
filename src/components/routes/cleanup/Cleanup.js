@@ -1,7 +1,8 @@
 import * as React from "react";
-import { io } from "socket.io-client";
+import { useDispatch, useSelector } from "react-redux";
+import { setIsRunning, setIsNotRunning } from "components/appSlice";
 import { v4 as uuid } from "uuid";
-import { post } from "utils/requests";
+import { post, socketIO } from "utils/requests";
 import { formatBytes } from "utils/utilities";
 import {
   Box,
@@ -21,63 +22,36 @@ import DragDropFileContainer from "components/containers/DragDropFileContainer";
 import ListContainer from "components/containers/ListContainer";
 import RunButton from "components/buttons/RunButton";
 import DeleteTableRow from "components/buttons/DeleteTableRow";
-import StatCard from "components/containers/StatCard";
+import StatCard from "components/cards/StatCard";
 import { AgGridReact } from "ag-grid-react";
+import { addFolders, deleteFolder, changeOption, addFiles, updateStats } from "./cleanupSlice";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
-// Electron Inter Process Communication and dialog
-const { ipcRenderer } = window.require("electron");
-
-// Dynamically generated TCP (open) port between 3000-3999
-const port = ipcRenderer.sendSync("get-port-number");
-
 export default function Cleanup() {
-  const [items, setItems] = React.useState([]);
-  const [runOption, setRunOption] = React.useState("dryRun");
-  const [filesToDelete, setFilesToDelete] = React.useState([]);
-
-  const [directoryCount, setDirectoryCount] = React.useState(0);
-  const [fileCount, setFileCount] = React.useState(0);
-  const [spaceReduction, setSpaceReduction] = React.useState("0");
-  const [totalTime, setTotalTime] = React.useState(0);
-
-  const [active, setActive] = React.useState(false);
-
+  const dispatch = useDispatch();
+  const { folders, option, files, stats } = useSelector((state) => state.cleanup);
   const [connected, setConnected] = React.useState(false);
 
   React.useEffect(() => {
     if (connected === false) {
-      const socket = io(`http://localhost:${port}`, {
-        transports: ["websocket"],
-        cors: {
-          origin: `http://localhost:${port}`
-        }
-      });
+      const socket = socketIO();
 
-      socket.on("connect", (data) => {
-        console.log("connected");
-        console.log(data);
+      socket.on("connect", () => {
         setConnected(true);
       });
 
-      socket.on("disconnect", (data) => {
-        console.log("disconnected");
-        console.log(data);
+      socket.on("disconnect", () => {
       });
 
       socket.on("cleanup", (data) => {
-        console.log(data);
-        setDirectoryCount(data.directory);
-        setSpaceReduction(formatBytes(data.size));
-        setFileCount(data.files);
-        setTotalTime(data.time);
+        dispatch(updateStats({
+          dirCount: data.directory,
+          fileCount: data.files,
+          spaceReduction: formatBytes(data.size),
+          totalTime: data.time
+        }));
       });
-
-      return function cleanup() {
-        console.log("disconnecting socket");
-        socket.disconnect();
-      };
     }
   }, []);
 
@@ -133,24 +107,24 @@ export default function Cleanup() {
   };
 
   const handleResponse = (response) => {
-    setFilesToDelete(response.files);
-    setActive(false);
+    dispatch(addFiles(response.files));
+    dispatch(setIsNotRunning());
   };
 
   const handleClick = () => {
     const selectedRows = gridRef.current.api.getSelectedRows();
 
-    if ((runOption === "dryRun" || runOption === "deleteNoDryRun") && (items.length === 0 || selectedRows.length === 0)) {
-      alert("Folders must be provided and rows must be checked in the table before cleaning up files.");
-    } else if (runOption === "deleteAfterDryRun" && filesToDelete.length === 0) {
-      alert("No files were found during the previous dry run.");
+    if ((option === "dryRun" || option === "deleteNoDryRun") && (folders.length === 0 || selectedRows.length === 0)) {
+      alert("Folders must be provided and rows must be checked in the table before cleaning up files."); // eslint-disable-line no-alert
+    } else if (option === "deleteAfterDryRun" && files.length === 0) {
+      alert("No files were found during the previous dry run."); // eslint-disable-line no-alert
     } else {
-      setActive(true);
+      dispatch(setIsRunning());
       post(
         JSON.stringify({
-          option: runOption,
-          folders: items,
-          files: filesToDelete,
+          option,
+          folders,
+          files,
           extensions: selectedRows
         }),
         "cleanup",
@@ -168,15 +142,51 @@ export default function Cleanup() {
       />
       <Grid container spacing={ 2 }>
         <Grid item xs={ 12 }>
-          <DragDropFileContainer files={ items } setFiles={ setItems } />
+          <DragDropFileContainer
+            items={ folders }
+            setItems={ addFolders }
+            deleteItem={ deleteFolder }
+          />
         </Grid>
-        <Grid item xs={ 12 } sm={ 6 }>
-          <StatCard title="Directories searched" stat={ directoryCount } />
-          <StatCard title="Files deleted" stat={ fileCount } />
-          <StatCard title="Total space reduction" stat={ spaceReduction } />
-          <StatCard title="Time elapsed (H:M:S)" stat={ totalTime } />
+        <Grid item xs={ 12 } sm={ 4 }>
+          <FormControl>
+            <FormLabel id="options-group-label">Options</FormLabel>
+            <RadioGroup
+              aria-labelledby="options-group-label"
+              value={ option }
+              name="options-group"
+            >
+              <FormControlLabel
+                value="dryRun"
+                control={ <Radio /> }
+                label="Dry run"
+                onChange={ (event) => dispatch(changeOption(event.target.value)) }
+              />
+              <FormControlLabel
+                value="deleteAfterDryRun"
+                control={ <Radio /> }
+                label="Delete files found after dry run"
+                onChange={ (event) => dispatch(changeOption(event.target.value)) }
+              />
+              <FormControlLabel
+                value="deleteNoDryRun"
+                control={ <Radio /> }
+                label="Delete files, no dry run"
+                onChange={ (event) => dispatch(changeOption(event.target.value)) }
+              />
+            </RadioGroup>
+          </FormControl>
+          <Box sx={ {
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "2rem"
+          } }
+          >
+            <RunButton handleClick={ handleClick } />
+          </Box>
         </Grid>
-        <Grid item xs={ 12 } sm={ 6 }>
+        <Grid item xs={ 12 } sm={ 8 }>
           <Box>
             <div className="ag-theme-alpine" style={ gridStyle }>
               <AgGridReact
@@ -196,43 +206,23 @@ export default function Cleanup() {
             </Tooltip>
           </Box>
         </Grid>
-        <Grid item xs={ 12 }>
-          <Box sx={ { display: "flex", alignItems: "center", justifyContent: "space-around" } }>
-            <FormControl>
-              <FormLabel id="options-group-label">Options</FormLabel>
-              <RadioGroup
-                aria-labelledby="options-group-label"
-                value={ runOption }
-                name="options-group"
-              >
-                <FormControlLabel
-                  value="dryRun"
-                  control={ <Radio /> }
-                  label="Dry run"
-                  onChange={ (event) => setRunOption(event.target.value) }
-                />
-                <FormControlLabel
-                  value="deleteAfterDryRun"
-                  control={ <Radio /> }
-                  label="Delete files found after dry run"
-                  onChange={ (event) => setRunOption(event.target.value) }
-                />
-                <FormControlLabel
-                  value="deleteNoDryRun"
-                  control={ <Radio /> }
-                  label="Delete files, no dry run"
-                  onChange={ (event) => setRunOption(event.target.value) }
-                />
-              </RadioGroup>
-            </FormControl>
-            <RunButton active={ active } handleClick={ handleClick } />
-          </Box>
+        <Grid item xs={ 12 } sm={ 6 }>
+          <StatCard title="Directories searched" stat={ stats.dirCount } />
+        </Grid>
+        <Grid item xs={ 12 } sm={ 6 }>
+          <StatCard title="Files deleted" stat={ stats.fileCount } />
+        </Grid>
+        <Grid item xs={ 12 } sm={ 6 }>
+          <StatCard title="Total space reduction" stat={ stats.spaceReduction } />
+        </Grid>
+        <Grid item xs={ 12 } sm={ 6 }>
+          <StatCard title="Time elapsed (H:M:S)" stat={ stats.totalTime } />
         </Grid>
         <Grid item xs={ 12 }>
-          {runOption === "dryRun"
+          {option === "dryRun"
             ? <Typography>Files found after dry run:</Typography>
             : <Typography>Files deleted:</Typography>}
-          <ListContainer files={ filesToDelete } />
+          <ListContainer files={ files } />
         </Grid>
       </Grid>
     </React.Fragment>

@@ -1,5 +1,5 @@
 import * as React from "react";
-
+import { useDispatch } from "react-redux";
 import {
   Box,
   List,
@@ -14,12 +14,11 @@ import {
 } from "@mui/material";
 import FolderIcon from "@mui/icons-material/Folder";
 import DeleteIcon from "@mui/icons-material/Delete";
-
 import styles from "./DragDropFileContainer.module.scss";
 
 export default function DragDropFileContainer(props) {
-  const { files, setFiles } = props;
-
+  const dispatch = useDispatch();
+  const { items, setItems, deleteItem } = props;
   const [dense, setDense] = React.useState(false);
   const [secondary, setSecondary] = React.useState(false);
 
@@ -33,22 +32,20 @@ export default function DragDropFileContainer(props) {
         // If dropped items aren't files, reject them
         if (e.dataTransfer.items[i].kind === "file") {
           const file = e.dataTransfer.items[i].getAsFile();
-
-          // Only add object if it is unique
-          isUnique({
+          dispatch(setItems({
             name: file.name,
             path: file.path
-          });
+          }));
         }
       }
     } else {
       // Use DataTransfer interface to access the file(s)
       for (let i = 0; i < e.dataTransfer.files.length; i += 1) {
         // Only add object if it is unique
-        isUnique({
+        dispatch(setItems({
           name: e.dataTransfer.files[i].name,
           path: e.dataTransfer.files[i].path
-        });
+        }));
       }
     }
   }
@@ -58,22 +55,12 @@ export default function DragDropFileContainer(props) {
     e.preventDefault();
   }
 
-  function isUnique(newContent) {
-    const index = files.findIndex((object) => object.path === newContent.path);
-    if (index === -1) {
-      setFiles((previousContent) => {
-        return [...previousContent, newContent];
-      });
-    }
-  }
-
   const handleDelete = (index) => {
-    const newFiles = (file) => file.filter((item, i) => i !== index);
-    setFiles(newFiles);
+    dispatch(deleteItem(index));
   };
 
   function generate() {
-    return files.map((file, index) => {
+    return items.map((file, index) => {
       return (
         <ListItem
           key={ index }
@@ -131,7 +118,7 @@ export default function DragDropFileContainer(props) {
         onDrop={ dropHandler }
         onDragOver={ dragOverHandler }
       >
-        {files.length > 0 && <List dense={ dense }>{generate()}</List>}
+        {items?.length > 0 && <List dense={ dense }>{generate()}</List>}
       </div>
     </Box>
   );

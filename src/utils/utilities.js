@@ -19,6 +19,13 @@ export function addCommaToNumber(number) {
 export function rgbaToString(rgba) {
   return `rgba(${rgba.r}, ${rgba.g}, ${rgba.b}, ${rgba.a})`;
 }
+export function str2bool(value) {
+  if (value && typeof value === "string") {
+    if (value.toLowerCase() === "true") return true;
+    if (value.toLowerCase() === "false") return false;
+  }
+  return value;
+}
 
 export const linestyles = [
   "solid",

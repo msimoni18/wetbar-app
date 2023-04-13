@@ -1,11 +1,11 @@
 import * as React from "react";
+import { useDispatch } from "react-redux";
 import { Box, IconButton, Typography } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
-
 import styles from "./DragDropTextField.module.scss";
 
-export default function DragDropTextField(props) {
-  const { item, setItem } = props;
+export default function DragDropTextField({ item, setItem }) {
+  const dispatch = useDispatch();
 
   function dropHandler(e) {
     // Prevent default behavior (Prevent file from being opened)
@@ -17,13 +17,13 @@ export default function DragDropTextField(props) {
         // If dropped items aren't files, reject them
         if (e.dataTransfer.items[i].kind === "file") {
           const droppedItem = e.dataTransfer.items[i].getAsFile();
-          setItem(droppedItem.path);
+          dispatch(setItem(droppedItem.path));
         }
       }
     } else {
       // Use DataTransfer interface to access the file(s)
       for (let i = 0; i < e.dataTransfer.files.length; i += 1) {
-        setItem(e.dataTransfer.files[i].path);
+        dispatch(setItem(e.dataTransfer.files[i].path));
       }
     }
   }
@@ -37,7 +37,7 @@ export default function DragDropTextField(props) {
     <Box sx={ { flexGrow: 1 } }>
       <div
         className={ styles["drag-drop-textfield"] }
-        data-text="Drag and drop your folder here."
+        data-text="Drag and drop your file or folder here."
         onDrop={ dropHandler }
         onDragOver={ dragOverHandler }
       >
@@ -50,10 +50,10 @@ export default function DragDropTextField(props) {
             flexWrap: "nowrap"
           } }
           >
-            <Typography>{item}</Typography>
-            <IconButton onClick={ () => setItem("") }>
+            <IconButton onClick={ () => dispatch(setItem("")) }>
               <ClearIcon fontSize="small" />
             </IconButton>
+            <Typography>{item}</Typography>
           </Box>
         )}
       </div>

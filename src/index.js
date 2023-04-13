@@ -1,7 +1,5 @@
 import "index.scss";
-
 import * as serviceWorker from "serviceWorker";
-
 import App from "components/App";
 import { Provider } from "react-redux";
 import React from "react";

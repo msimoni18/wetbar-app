@@ -10,6 +10,13 @@ WETbar
    :maxdepth: 2
    :caption: Contents:
 
+   spacehogs
+   cleanup
+   archive
+   spaceutilization
+   plots
+   flamingo
+   settings
 
 
 Indices and tables
