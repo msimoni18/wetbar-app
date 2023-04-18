@@ -151,7 +151,7 @@ export default function Flamingo() {
           </FormControl>
         </Grid>
         <Grid item xs={ 12 } sx={ { display: "flex", justifyContent: "center" } }>
-          <RunButton handleClick={ handleButtonClick } />
+          <RunButton handleClick={ handleButtonClick }>Run</RunButton>
         </Grid>
       </Grid>
     </React.Fragment>

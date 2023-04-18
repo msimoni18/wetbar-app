@@ -267,7 +267,7 @@ export default function Archive() {
             </FormControl>
           </Grid>
           <Grid item xs={ 6 } sm={ 2 }>
-            <RunButton handleClick={ handleButtonClick } />
+            <RunButton handleClick={ handleButtonClick }>Run</RunButton>
           </Grid>
         </Grid>
       </Grid>

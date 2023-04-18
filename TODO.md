@@ -41,6 +41,8 @@ KNOWN ISSUES
 General
 =======
 
+- Does it make sense to create a custom useFetch hook? (#137, https://fluor.udemy.com/course/react-tutorial-and-projects-course/learn/lecture/36179346#overview)
+
 - Move connect/disconnect sockets to top level of App
 
 - Try opening new BrowserWindow to "pop out" plot containers
@@ -116,10 +118,13 @@ Backend
 File Options
 ============
 
-- Allow user to preview data based on inputs so they can check if their
-  inputs are correct
-
-- Allow user to preview Excel sheets available
+- Instead of a folder icon next to each folder/file, add a button that
+  opens a modular window for file options. Include a "preview" data
+  section and show available Excel sheets in a list. If this is implemented,
+  need to figure out how to globally apply settings so someone doesn't
+  have to go into 10 different folders. Maybe keep the current file options,
+  if if a checkbox is selected in the modular window, then those file options
+  will be used instead of the global ones.
 
 Settings
 ========

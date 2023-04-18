@@ -1,6 +1,5 @@
 import * as React from "react";
-import ResizeablePlot from "components/containers/ResizeablePlot";
-import TestSocketCounter from "components/containers/TestSocketCounter";
+import ResizeablePlot from "./ResizeablePlot";
 
 export default function Test() {
 
@@ -29,13 +28,6 @@ export default function Test() {
       <br />
       <ResizeablePlot data={ testData } layout={ testLayout } />
       <br />
-      <hr />
-      <br />
-      <h3>Test counter with sockets</h3>
-      <br />
-      <TestSocketCounter />
-      <br />
-      <hr />
     </React.Fragment>
   );
 }

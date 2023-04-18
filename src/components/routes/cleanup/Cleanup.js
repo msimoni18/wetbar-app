@@ -183,7 +183,7 @@ export default function Cleanup() {
             marginTop: "2rem"
           } }
           >
-            <RunButton handleClick={ handleClick } />
+            <RunButton handleClick={ handleClick }>Run</RunButton>
           </Box>
         </Grid>
         <Grid item xs={ 12 } sm={ 8 }>

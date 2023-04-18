@@ -1,6 +1,6 @@
 import * as React from "react";
 import { post, get } from "utils/requests";
-import { v4 as uuid } from "uuid";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
   FormControl,
@@ -16,12 +16,10 @@ import {
   DialogActions,
   DialogContentText,
   Button,
-  CircularProgress,
   Tooltip,
   Typography,
   Grid
 } from "@mui/material";
-import { grey } from "@mui/material/colors";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ArticleIcon from "@mui/icons-material/Article";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
@@ -30,25 +28,31 @@ import DragDropFileContainer from "components/containers/DragDropFileContainer";
 import SimpleFileContainer from "components/containers/SimpleFileContainer";
 import PlotContainer from "components/containers/PlotContainer";
 import ExpressService from "components/containers/ExpressService";
+import RunButton from "components/buttons/RunButton";
+import { setIsRunning, setIsNotRunning } from "components/appSlice";
+import {
+  addItems,
+  deleteItem,
+  changeCriteria,
+  changeRegex,
+  changeSkipRows,
+  changeDelimiter,
+  changeSheets,
+  addLoadedFiles,
+  addNewPlot,
+  deletePlot
+} from "./plotsSlice";
 
 export default function Plots() {
-  // File Options
+  const dispatch = useDispatch();
+  const { fileOptions, plotList } = useSelector((state) => state.plots);
   const [openFileOptions, setOpenFileOptions] = React.useState(false);
   const [openExpressOptions, setOpenExpressOptions] = React.useState(false);
-  const [items, setItems] = React.useState([]);
-  const [searchCriteria, setSearchCriteria] = React.useState("folder");
-  const [regex, setRegex] = React.useState("*.xlsx");
-  const [skiprows, setSkiprows] = React.useState("");
-  const [delimiter, setDelimiter] = React.useState("");
-  const [sheets, setSheets] = React.useState("");
-  const [loading, setLoading] = React.useState(false);
-  const [loadedData, setLoadedData] = React.useState({});
-  const [plotList, setPlotList] = React.useState([]);
 
   const handleOpenFileOptions = () => {
     get(
       "load-files",
-      (response) => setLoadedData(response),
+      (response) => dispatch(addLoadedFiles(response)),
       (error) => console.error(error)
     );
     setOpenFileOptions(true);
@@ -59,20 +63,20 @@ export default function Plots() {
   };
 
   const handleLoadFilesResponse = (response) => {
-    setLoadedData(response);
-    setLoading(false);
+    dispatch(addLoadedFiles(response));
+    dispatch(setIsNotRunning());
   };
 
   const handleLoadFiles = () => {
-    setLoading(true);
+    dispatch(setIsRunning());
     post(
       JSON.stringify({
-        paths: items,
-        search_criteria: searchCriteria,
-        regex,
-        skiprows,
-        delimiter,
-        sheets
+        paths: fileOptions.items,
+        search_criteria: fileOptions.searchCriteria,
+        regex: fileOptions.regex,
+        skiprows: fileOptions.skipRows,
+        delimiter: fileOptions.delimiter,
+        sheets: fileOptions.sheets
       }),
       "load-files",
       (response) => handleLoadFilesResponse(response),
@@ -80,33 +84,13 @@ export default function Plots() {
     );
   };
 
-  const handleDeleteFilesResponse = (response) => {
-    const newData = loadedData.data.filter((item) => response.includes(item.file));
-    if (newData.length === 0) {
-      setLoadedData((prevData) => ({ ...prevData, data: newData, message: "No files have been loaded." }));
-    } else {
-      setLoadedData((prevData) => ({ ...prevData, data: newData }));
-    }
-  };
-
-  const handleDeleteFiles = (pathName) => {
+  const handleDeleteLoadedFile = (pathName) => {
     post(
       JSON.stringify(pathName),
       "delete-loaded-data",
-      (response) => handleDeleteFilesResponse(response),
+      (response) => dispatch(addLoadedFiles(response)),
       (error) => console.error(error)
     );
-  };
-
-  const deletePlot = React.useCallback(
-    (id) => () => {
-      setPlotList((prevRows) => prevRows.filter((row) => row !== id));
-    }, []
-  );
-
-  const handleAddNewPlot = () => {
-    const uniqueId = uuid();
-    setPlotList((prevItems) => [...prevItems, uniqueId]);
   };
 
   const handleOpenExpressOptions = () => {
@@ -126,7 +110,7 @@ export default function Plots() {
     {
       icon: <AddCircleIcon fontSize="large" />,
       name: "Add New Plot",
-      click: handleAddNewPlot
+      click: () => dispatch(addNewPlot())
     },
     {
       icon: <ElectricBoltIcon fontSize="large" />,
@@ -165,7 +149,11 @@ export default function Plots() {
           <hr />
           <Grid container alignItems="stretch" spacing={ 2 }>
             <Grid item xs={ 12 }>
-              <DragDropFileContainer files={ items } setFiles={ setItems } />
+              <DragDropFileContainer
+                items={ fileOptions.items }
+                setItems={ addItems }
+                deleteItem={ deleteItem }
+              />
             </Grid>
             <Grid item xs={ 12 } sm={ 6 }>
               <Box
@@ -180,20 +168,20 @@ export default function Plots() {
                   <FormLabel>Search criteria:</FormLabel>
                   <RadioGroup
                     aria-labelledby="demo-radio-buttons-group-label"
-                    value={ searchCriteria }
+                    value={ fileOptions.searchCriteria }
                     name="radio-buttons-group"
                   >
                     <FormControlLabel
                       value="file"
                       control={ <Radio /> }
                       label="File"
-                      onChange={ (event) => setSearchCriteria(event.target.value) }
+                      onChange={ (event) => dispatch(changeCriteria(event.target.value)) }
                     />
                     <FormControlLabel
                       value="folder"
                       control={ <Radio /> }
                       label="Folder"
-                      onChange={ (event) => setSearchCriteria(event.target.value) }
+                      onChange={ (event) => dispatch(changeCriteria(event.target.value)) }
                     />
                   </RadioGroup>
                 </FormControl>
@@ -204,8 +192,8 @@ export default function Plots() {
                   type="input"
                   variant="standard"
                   fullWidth
-                  value={ regex }
-                  onChange={ (event) => setRegex(event.target.value) }
+                  value={ fileOptions.regex }
+                  onChange={ (event) => dispatch(changeRegex(event.target.value)) }
                 />
               </Box>
             </Grid>
@@ -229,8 +217,8 @@ export default function Plots() {
                     type="input"
                     fullWidth
                     variant="standard"
-                    value={ skiprows }
-                    onChange={ (event) => setSkiprows(event.target.value) }
+                    value={ fileOptions.skipRows }
+                    onChange={ (event) => dispatch(changeSkipRows(event.target.value)) }
                   />
                   <TextField
                     margin="dense"
@@ -239,8 +227,8 @@ export default function Plots() {
                     type="input"
                     fullWidth
                     variant="standard"
-                    value={ delimiter }
-                    onChange={ (event) => setDelimiter(event.target.value) }
+                    value={ fileOptions.delimiter }
+                    onChange={ (event) => dispatch(changeDelimiter(event.target.value)) }
                   />
                   <TextField
                     margin="dense"
@@ -249,56 +237,37 @@ export default function Plots() {
                     type="input"
                     fullWidth
                     variant="standard"
-                    value={ sheets }
-                    onChange={ (event) => setSheets(event.target.value) }
+                    value={ fileOptions.sheets }
+                    onChange={ (event) => dispatch(changeSheets(event.target.value)) }
                   />
                 </FormControl>
               </Box>
             </Grid>
             <Grid item xs={ 12 }>
               <Typography>Loaded data:</Typography>
-              <SimpleFileContainer data={ loadedData } handleDelete={ handleDeleteFiles } />
+              <SimpleFileContainer
+                data={ fileOptions.loadedData }
+                handleDelete={ handleDeleteLoadedFile }
+              />
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Box sx={ { m: 1, position: "relative" } }>
-            <Button
-              variant="contained"
-              //   sx={buttonSx}
-              disabled={ loading }
-              onClick={ handleLoadFiles }
-            >
-              Load Files
-            </Button>
-            {loading && (
-              <CircularProgress
-                size={ 24 }
-                sx={ {
-                  color: grey[800],
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  marginTop: "-12px",
-                  marginLeft: "-12px"
-                } }
-              />
-            )}
-          </Box>
+          <RunButton handleClick={ handleLoadFiles }>Load Files</RunButton>
           <Button variant="outlined" onClick={ handleCloseFileOptions }>
             Close
           </Button>
         </DialogActions>
       </Dialog>
       <ExpressService
-        files={ loadedData.data }
+        files={ fileOptions.loadedData.data }
         open={ openExpressOptions }
         handleClose={ handleCloseExpressOptions }
       />
-      {plotList.map((item) => (
+      {plotList.map((id) => (
         <PlotContainer
-          key={ item }
-          plotId={ item }
+          key={ id }
+          plotId={ id }
           handleDelete={ deletePlot }
         />
       ))}

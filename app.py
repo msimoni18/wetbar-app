@@ -276,7 +276,7 @@ def load_files():
             'file': f,
             'name': str(Path(f).name),
             'parameters': data.DATA[f]['parameters']
-            } for f in sorted(data.DATA)
+            } for f in sort_nicely(data.DATA)
         ]
 
         return jsonify(result)
@@ -287,7 +287,7 @@ def load_files():
             'file': f,
             'name': str(Path(f).name),
             'parameters': data.DATA[f]['parameters']
-            } for f in sorted(data.DATA)]
+            } for f in sort_nicely(data.DATA)]
 
         return jsonify({
             'status': True,
@@ -357,9 +357,27 @@ def delete_loaded_data():
             if f != request.json:
                 keep_files.append(f)
 
+        if not keep_files:
+            data.DATA = {}
+            return jsonify({
+                'status': False,
+                'message': 'No files have been loaded.',
+                'data': []
+            })
+
         data.DATA = {f: data.DATA[f] for f in sort_nicely(keep_files)}
 
-        return jsonify(sorted(list(data.DATA.keys())))
+        new_data = [{
+            'file': f,
+            'name': str(Path(f).name),
+            'parameters': data.DATA[f]['parameters']
+            } for f in data.DATA]
+
+        return jsonify({
+            'status': True,
+            'message': 'success',
+            'data': new_data
+        })
 
 
 @socketio.on('cleanup')
@@ -429,31 +447,16 @@ def disconnected():
     print()
 
 
-@socketio.on('test-message')
-@app.route('/test-counter', methods=['POST'])
-def test_counter():
-    if request.method == 'POST':
-        print(request)
-        count = 0
-        for i in range(20):
-            if i > 9:
-                break
-            count = i + 1
-            socketio.emit("test-message", {'count': count})
-            time.sleep(1)
-        return jsonify(count)
-
-
 """
 -------------------------- APP SERVICES ----------------------------
 """
 # Quits Flask on Electron exit
 @app.route("/quit")
 def quit():
-  shutdown = request.environ.get("werkzeug.server.shutdown")
-  shutdown()
+    shutdown = request.environ.get("werkzeug.server.shutdown")
+    shutdown()
 
-  return
+    return
 
 
 if __name__ == "__main__":

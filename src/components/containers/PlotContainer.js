@@ -1,5 +1,6 @@
 import * as React from "react";
 import Plot from "react-plotly.js";
+import { useDispatch, useSelector } from "react-redux";
 import { useResizeDetector } from "react-resize-detector";
 import { v4 as uuid } from "uuid";
 import {
@@ -22,7 +23,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { post, get } from "utils/requests";
 import { rgbaToString } from "utils/utilities";
-import ResizeablePlot from "components/containers/ResizeablePlot";
+import ResizeablePlot from "components/routes/test/ResizeablePlot";
 import ColorSelector from "./ColorSelector";
 import Series from "./Series";
 import { Accordion, AccordionSummary, AccordionDetails } from "./CustomComponents";
@@ -43,6 +44,7 @@ const initialColors = {
 };
 
 export default function PlotContainer(props) {
+  const dispatch = useDispatch();
   const { plotId, handleDelete } = props;
   const { width, ref } = useResizeDetector();
   const [expanded, setExpanded] = React.useState("");
@@ -762,7 +764,7 @@ export default function PlotContainer(props) {
               </IconButton>
             </Tooltip>
             <Tooltip title="Delete plot" placement="top">
-              <IconButton onClick={ handleDelete(plotId) }>
+              <IconButton onClick={ () => dispatch(handleDelete(plotId)) }>
                 <DeleteIcon />
               </IconButton>
             </Tooltip>

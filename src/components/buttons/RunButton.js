@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { Box, Button, CircularProgress } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 
-export default function RunButton({ handleClick }) {
+export default function RunButton({ handleClick, children }) {
   const { isRunning } = useSelector((store) => store.app);
 
   return (
@@ -17,7 +17,7 @@ export default function RunButton({ handleClick }) {
           onClick={ handleClick }
           endIcon={ <SendIcon /> }
         >
-          Run
+          {children}
         </Button>
         {isRunning && (
           <CircularProgress
