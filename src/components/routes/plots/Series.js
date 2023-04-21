@@ -15,7 +15,7 @@ import {
 } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { HtmlTooltip } from "./tooltips/HtmlTooltip";
+import { HtmlTooltip } from "components/containers/tooltips/HtmlTooltip";
 
 export default function Series(props) {
   const { id, handleDelete, data, series, setSeries } = props;

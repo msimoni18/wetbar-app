@@ -24,10 +24,10 @@ import SaveIcon from "@mui/icons-material/Save";
 import { post, get } from "utils/requests";
 import { rgbaToString } from "utils/utilities";
 import ResizeablePlot from "components/routes/test/ResizeablePlot";
-import ColorSelector from "./ColorSelector";
+import ColorSelector from "../../containers/ColorSelector";
 import Series from "./Series";
-import { Accordion, AccordionSummary, AccordionDetails } from "./CustomComponents";
-import { linestyles, colorscales } from "../../utils/utilities";
+import { Accordion, AccordionSummary, AccordionDetails } from "../../containers/CustomComponents";
+import { linestyles, colorscales } from "../../../utils/utilities";
 import styles from "./PlotContainer.module.scss";
 
 const formatItemStyle = {
