@@ -1,6 +1,30 @@
 import { v4 as uuid } from "uuid";
 import { createSlice } from "@reduxjs/toolkit";
 
+// TODO: Consider thunk for updating name
+//       for better performance
+
+const baseSeries = {
+  file: "",
+  x: "",
+  y: "",
+  name: "",
+  type: "scatter",
+  mode: "lines",
+  yaxis: "y",
+  booleans: {
+    y2: false
+  },
+  normalize: {
+    enable: false,
+    type: "min",
+    useDifferentParameter: false,
+    parameter: ""
+  },
+  z: "",
+  aggregate: "min"
+};
+
 const plotsSlice = createSlice({
   name: "plots",
   initialState: {
@@ -13,7 +37,16 @@ const plotsSlice = createSlice({
       sheets: "",
       loadedData: {}
     },
-    plotList: []
+    plots: {}
+    // plots: {
+    //   'plot-id-1': {
+    //     series: {
+    //       'series-id-1': {x, y, z},
+    //       'series-id-1': {x, y, z},
+    //     },
+    //     layout: {}
+    //   }
+    // }
   },
   reducers: {
     addItems: (state, { payload }) => {
@@ -45,11 +78,48 @@ const plotsSlice = createSlice({
     addLoadedFiles: (state, { payload }) => {
       state.fileOptions.loadedData = payload;
     },
-    addNewPlot: (state) => {
-      state.plotList = [...state.plotList, uuid()];
+    addPlot: (state) => {
+      state.plots = {
+        ...state.plots,
+        [uuid()]: { series: {}, layout: {} }
+      };
     },
     deletePlot: (state, { payload }) => {
-      state.plotList = state.plotList.filter((id) => id !== payload);
+      delete state.plots[payload];
+    },
+    addSeries: (state, { payload }) => {
+      const seriesId = uuid();
+      state.plots[payload].series = {
+        ...state.plots[payload].series,
+        [seriesId]: { id: seriesId, ...baseSeries }
+      };
+    },
+    deleteSeries: (state, { payload }) => {
+      delete state.plots[payload.plotId].series[payload.id];
+    },
+    updateSeries: (state, { payload }) => {
+      state.plots[payload.plotId].series[payload.id] = {
+        ...state.plots[payload.plotId].series[payload.id],
+        ...payload.newInput
+      };
+    },
+    updateSeriesBooleans: (state, { payload }) => {
+      state.plots[payload.plotId].series[payload.id] = {
+        ...state.plots[payload.plotId].series[payload.id],
+        booleans: {
+          ...state.plots[payload.plotId].series[payload.id].booleans,
+          ...payload.newInput
+        }
+      };
+    },
+    updateSeriesNormalize: (state, { payload }) => {
+      state.plots[payload.plotId].series[payload.id] = {
+        ...state.plots[payload.plotId].series[payload.id],
+        normalize: {
+          ...state.plots[payload.plotId].series[payload.id].normalize,
+          ...payload.newInput
+        }
+      };
     }
   }
 });
@@ -63,8 +133,13 @@ export const {
   changeDelimiter,
   changeSheets,
   addLoadedFiles,
-  addNewPlot,
-  deletePlot
+  addPlot,
+  deletePlot,
+  addSeries,
+  deleteSeries,
+  updateSeries,
+  updateSeriesBooleans,
+  updateSeriesNormalize
 } = plotsSlice.actions;
 
 export default plotsSlice.reducer;

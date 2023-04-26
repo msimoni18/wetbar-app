@@ -1,4 +1,6 @@
 import React from "react";
+import PropTypes from "prop-types";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Box,
   Checkbox,
@@ -16,146 +18,93 @@ import {
 import InfoIcon from "@mui/icons-material/Info";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { HtmlTooltip } from "components/containers/tooltips/HtmlTooltip";
+import {
+  deleteSeries,
+  updateSeries,
+  updateSeriesBooleans,
+  updateSeriesNormalize
+} from "./plotsSlice";
 
-export default function Series(props) {
-  const { id, handleDelete, data, series, setSeries } = props;
+Series.propTypes = {
+  plotId: PropTypes.string,
+  id: PropTypes.string
+};
+
+export default function Series({ plotId, id }) {
+  const dispatch = useDispatch();
+  const series = useSelector((state) =>
+    state.plots.plots[plotId].series[id]);
+  const data = useSelector((state) => state.plots.fileOptions.loadedData.data);
   const [availableParams, setAvailableParams] = React.useState([]);
-  const [file, setFile] = React.useState("");
-  const [x, setX] = React.useState("");
-  const [y, setY] = React.useState("");
-  const [z, setZ] = React.useState("");
-  const [name, setName] = React.useState("");
-  const [type, setType] = React.useState("scatter");
-  const [mode, setMode] = React.useState("lines");
-  const [y2, setY2] = React.useState(false);
-  const [normalize, setNormalize] = React.useState(false);
-  const [normalizeType, setNormalizeType] = React.useState("min");
-  const [useNewNormalizeParameter, setUseNewNormalizeParameter] = React.useState(false);
-  const [normalizeParameter, setNormalizeParameter] = React.useState("");
-  const [aggregateType, setAggregateType] = React.useState("min");
 
   React.useEffect(() => {
-    const item = data.filter((row) => row.file === file);
-    setAvailableParams(item[0]?.parameters);
-  }, [file]);
+    const item = data?.filter((row) => row.file === series.file);
+    if (item) {
+      setAvailableParams(item[0]?.parameters);
+    }
+  }, [series.file]);
 
-  // TODO: Change map functions to forEach based on
-  // https://stackoverflow.com/questions/51519149/how-to-return-a-spread-operator-in-a-map-arrow-function-in-one-line
+  const handleDelete = () => {
+    dispatch(deleteSeries({ plotId, id }));
+  };
 
   const handleFileChange = (event) => {
-    const newFile = event.target.value;
-    setFile(newFile);
-
-    const newSeries = series.map((row) => (row.id === id ? { ...row, file: newFile } : row));
-    setSeries(newSeries);
+    dispatch(updateSeries({ plotId, id, newInput: { file: event.target.value } }));
   };
 
   const handleXChange = (event) => {
-    const newX = event.target.value;
-    setX(newX);
-
-    const newSeries = series.map((row) => (row.id === id ? { ...row, x: newX } : row));
-    setSeries(newSeries);
+    dispatch(updateSeries({ plotId, id, newInput: { x: event.target.value } }));
   };
 
   const handleYChange = (event) => {
-    const newY = event.target.value;
-    setY(newY);
-
-    let newSeries;
-    if (!useNewNormalizeParameter) {
-      setNormalizeParameter(newY);
-      newSeries = series.map((row) => (row.id === id
-        ? {
-          ...row,
-          y: newY,
-          normalize: {
-            ...row.normalize,
-            parameter: newY
-          }
-        } : row));
-    } else {
-      newSeries = series.map((row) => (row.id === id ? { ...row, y: newY } : row));
-    }
-
-    setSeries(newSeries);
-  };
-
-  const handleZChange = (event) => {
-    const newZ = event.target.value;
-    setZ(newZ);
-
-    const newSeries = series.map((row) => (row.id === id ? { ...row, z: newZ } : row));
-    setSeries(newSeries);
-  };
-
-  const handleAggregateChange = (event) => {
-    const newAgg = event.target.value;
-    setAggregateType(newAgg);
-
-    const newSeries = series.map((row) => (row.id === id ? { ...row, aggregate: newAgg } : row));
-    setSeries(newSeries);
+    dispatch(updateSeries({ plotId, id, newInput: { y: event.target.value } }));
   };
 
   const handleNameChange = (event) => {
-    const newName = event.target.value;
-    setName(newName);
-
-    const newSeries = series.map((row) => (row.id === id ? { ...row, name: newName } : row));
-    setSeries(newSeries);
+    dispatch(updateSeries({ plotId, id, newInput: { name: event.target.value } }));
   };
 
   const handleModeChange = (event) => {
-    const newMode = event.target.value;
-    setMode(newMode);
-
-    const newSeries = series.map((row) => (row.id === id ? { ...row, mode: newMode } : row));
-    setSeries(newSeries);
+    dispatch(updateSeries({ plotId, id, newInput: { mode: event.target.value } }));
   };
 
-  React.useEffect(() => {
-    if (y2) {
-      const newSeries = series.map((row) => (row.id === id ? { ...row, yaxis: "y2" } : row));
-      setSeries(newSeries);
-    } else if (!y2) {
-      const newSeries = series.map((row) => (row.id === id ? { ...row, yaxis: "y" } : row));
-      setSeries(newSeries);
-    }
-  }, [y2]);
-
-  React.useEffect(() => {
-    if (normalize) {
-      const newSeries = series.map((row) => (row.id === id
-        ? {
-          ...row,
-          normalize: {
-            ...row.normalize,
-            type: normalizeType,
-            parameter: normalizeParameter
-          } }
-        : row
-      ));
-      setSeries(newSeries);
-    } else if (!normalize) {
-      const newSeries = series.map((row) => (row.id === id
-        ? { ...row, normalize: { ...row.normalize, type: "", parameter: y } }
-        : row
-      ));
-      setSeries(newSeries);
-    }
-  }, [normalize, normalizeType, normalizeParameter, y]);
-
-  React.useEffect(() => {
-    if (!useNewNormalizeParameter) {
-      setNormalizeParameter(y);
-    }
-  }, [useNewNormalizeParameter]);
-
   const handleTypeChange = (event) => {
-    const newType = event.target.value;
-    setType(newType);
-    const newSeries = series.map((row) => (row.id === id ? { ...row, type: newType } : row));
-    setSeries(newSeries);
+    dispatch(updateSeries({ plotId, id, newInput: { type: event.target.value } }));
+  };
+
+  const handleYAxisChange = (event) => {
+    let axis;
+    if (!event.target.checked) {
+      axis = "y";
+    } else {
+      axis = "y2";
+    }
+    dispatch(updateSeries({ plotId, id, newInput: { yaxis: axis } }));
+    dispatch(updateSeriesBooleans({ plotId, id, newInput: { y2: event.target.checked } }));
+  };
+
+  const handleNormalizeEnable = (event) => {
+    dispatch(updateSeriesNormalize({ plotId, id, newInput: { enable: event.target.checked } }));
+  };
+
+  const handleNormalizeType = (event) => {
+    dispatch(updateSeriesNormalize({ plotId, id, newInput: { type: event.target.value } }));
+  };
+
+  const handleNormalizeEnableParam = (event) => {
+    dispatch(updateSeriesNormalize({ plotId, id, newInput: { useDifferentParameter: event.target.checked } }));
+  };
+
+  const handleNormalizeParameter = (event) => {
+    dispatch(updateSeriesNormalize({ plotId, id, newInput: { parameter: event.target.value } }));
+  };
+
+  const handleZChange = (event) => {
+    dispatch(updateSeries({ plotId, id, newInput: { z: event.target.value } }));
+  };
+
+  const handleAggregateChange = (event) => {
+    dispatch(updateSeries({ plotId, id, newInput: { aggregate: event.target.value } }));
   };
 
   return (
@@ -163,7 +112,7 @@ export default function Series(props) {
       <Typography>Chart Type</Typography>
       <RadioGroup
         aria-labelledby="plot-type-radio-buttons-group-label"
-        value={ type }
+        value={ series.type }
         name="plot-type-buttons-group"
         onChange={ handleTypeChange }
         row
@@ -179,7 +128,7 @@ export default function Series(props) {
         id="file-select"
         size="small"
         fullWidth
-        value={ file }
+        value={ series.file }
         onChange={ handleFileChange }
       >
         {data?.map((item) => (
@@ -191,7 +140,7 @@ export default function Series(props) {
         id="x-parameter-select"
         size="small"
         fullWidth
-        value={ x }
+        value={ series.x }
         onChange={ handleXChange }
       >
         {availableParams?.map((item) => (
@@ -203,14 +152,14 @@ export default function Series(props) {
         id="y-parameter-select"
         size="small"
         fullWidth
-        value={ y }
+        value={ series.y }
         onChange={ handleYChange }
       >
         {availableParams?.map((item) => (
           <MenuItem key={ item } value={ item }>{item}</MenuItem>
         ))}
       </Select>
-      {["contour", "surface", "scatter3d"].includes(type)
+      {["contour", "surface", "scatter3d"].includes(series.type)
         && (
           <React.Fragment>
             <Typography>Z Parameter</Typography>
@@ -218,7 +167,7 @@ export default function Series(props) {
               id="z-parameter-select"
               size="small"
               fullWidth
-              value={ z }
+              value={ series.z }
               onChange={ handleZChange }
             >
               {availableParams?.map((item) => (
@@ -228,7 +177,7 @@ export default function Series(props) {
             <Typography>Aggregate Type</Typography>
             <RadioGroup
               aria-labelledby="aggregate-radio-buttons-group-label"
-              value={ aggregateType }
+              value={ series.aggregate }
               name="aggregate-buttons-group"
               onChange={ handleAggregateChange }
               row
@@ -246,7 +195,7 @@ export default function Series(props) {
         variant="outlined"
         size="small"
         fullWidth
-        value={ name }
+        value={ series.name }
         onChange={ handleNameChange }
       />
       <Typography>Mode</Typography>
@@ -254,7 +203,7 @@ export default function Series(props) {
         id="mode-select"
         size="small"
         fullWidth
-        value={ mode }
+        value={ series.mode }
         onChange={ handleModeChange }
       >
         <MenuItem value="lines">lines</MenuItem>
@@ -273,8 +222,8 @@ export default function Series(props) {
         <FormControlLabel
           control={ (
             <Checkbox
-              checked={ y2 }
-              onChange={ (event) => setY2(event.target.checked) }
+              checked={ series.booleans.y2 }
+              onChange={ handleYAxisChange }
             />
           ) }
           label="Enable y-axis"
@@ -284,20 +233,20 @@ export default function Series(props) {
       <FormControlLabel
         control={ (
           <Checkbox
-            checked={ normalize }
-            onChange={ (event) => setNormalize(event.target.checked) }
+            checked={ series.normalize.enable }
+            onChange={ handleNormalizeEnable }
           />
         ) }
         label="Enable"
       />
-      {normalize
+      {series.normalize.enable
         && (
           <React.Fragment>
             <RadioGroup
               aria-labelledby="normalize-radio-buttons-group-label"
-              value={ normalizeType }
+              value={ series.normalize.type }
               name="normalize-buttons-group"
-              onChange={ (event) => setNormalizeType(event.target.value) }
+              onChange={ handleNormalizeType }
               row
             >
               <FormControlLabel value="min" control={ <Radio /> } label="Min" />
@@ -322,8 +271,8 @@ export default function Series(props) {
             <FormControlLabel
               control={ (
                 <Checkbox
-                  checked={ useNewNormalizeParameter }
-                  onChange={ (event) => setUseNewNormalizeParameter(event.target.checked) }
+                  checked={ series.normalize.useDifferentParameter }
+                  onChange={ handleNormalizeEnableParam }
                 />
               ) }
               label="Use different parameter"
@@ -332,9 +281,9 @@ export default function Series(props) {
               id="normalize-select"
               size="small"
               fullWidth
-              value={ normalizeParameter }
-              onChange={ (event) => setNormalizeParameter(event.target.value) }
-              disabled={ !useNewNormalizeParameter }
+              value={ series.normalize.parameter }
+              onChange={ handleNormalizeParameter }
+              disabled={ !series.normalize.useDifferentParameter }
             >
               {availableParams?.map((item) => (
                 <MenuItem key={ item } value={ item }>{item}</MenuItem>
@@ -344,12 +293,11 @@ export default function Series(props) {
         )}
       <Box sx={ { width: "100%", textAlign: "right" } }>
         <Tooltip title="Delete series" placement="right">
-          <IconButton onClick={ handleDelete(id) }>
+          <IconButton onClick={ handleDelete }>
             <DeleteIcon />
           </IconButton>
         </Tooltip>
       </Box>
     </Box>
-
   );
 }

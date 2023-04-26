@@ -23,11 +23,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import SaveIcon from "@mui/icons-material/Save";
 import { post, get } from "utils/requests";
 import { rgbaToString } from "utils/utilities";
-import ResizeablePlot from "components/routes/test/ResizeablePlot";
 import ColorSelector from "../../containers/ColorSelector";
 import Series from "./Series";
 import { Accordion, AccordionSummary, AccordionDetails } from "../../containers/CustomComponents";
 import { linestyles, colorscales } from "../../../utils/utilities";
+import { deletePlot, addSeries, deleteSeries } from "./plotsSlice";
 import styles from "./PlotContainer.module.scss";
 
 const formatItemStyle = {
@@ -43,58 +43,16 @@ const initialColors = {
   plotBackground: { r: 255, g: 255, b: 255, a: 1 }
 };
 
-export default function PlotContainer(props) {
+export default function PlotContainer({ id }) {
   const dispatch = useDispatch();
-  const { plotId, handleDelete } = props;
+  const { series, layout2 } = useSelector((state) => state.plots.plots[id]);
+
   const { width, ref } = useResizeDetector();
   const [expanded, setExpanded] = React.useState("");
   const [isExpanded, setIsExpanded] = React.useState(false);
-  const [loadedData, setLoadedData] = React.useState([]);
 
   const handleExpandedChange = (panel) => (event, newExpanded) => {
     setExpanded(newExpanded ? panel : false);
-  };
-
-  React.useEffect(() => {
-    get(
-      "load-files",
-      (response) => setLoadedData(response),
-      (error) => console.error(error)
-    );
-  }, []);
-
-  // Data
-  const [series, setSeries] = React.useState([]);
-
-  const deleteSeries = React.useCallback(
-    (id) => () => {
-      setSeries((prevRows) => prevRows.filter((row) => row.id !== id));
-    }, []
-  );
-
-  const addNewSeries = () => {
-    const uniqueId = uuid();
-
-    const baseSeries = {
-      id: uniqueId,
-      file: "",
-      x: "",
-      y: "",
-      z: "",
-      aggregate: "min",
-      colorscale: "Jet",
-      reversescale: true,
-      name: "",
-      type: "scatter",
-      mode: "lines",
-      yaxis: "y",
-      normalize: {
-        type: "",
-        parameter: ""
-      }
-    };
-
-    setSeries((prevItems) => [...prevItems, baseSeries]);
   };
 
   const [plotData, setPlotData] = React.useState([]);
@@ -104,32 +62,32 @@ export default function PlotContainer(props) {
   };
 
   const updatePlot = () => {
-    const cellData = [];
-    series.forEach((row) => {
-      const cells = {
-        id: row.id,
-        file: row.file,
-        x: row.x,
-        y: row.y,
-        z: row.z,
-        aggregate: row.aggregate,
-        colorscale: row.colorscale,
-        reversescale: row.reversescale,
-        name: row.name,
-        type: row.type,
-        mode: row.mode,
-        yaxis: row.yaxis,
-        normalize: row.normalize
-      };
-      cellData.push(cells);
-    });
+    // const cellData = [];
+    // series.forEach((row) => {
+    //   const cells = {
+    //     id: row.id,
+    //     file: row.file,
+    //     x: row.x,
+    //     y: row.y,
+    //     z: row.z,
+    //     aggregate: row.aggregate,
+    //     colorscale: row.colorscale,
+    //     reversescale: row.reversescale,
+    //     name: row.name,
+    //     type: row.type,
+    //     mode: row.mode,
+    //     yaxis: row.yaxis,
+    //     normalize: row.normalize
+    //   };
+    //   cellData.push(cells);
+    // });
 
-    post(
-      JSON.stringify(cellData),
-      "get-plot-data",
-      (response) => handleUpdatePlotResponse(response),
-      (response) => console.error(response)
-    );
+    // post(
+    //   JSON.stringify(cellData),
+    //   "get-plot-data",
+    //   (response) => handleUpdatePlotResponse(response),
+    //   (response) => console.error(response)
+    // );
   };
 
   // Layout
@@ -379,21 +337,18 @@ export default function PlotContainer(props) {
             <Typography>Series</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            {series?.map((row) => (
-              <Box key={ row.id } sx={ formatItemStyle }>
+            {Object.keys(series)?.map((seriesId) => (
+              <Box key={ seriesId } sx={ formatItemStyle }>
                 <Series
-                  key={ row.id }
-                  id={ row.id }
-                  handleDelete={ deleteSeries }
-                  data={ loadedData.data }
-                  series={ series }
-                  setSeries={ setSeries }
+                  key={ seriesId }
+                  plotId={ id }
+                  id={ seriesId }
                 />
               </Box>
             ))}
             <Box sx={ { display: "flex", justifyContent: "space-evenly" } }>
               <Tooltip title="Add new series" placement="left">
-                <IconButton onClick={ addNewSeries }>
+                <IconButton onClick={ () => dispatch(addSeries(id)) }>
                   <AddCircleIcon />
                 </IconButton>
               </Tooltip>
@@ -764,7 +719,7 @@ export default function PlotContainer(props) {
               </IconButton>
             </Tooltip>
             <Tooltip title="Delete plot" placement="top">
-              <IconButton onClick={ () => dispatch(handleDelete(plotId)) }>
+              <IconButton onClick={ () => dispatch(deletePlot(id)) }>
                 <DeleteIcon />
               </IconButton>
             </Tooltip>

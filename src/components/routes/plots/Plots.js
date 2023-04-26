@@ -39,13 +39,12 @@ import {
   changeDelimiter,
   changeSheets,
   addLoadedFiles,
-  addNewPlot,
-  deletePlot
+  addPlot
 } from "./plotsSlice";
 
 export default function Plots() {
   const dispatch = useDispatch();
-  const { fileOptions, plotList } = useSelector((state) => state.plots);
+  const { fileOptions, plots } = useSelector((state) => state.plots);
   const [openFileOptions, setOpenFileOptions] = React.useState(false);
   const [openExpressOptions, setOpenExpressOptions] = React.useState(false);
 
@@ -110,7 +109,7 @@ export default function Plots() {
     {
       icon: <AddCircleIcon fontSize="large" />,
       name: "Add New Plot",
-      click: () => dispatch(addNewPlot())
+      click: () => dispatch(addPlot())
     },
     {
       icon: <ElectricBoltIcon fontSize="large" />,
@@ -264,11 +263,10 @@ export default function Plots() {
         open={ openExpressOptions }
         handleClose={ handleCloseExpressOptions }
       />
-      {plotList.map((id) => (
+      {Object.keys(plots)?.map((id) => (
         <PlotContainer
           key={ id }
-          plotId={ id }
-          handleDelete={ deletePlot }
+          id={ id }
         />
       ))}
     </React.Fragment>

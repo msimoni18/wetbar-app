@@ -31,13 +31,6 @@ KNOWN ISSUES
   the labels because the response does not have text
   and textposition
 
-- Right now, if new data is loaded, any existing plots
-  will not be able to access it. Instead of getting
-  whatever data is loaded when a new plot is added to
-  the page, add a dependency to the useEffect() to detect
-  when new data is loaded, so all existing plots will
-  have access to the data.
-
 General
 =======
 
