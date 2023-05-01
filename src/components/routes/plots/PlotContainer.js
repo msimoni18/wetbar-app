@@ -1,4 +1,5 @@
 import * as React from "react";
+import cloneDeep from "lodash.clonedeep";
 import Plot from "react-plotly.js";
 import { useDispatch, useSelector } from "react-redux";
 import { useResizeDetector } from "react-resize-detector";
@@ -27,7 +28,22 @@ import ColorSelector from "../../containers/ColorSelector";
 import Series from "./Series";
 import { Accordion, AccordionSummary, AccordionDetails } from "../../containers/CustomComponents";
 import { linestyles, colorscales } from "../../../utils/utilities";
-import { deletePlot, addSeries, deleteSeries } from "./plotsSlice";
+import {
+  deletePlot,
+  addSeries,
+  updateLayout,
+  updateLayoutFont,
+  updateLayoutTitle,
+  updateLayoutXAxis,
+  updateLayoutXAxisGridMinor,
+  updateLayoutYAxis,
+  updateLayoutYAxisGridMinor,
+  updateLayoutMargin,
+  updateColorScaleOptions,
+  updateOptions,
+  updateOptionsY2,
+  updateBarLabels
+} from "./plotsSlice";
 import styles from "./PlotContainer.module.scss";
 
 const formatItemStyle = {
@@ -45,7 +61,12 @@ const initialColors = {
 
 export default function PlotContainer({ id }) {
   const dispatch = useDispatch();
-  const { series, layout2 } = useSelector((state) => state.plots.plots[id]);
+  const { series, layout, data, options } = useSelector((state) => state.plots.plots[id]);
+
+  // Deep copy layout so it is mutable. The Plot component
+  // will mutate layout, so it cannot be an immutable object
+  // const layout2 = structuredClone(layout); // Only in Node >= v17
+  const layout2 = cloneDeep(layout);
 
   const { width, ref } = useResizeDetector();
   const [expanded, setExpanded] = React.useState("");
@@ -55,274 +76,93 @@ export default function PlotContainer({ id }) {
     setExpanded(newExpanded ? panel : false);
   };
 
-  const [plotData, setPlotData] = React.useState([]);
-
   const handleUpdatePlotResponse = (response) => {
-    setPlotData(response);
   };
 
   const updatePlot = () => {
-    // const cellData = [];
-    // series.forEach((row) => {
-    //   const cells = {
-    //     id: row.id,
-    //     file: row.file,
-    //     x: row.x,
-    //     y: row.y,
-    //     z: row.z,
-    //     aggregate: row.aggregate,
-    //     colorscale: row.colorscale,
-    //     reversescale: row.reversescale,
-    //     name: row.name,
-    //     type: row.type,
-    //     mode: row.mode,
-    //     yaxis: row.yaxis,
-    //     normalize: row.normalize
-    //   };
-    //   cellData.push(cells);
-    // });
+    const plotData = [];
+    series.forEach((row) => {
+      const cell = {
+        id: row.id,
+        file: row.file,
+        x: row.x,
+        y: row.y,
+        z: row.z,
+        aggregate: row.aggregate,
+        colorscale: row.colorscale,
+        reversescale: row.reversescale,
+        name: row.name,
+        type: row.type,
+        mode: row.mode,
+        yaxis: row.yaxis,
+        normalize: row.normalize
+      };
+      plotData.push(cell);
+    });
 
     // post(
-    //   JSON.stringify(cellData),
+    //   JSON.stringify(plotData),
     //   "get-plot-data",
     //   (response) => handleUpdatePlotResponse(response),
     //   (response) => console.error(response)
     // );
   };
 
-  // Layout
-  const [height, setHeight] = React.useState(400);
-  const [title, setTitle] = React.useState("");
-  const [fontSize, setFontSize] = React.useState(12);
-  const [xLabel, setXLabel] = React.useState("");
-  const [yLabel, setYLabel] = React.useState("");
-  const [enableYAxis2, setEnableYAxis2] = React.useState(false);
-  const [yLabel2, setYLabel2] = React.useState("");
-  const [yLabel2Position, setYLabel2Position] = React.useState(1);
-  const [legend, setLegend] = React.useState(false);
-  const [majorGridlineChecked, setMajorGridlineChecked] = React.useState(true);
-  const [minorGridlineChecked, setMinorGridlineChecked] = React.useState(true);
-  const [majorGridlineColor, setMajorGridlineColor] = React.useState(initialColors.majorGridline);
-  const [minorGridlineColor, setMinorGridlineColor] = React.useState(initialColors.minorGridline);
-  const [majorLinestyle, setMajorLinestyle] = React.useState("solid");
-  const [minorLinestyle, setMinorLinestyle] = React.useState("dot");
-  const [fontColor, setFontColor] = React.useState(initialColors.font);
-  const [paperBgcolor, setPaperBgcolor] = React.useState(initialColors.plotBackground);
-  const [plotBgcolor, setPlotBgcolor] = React.useState(initialColors.plotBackground);
-  const [bottomMargin, setBottomMargin] = React.useState(80);
-  const [leftMargin, setLeftMargin] = React.useState(80);
-  const [topMargin, setTopMargin] = React.useState(80);
-  const [rightMargin, setRightMargin] = React.useState(80);
-  const [barMode, setBarMode] = React.useState("group");
-  const [enableBarOptions, setEnableBarOptions] = React.useState(false);
-  const [enableBarLabels, setEnableBarLabels] = React.useState(false);
-  const [enableContourOptions, setEnableContourOptions] = React.useState(false);
-  const [colorscale, setColorscale] = React.useState("Jet");
-  const [enableReverseColorscale, setEnableReverseColorscale] = React.useState(true);
+  const handleLayoutChange = (key, value) => {
+    dispatch(updateLayout({ id, newInput: { [key]: value } }));
+  };
 
-  const [layout, setLayout] = React.useState({
-    width: width - 20,
-    height,
-    font: {
-      color: rgbaToString(fontColor),
-      size: fontSize
-    },
-    title: {
-      text: title
-    },
-    xaxis: {
-      title: xLabel,
-      domain: [0, 1],
-      gridcolor: rgbaToString(majorGridlineColor),
-      griddash: majorLinestyle,
-      gridwidth: 1,
-      showgrid: majorGridlineChecked,
-      minor: {
-        gridcolor: rgbaToString(minorGridlineColor),
-        griddash: minorLinestyle,
-        gridwidth: 1,
-        showgrid: minorGridlineChecked
-      }
-    },
-    yaxis: {
-      title: yLabel,
-      gridcolor: rgbaToString(majorGridlineColor),
-      griddash: majorLinestyle,
-      gridwidth: 1,
-      showgrid: majorGridlineChecked,
-      minor: {
-        gridcolor: rgbaToString(minorGridlineColor),
-        griddash: minorLinestyle,
-        gridwidth: 1,
-        showgrid: minorGridlineChecked
-      }
-    },
-    showlegend: legend,
-    paper_bgcolor: rgbaToString(paperBgcolor),
-    plot_bgcolor: rgbaToString(plotBgcolor),
-    margin: {
-      b: bottomMargin,
-      l: leftMargin,
-      t: topMargin,
-      r: rightMargin
-    },
-    barmode: barMode
-  });
+  const handleFontChange = (key, value) => {
+    dispatch(updateLayoutFont({ id, key, newInput: { [key]: value } }));
+  };
 
-  React.useEffect(() => {
-    setLayout((prevLayout) => (
-      {
-        ...prevLayout,
-        width: width - 20,
-        height,
-        showlegend: legend,
-        paper_bgcolor: rgbaToString(paperBgcolor),
-        plot_bgcolor: rgbaToString(plotBgcolor),
-        barmode: barMode
-      }));
-  }, [width, height, legend, paperBgcolor, plotBgcolor, barMode]);
+  const handleTitleChange = (key, value) => {
+    dispatch(updateLayoutTitle({ id, newInput: { [key]: value } }));
+  };
 
-  React.useEffect(() => {
-    setLayout((prevLayout) => (
-      {
-        ...prevLayout,
-        font: {
-          color: rgbaToString(fontColor),
-          size: fontSize
-        }
-      }));
-  }, [fontColor, fontSize]);
+  const handleXAxisChange = (key, value) => {
+    dispatch(updateLayoutXAxis({ id, newInput: { [key]: value } }));
+  };
 
-  React.useEffect(() => {
-    setLayout((prevLayout) => (
-      {
-        ...prevLayout,
-        title: {
-          text: title
-        }
-      }));
-  }, [title]);
+  const handleXAxisMinorGridChange = (key, value) => {
+    dispatch(updateLayoutXAxisGridMinor({ id, newInput: { [key]: value } }));
+  };
 
-  React.useEffect(() => {
-    setLayout((prevLayout) => (
-      {
-        ...prevLayout,
-        xaxis: {
-          title: xLabel,
-          gridcolor: rgbaToString(majorGridlineColor),
-          griddash: majorLinestyle,
-          showgrid: majorGridlineChecked,
-          minor: {
-            gridcolor: rgbaToString(minorGridlineColor),
-            griddash: minorLinestyle,
-            showgrid: minorGridlineChecked
-          }
-        },
-        yaxis: {
-          title: yLabel,
-          gridcolor: rgbaToString(majorGridlineColor),
-          griddash: majorLinestyle,
-          showgrid: majorGridlineChecked,
-          minor: {
-            gridcolor: rgbaToString(minorGridlineColor),
-            griddash: minorLinestyle,
-            showgrid: minorGridlineChecked
-          }
-        }
-      }));
-  }, [
-    xLabel, yLabel,
-    majorGridlineChecked, majorGridlineColor, majorLinestyle,
-    minorGridlineChecked, minorGridlineColor, minorLinestyle
-  ]);
+  const handleYAxisChange = (key, value) => {
+    dispatch(updateLayoutYAxis({ id, newInput: { [key]: value } }));
+  };
 
-  React.useEffect(() => {
-    setLayout((prevLayout) => (
-      {
-        ...prevLayout,
-        margin: {
-          b: bottomMargin,
-          l: leftMargin,
-          t: topMargin,
-          r: rightMargin
-        }
-      }));
-  }, [bottomMargin, leftMargin, topMargin, rightMargin]);
+  const handleYAxisMinorGridChange = (key, value) => {
+    dispatch(updateLayoutYAxisGridMinor({ id, newInput: { [key]: value } }));
+  };
 
-  React.useEffect(() => {
-    if (enableYAxis2) {
-      setLayout((prevLayout) => ({
-        ...prevLayout,
-        xaxis: {
-          ...prevLayout.xaxis,
-          domain: [0, yLabel2Position]
-        },
-        yaxis2: {
-          title: yLabel2,
-          showgrid: false,
-          minor: {
-            showgrid: false
-          },
-          anchor: "free",
-          overlaying: "y",
-          side: "right",
-          position: yLabel2Position
-        } }));
-    } else if (!enableYAxis2) {
-      setLayout((prevLayout) => ({
-        ...prevLayout,
-        xaxis: {
-          ...prevLayout.xaxis,
-          domain: [0, 1]
-        },
-        yaxis2: {}
-      }));
-    }
-  }, [yLabel2, yLabel2Position, enableYAxis2]);
+  const handleMarginChange = (key, value) => {
+    dispatch(updateLayoutMargin({ id, newInput: { [key]: value } }));
+  };
 
-  React.useEffect(() => {
-    const newPlotData = [];
-    if (enableBarLabels) {
-      plotData.forEach((item) => {
-        if (item.type === "bar") {
-          newPlotData.push({
-            ...item,
-            text: item.y.map(String),
-            textposition: "auto"
-          });
-        } else {
-          newPlotData.push(item);
-        }
-      });
-    } else {
-      plotData.forEach((item) => {
-        if (item.type === "bar") {
-          delete item.text;
-          delete item.textposition;
-        }
-        newPlotData.push(item);
-      });
-    }
-    setPlotData(newPlotData);
-  }, [enableBarLabels]);
+  const handleColorScaleChange = (key, value) => {
+    dispatch(updateColorScaleOptions({ id, newInput: { [key]: value } }));
+  };
 
-  React.useEffect(() => {
-    const newPlotData = [{
-      ...plotData[0],
-      colorscale,
-      reversescale: enableReverseColorscale
-    }];
+  const handleOptionsChange = (key, value) => {
+    dispatch(updateOptions({ id, newInput: { [key]: value } }));
+  };
 
-    setPlotData(newPlotData);
-  }, [colorscale, enableReverseColorscale]);
+  const handleOptionsY2Change = (key, value) => {
+    dispatch(updateOptionsY2({ id, newInput: { [key]: value } }));
+  };
+
+  const handleBarLabels = (key, value) => {
+    dispatch(updateBarLabels({ id, newInput: { [key]: value } }));
+  };
 
   return (
-    <div className={ styles["plot-container"] } style={ { height } }>
+    <div className={ styles["plot-container"] } style={ { height: layout.height } }>
       <div
         ref={ ref }
         className={ isExpanded ? styles["plot-container-left"] : styles["plot-container-left-expanded"] }
       >
-        <Plot data={ plotData } layout={ layout } />
+        <Plot data={ data } layout={ { width: width - 20, ...layout2 } } />
         <button
           type="button"
           className={ styles["plot-container-handle"] }
@@ -376,8 +216,8 @@ export default function PlotContainer({ id }) {
                 variant="outlined"
                 size="small"
                 fullWidth
-                value={ title }
-                onChange={ (event) => setTitle(event.target.value) }
+                value={ layout.title.text }
+                onChange={ (event) => handleTitleChange("text", event.target.value) }
               />
             </Box>
             <Box sx={ formatItemStyle }>
@@ -389,8 +229,8 @@ export default function PlotContainer({ id }) {
                 variant="outlined"
                 size="small"
                 fullWidth
-                value={ xLabel }
-                onChange={ (event) => setXLabel(event.target.value) }
+                value={ layout.xaxis.title }
+                onChange={ (event) => handleXAxisChange("title", event.target.value) }
               />
             </Box>
             <Box sx={ formatItemStyle }>
@@ -402,44 +242,44 @@ export default function PlotContainer({ id }) {
                 variant="outlined"
                 size="small"
                 fullWidth
-                value={ yLabel }
-                onChange={ (event) => setYLabel(event.target.value) }
+                value={ layout.yaxis.title }
+                onChange={ (event) => handleYAxisChange("title", event.target.value) }
               />
             </Box>
             <Box sx={ formatItemStyle }>
               <FormControlLabel
                 control={ (
                   <Checkbox
-                    checked={ enableYAxis2 }
-                    onChange={ (event) => setEnableYAxis2(event.target.checked) }
+                    checked={ options.enableY2 }
+                    onChange={ (event) => handleOptionsChange("enableY2", event.target.checked) }
                   />
                 ) }
                 label="Enable secondary y-axis"
               />
-              {enableYAxis2
+              {options.enableY2
               && (
                 <Box>
                   <Typography>Text</Typography>
                   <TextField
-                    disabled={ !enableYAxis2 }
+                    disabled={ !options.enableY2 }
                     margin="dense"
                     id="y-label2"
                     type="input"
                     variant="outlined"
                     size="small"
                     fullWidth
-                    value={ yLabel2 }
-                    onChange={ (event) => setYLabel2(event.target.value) }
+                    value={ options.y2.title }
+                    onChange={ (event) => handleOptionsY2Change("y2", event.target.value) }
                   />
                   <Typography>Position</Typography>
                   <Slider
-                    value={ yLabel2Position }
+                    value={ options.y2.position }
                     min={ 0 }
                     max={ 1 }
                     step={ 0.01 }
                     getAriaLabel={ () => "ylabel-2-position-slider" }
                     valueLabelDisplay="auto"
-                    onChange={ (event, newValue) => setYLabel2Position(newValue) }
+                    onChange={ (event, newValue) => handleOptionsY2Change("position", newValue) }
                   />
                 </Box>
               )}
@@ -455,8 +295,8 @@ export default function PlotContainer({ id }) {
               <FormControlLabel
                 control={ (
                   <Checkbox
-                    checked={ legend }
-                    onChange={ (event) => setLegend(event.target.checked) }
+                    checked={ layout.showlegend }
+                    onChange={ (event) => handleLayoutChange("showlegend", event.target.checked) }
                   />
                 ) }
                 label="Enable"
@@ -474,19 +314,19 @@ export default function PlotContainer({ id }) {
               <FormControlLabel
                 control={ (
                   <Checkbox
-                    checked={ majorGridlineChecked }
+                    checked={ layout.xaxis.showgrid }
                     onChange={ (event) => setMajorGridlineChecked(event.target.checked) }
                   />
                 ) }
                 label="Enable"
               />
               <Typography>Color</Typography>
-              <ColorSelector initialColor={ initialColors.majorGridline } color={ majorGridlineColor } setColor={ setMajorGridlineColor } />
+              <ColorSelector initialColor={ initialColors.majorGridline } color={ layout.xaxis.gridcolor } setColor={ setMajorGridlineColor } />
               <Typography>Linestyle</Typography>
               <Select
                 id="major-linestyle-select"
                 size="small"
-                value={ majorLinestyle }
+                value={ layout.xaxis.griddash }
                 onChange={ (event) => setMajorLinestyle(event.target.value) }
                 sx={ { width: "150px" } }
               >
@@ -500,19 +340,19 @@ export default function PlotContainer({ id }) {
               <FormControlLabel
                 control={ (
                   <Checkbox
-                    checked={ minorGridlineChecked }
+                    checked={ layout.xaxis.minor.showgrid }
                     onChange={ (event) => setMinorGridlineChecked(event.target.checked) }
                   />
                 ) }
                 label="Enable"
               />
               <Typography>Color</Typography>
-              <ColorSelector initialColor={ initialColors.minorGridline } color={ minorGridlineColor } setColor={ setMinorGridlineColor } />
+              <ColorSelector initialColor={ initialColors.minorGridline } color={ layout.xaxis.minor.gridcolor } setColor={ setMinorGridlineColor } />
               <Typography>Linestyle</Typography>
               <Select
                 id="minor-linestyle-select"
                 size="small"
-                value={ minorLinestyle }
+                value={ layout.xaxis.minor.griddash }
                 onChange={ (event) => setMinorLinestyle(event.target.value) }
                 sx={ { width: "150px" } }
               >
@@ -542,21 +382,21 @@ export default function PlotContainer({ id }) {
               <FormControlLabel
                 control={ (
                   <Checkbox
-                    checked={ enableBarOptions }
-                    onChange={ (event) => setEnableBarOptions(event.target.checked) }
+                    checked={ options.enableBarOptions }
+                    onChange={ (event) => handleOptionsChange("enableBarOptions", event.target.checked) }
                   />
                 ) }
                 label="Enable bar chart options"
               />
-              {enableBarOptions
+              {options.enableBarOptions
               && (
                 <Box>
                   <Typography>Mode</Typography>
                   <RadioGroup
                     aria-labelledby="barmode-radio-buttons-group-label"
-                    value={ barMode }
+                    value={ layout.barmode }
                     name="barmode-buttons-group"
-                    onChange={ (event) => setBarMode(event.target.value) }
+                    onChange={ (event) => handleLayoutChange("barmode", event.target.value) }
                     row
                   >
                     <FormControlLabel value="group" control={ <Radio /> } label="Group" />
@@ -566,8 +406,8 @@ export default function PlotContainer({ id }) {
                   <FormControlLabel
                     control={ (
                       <Checkbox
-                        checked={ enableBarLabels }
-                        onChange={ (event) => setEnableBarLabels(event.target.checked) }
+                        checked={ options.enableBarLabels }
+                        onChange={ (event) => handleBarLabels("enableBarLabels", event.target.checked) }
                       />
                     ) }
                     label="Add bar labels"
@@ -579,21 +419,21 @@ export default function PlotContainer({ id }) {
               <FormControlLabel
                 control={ (
                   <Checkbox
-                    checked={ enableContourOptions }
-                    onChange={ (event) => setEnableContourOptions(event.target.checked) }
+                    checked={ options.enableContourOptions }
+                    onChange={ (event) => handleOptionsChange("enableContourOptions", event.target.checked) }
                   />
                 ) }
                 label="Enable contour chart options"
               />
-              {enableContourOptions
+              {options.enableContourOptions
               && (
                 <Box>
                   <Typography>Colorscale</Typography>
                   <Select
                     id="colorscale-select"
                     size="small"
-                    value={ colorscale }
-                    onChange={ (event) => setColorscale(event.target.value) }
+                    value={ options.colorscale }
+                    onChange={ (event) => handleColorScaleChange("colorscale", event.target.value) }
                     sx={ { width: "150px" } }
                   >
                     {colorscales.map((item, key) => (
@@ -603,8 +443,8 @@ export default function PlotContainer({ id }) {
                   <FormControlLabel
                     control={ (
                       <Checkbox
-                        checked={ enableReverseColorscale }
-                        onChange={ () => setEnableReverseColorscale(!enableReverseColorscale) }
+                        checked={ options.reversescale }
+                        onChange={ (event) => handleColorScaleChange("reversescale", event.target.checked) }
                       />
                     ) }
                     label="Reverse colorscale"
@@ -615,62 +455,62 @@ export default function PlotContainer({ id }) {
             <Box sx={ formatItemStyle }>
               <Typography>Height</Typography>
               <Slider
-                value={ height }
+                value={ layout.height }
                 min={ 200 }
                 max={ 800 }
                 aria-label="height-slider"
                 valueLabelDisplay="auto"
-                onChange={ (event, newValue) => setHeight(newValue) }
+                onChange={ (event, newValue) => handleLayoutChange("layout", newValue) }
               />
             </Box>
             <Box sx={ formatItemStyle }>
               <Typography>Font Size</Typography>
               <Slider
-                value={ fontSize }
+                value={ layout.font.size }
                 min={ 8 }
                 max={ 32 }
                 aria-label="font-size-slider"
                 valueLabelDisplay="auto"
-                onChange={ (event, newValue) => setFontSize(newValue) }
+                onChange={ (event, newValue) => handleFontChange("font", newValue) }
               />
             </Box>
             <Box sx={ formatItemStyle }>
               <Typography>Margin</Typography>
               <Typography>Top</Typography>
               <Slider
-                value={ topMargin }
+                value={ layout.margin.t }
                 min={ 0 }
                 max={ 200 }
                 aria-label="top-margin-slider"
                 valueLabelDisplay="auto"
-                onChange={ (event, newValue) => setTopMargin(newValue) }
+                onChange={ (event, newValue) => handleMarginChange("t", newValue) }
               />
               <Typography>Bottom</Typography>
               <Slider
-                value={ bottomMargin }
+                value={ layout.margin.b }
                 min={ 0 }
                 max={ 200 }
                 aria-label="bottom-margin-slider"
                 valueLabelDisplay="auto"
-                onChange={ (event, newValue) => setBottomMargin(newValue) }
+                onChange={ (event, newValue) => handleMarginChange("b", newValue) }
               />
               <Typography>Left</Typography>
               <Slider
-                value={ leftMargin }
+                value={ layout.margin.l }
                 min={ 0 }
                 max={ 200 }
                 aria-label="left-margin-slider"
                 valueLabelDisplay="auto"
-                onChange={ (event, newValue) => setLeftMargin(newValue) }
+                onChange={ (event, newValue) => handleMarginChange("l", newValue) }
               />
               <Typography>Right</Typography>
               <Slider
-                value={ rightMargin }
+                value={ layout.margin.r }
                 min={ 0 }
                 max={ 200 }
                 aria-label="right-margin-slider"
                 valueLabelDisplay="auto"
-                onChange={ (event, newValue) => setRightMargin(newValue) }
+                onChange={ (event, newValue) => handleMarginChange("r", newValue) }
               />
             </Box>
             <Box sx={ formatItemStyle }>
@@ -678,19 +518,19 @@ export default function PlotContainer({ id }) {
               <Typography>Font</Typography>
               <ColorSelector
                 initialColor={ initialColors.font }
-                color={ fontColor }
+                color={ layout.font.color }
                 setColor={ setFontColor }
               />
               <Typography>Paper</Typography>
               <ColorSelector
                 initialColor={ initialColors.plotBackground }
-                color={ paperBgcolor }
+                color={ layout.paper_bgcolor }
                 setColor={ setPaperBgcolor }
               />
               <Typography>Plot</Typography>
               <ColorSelector
                 initialColor={ initialColors.plotBackground }
-                color={ plotBgcolor }
+                color={ layout.plot_bgcolor }
                 setColor={ setPlotBgcolor }
               />
             </Box>
