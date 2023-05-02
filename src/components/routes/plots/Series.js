@@ -42,7 +42,7 @@ export default function Series({ plotId, id }) {
     if (item) {
       setAvailableParams(item[0]?.parameters);
     }
-  }, [series.file]);
+  }, [series.file, data]);
 
   const handleDelete = () => {
     dispatch(deleteSeries({ plotId, id }));

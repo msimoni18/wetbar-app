@@ -28,16 +28,10 @@ export default function SpaceHogs() {
       (response) => setData(response),
       (error) => console.error(error)
     );
-  }, []);
+  }, [site]);
 
   const handleChange = (newSite) => {
     dispatch(updateSite(newSite));
-    post(
-      JSON.stringify(newSite),
-      "space-hogs",
-      (response) => setData(response),
-      (error) => console.error(error)
-    );
   };
 
   React.useEffect(() => {

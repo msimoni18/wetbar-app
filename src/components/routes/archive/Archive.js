@@ -80,7 +80,7 @@ export default function Archive() {
       sortable: true,
       resizable: true
     };
-  });
+  }, []);
 
   const addRow = () => {
     gridRef.current.api.applyTransaction({ add: [{ id: uuid(), criteria: "" }] });

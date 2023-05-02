@@ -1,6 +1,5 @@
 import * as React from "react";
-import { io } from "socket.io-client";
-import { MemoryRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { MemoryRouter as Router, Routes, Route } from "react-router-dom";
 import Titlebar from "components/titlebar/Titlebar";
 import SpaceHogs from "components/routes/spacehogs/SpaceHogs";
 import Sidebar from "components/sidebar/Sidebar";
@@ -10,7 +9,7 @@ import Flamingo from "components/routes/flamingo/Flamingo";
 import Plots from "components/routes/plots/Plots";
 import SpaceUtilization from "components/routes/spaceutilization/SpaceUtilization";
 import Settings from "components/routes/settings/Settings";
-import Test from "components/routes/test/Test";
+// import Test from "components/routes/test/Test";
 import { ThemeProvider } from "@mui/material";
 import theme from "../theme/theme";
 import styles from "./App.module.scss";
