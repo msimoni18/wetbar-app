@@ -27,6 +27,7 @@
     "react-resize-detector": "^7.1.2",
     "react-router-dom": "^6.3.0",
     "react-scripts": "3.4.1",
+    "react-window": "^1.8.9",
     "socket.io": "^4.5.1",
     "socket.io-client": "^4.5.1"
   },
@@ -47,6 +48,7 @@
     "eslint-plugin-react": "^7.24.0",
     "eslint-plugin-standard": "^5.0.0",
     "jsdoc": "^3.6.5",
+    "react-devtools": "^4.27.6",
     "sass": "^1.26.5"
   },
   "optionalDependencies": {
@@ -88,7 +90,8 @@
     "start": "node ./scripts/dispatch start",
     "start:electron": "electron .",
     "start:react": "react-scripts start",
-    "test": "react-scripts test"
+    "test": "react-scripts test",
+    "react-devtools": "react-devtools"
   },
   "version": "1.0.0"
 }
