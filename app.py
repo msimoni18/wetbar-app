@@ -330,7 +330,7 @@ def get_plot_data():
             y_data = df[row['y']]
 
             # Normalize data if enabled
-            if row['normalize']['type']:
+            if row['normalize']['enable']:
                 norm_data = df[row['normalize']['parameter']]
                 if row['normalize']['type'] == 'min':
                     x_data = x_data - x_data[norm_data.idxmin()]
@@ -397,6 +397,7 @@ def cleanup():
                 )
         elif option == "deleteAfterDryRun":
             delete_files(files)
+            files = []
         elif option == "deleteNoDryRun":
             files = find_files_and_delete(
                 folders=folders,
@@ -404,7 +405,16 @@ def cleanup():
                 dry_run=False
                 )
 
-        return jsonify({'files': files})
+        data = []
+        if files:
+            for i, file in enumerate(files, 1):
+                data.append({
+                    "filename": file,
+                    "extension": os.path.splitext(file)[-1],
+                    "number": i
+                })
+
+        return jsonify({'data': data})
 
 
 @app.route('/flamingo', methods=['POST'])

@@ -1,9 +1,8 @@
-import * as React from "react";
+import React, { Fragment, useState, useEffect, useRef, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsRunning, setIsNotRunning } from "components/appSlice";
 import { v4 as uuid } from "uuid";
 import { post, socketIO } from "utils/requests";
-import { formatBytes } from "utils/utilities";
 import {
   Box,
   FormControl,
@@ -19,21 +18,21 @@ import {
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import Header from "components/containers/Header";
 import DragDropFileContainer from "components/containers/DragDropFileContainer";
-import ListContainer from "components/containers/ListContainer";
 import RunButton from "components/buttons/RunButton";
 import DeleteTableRow from "components/buttons/DeleteTableRow";
-import StatCard from "components/cards/StatCard";
+import CleanupFilesTable from "components/tables/CleanupFilesTable";
 import { AgGridReact } from "ag-grid-react";
+import Stats from "./Stats";
 import { addFolders, deleteFolder, changeOption, addFiles, updateStats } from "./cleanupSlice";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
 export default function Cleanup() {
   const dispatch = useDispatch();
-  const { folders, option, files, stats } = useSelector((state) => state.cleanup);
-  const [connected, setConnected] = React.useState(false);
+  const { folders, option, files } = useSelector((state) => state.cleanup);
+  const [connected, setConnected] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (connected === false) {
       const socket = socketIO();
 
@@ -48,17 +47,16 @@ export default function Cleanup() {
         dispatch(updateStats({
           dirCount: data.directory,
           fileCount: data.files,
-          spaceReduction: formatBytes(data.size),
+          spaceReduction: data.size,
           totalTime: data.time
         }));
       });
     }
-  }, []);
+  }, [connected]);
 
-  const gridRef = React.useRef();
-  // const containerStyle = React.useMemo(() => ({ width: '100%', height: '100%' }), []);
-  const gridStyle = React.useMemo(() => ({ height: 400 }), []);
-  const [rowData] = React.useState([
+  const gridRef = useRef();
+  const gridStyle = useMemo(() => ({ height: 300 }), []);
+  const [rowData] = useState([
     { id: uuid(), file: "*.taskinfo" },
     { id: uuid(), file: "*.tasklog" },
     { id: uuid(), file: "*.screen" },
@@ -70,7 +68,7 @@ export default function Cleanup() {
     { id: uuid(), file: "*TR_DPR_Plots*.png" }
   ]);
 
-  const [columnDefs] = React.useState([
+  const [columnDefs] = useState([
     {
       field: "checkbox",
       headerName: "",
@@ -93,25 +91,26 @@ export default function Cleanup() {
     }
   ]);
 
-  const defaultColDef = React.useMemo(() => {
+  const defaultColDef = useMemo(() => {
     return {
       flex: 1,
       minWidth: 100,
       sortable: true,
       resizable: true
     };
-  });
+  }, []);
 
   const addRow = () => {
     gridRef.current.api.applyTransaction({ add: [{ id: uuid(), file: "" }] });
   };
 
   const handleResponse = (response) => {
-    dispatch(addFiles(response.files));
+    dispatch(addFiles(response.data));
     dispatch(setIsNotRunning());
   };
 
   const handleClick = () => {
+    dispatch(addFiles([]));
     const selectedRows = gridRef.current.api.getSelectedRows();
 
     if ((option === "dryRun" || option === "deleteNoDryRun") && (folders.length === 0 || selectedRows.length === 0)) {
@@ -135,7 +134,7 @@ export default function Cleanup() {
   };
 
   return (
-    <React.Fragment>
+    <Fragment>
       <Header
         heading="Cleanup"
         description="Easily delete unwanted files to clear shared space for your coworkers."
@@ -148,46 +147,36 @@ export default function Cleanup() {
             deleteItem={ deleteFolder }
           />
         </Grid>
-        <Grid item xs={ 12 } sm={ 4 }>
-          <FormControl>
-            <FormLabel id="options-group-label">Options</FormLabel>
-            <RadioGroup
-              aria-labelledby="options-group-label"
-              value={ option }
-              name="options-group"
-            >
-              <FormControlLabel
-                value="dryRun"
-                control={ <Radio /> }
-                label="Dry run"
-                onChange={ (event) => dispatch(changeOption(event.target.value)) }
-              />
-              <FormControlLabel
-                value="deleteAfterDryRun"
-                control={ <Radio /> }
-                label="Delete files found after dry run"
-                onChange={ (event) => dispatch(changeOption(event.target.value)) }
-              />
-              <FormControlLabel
-                value="deleteNoDryRun"
-                control={ <Radio /> }
-                label="Delete files, no dry run"
-                onChange={ (event) => dispatch(changeOption(event.target.value)) }
-              />
-            </RadioGroup>
-          </FormControl>
-          <Box sx={ {
-            width: "100%",
-            display: "flex",
-            justifyContent: "center",
-            marginTop: "2rem"
-          } }
-          >
-            <RunButton handleClick={ handleClick }>Run</RunButton>
-          </Box>
-        </Grid>
         <Grid item xs={ 12 } sm={ 8 }>
-          <Box>
+          <Grid item xs={ 12 }>
+            <FormControl>
+              <FormLabel id="options-group-label">Options</FormLabel>
+              <RadioGroup
+                aria-labelledby="options-group-label"
+                value={ option }
+                name="options-group"
+                row
+              >
+                <FormControlLabel
+                  value="dryRun"
+                  control={ <Radio /> }
+                  label="Dry run"
+                  onChange={ (event) => dispatch(changeOption(event.target.value)) }
+                />
+                <FormControlLabel
+                  value="deleteAfterDryRun"
+                  control={ <Radio /> }
+                  label="Delete files found after dry run"
+                  onChange={ (event) => dispatch(changeOption(event.target.value)) }
+                />
+                <FormControlLabel
+                  value="deleteNoDryRun"
+                  control={ <Radio /> }
+                  label="Delete files, no dry run"
+                  onChange={ (event) => dispatch(changeOption(event.target.value)) }
+                />
+              </RadioGroup>
+            </FormControl>
             <div className="ag-theme-alpine" style={ gridStyle }>
               <AgGridReact
                 ref={ gridRef }
@@ -199,32 +188,32 @@ export default function Cleanup() {
                 animateRows
               />
             </div>
-            <Tooltip title="Add new row" placement="right">
-              <IconButton onClick={ addRow }>
-                <AddCircleIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
+            <Box sx={ {
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginTop: "1rem"
+            } }
+            >
+              <Tooltip title="Add new row" placement="left">
+                <IconButton onClick={ addRow }>
+                  <AddCircleIcon />
+                </IconButton>
+              </Tooltip>
+              <Box sx={ { paddingLeft: "5rem" } }>
+                <RunButton handleClick={ handleClick }>Run</RunButton>
+              </Box>
+            </Box>
+          </Grid>
         </Grid>
-        <Grid item xs={ 12 } sm={ 6 }>
-          <StatCard title="Directories searched" stat={ stats.dirCount } />
-        </Grid>
-        <Grid item xs={ 12 } sm={ 6 }>
-          <StatCard title="Files deleted" stat={ stats.fileCount } />
-        </Grid>
-        <Grid item xs={ 12 } sm={ 6 }>
-          <StatCard title="Total space reduction" stat={ stats.spaceReduction } />
-        </Grid>
-        <Grid item xs={ 12 } sm={ 6 }>
-          <StatCard title="Time elapsed (H:M:S)" stat={ stats.totalTime } />
+        <Grid item xs={ 12 } sm={ 4 }>
+          <Stats />
         </Grid>
         <Grid item xs={ 12 }>
-          {option === "dryRun"
-            ? <Typography>Files found after dry run:</Typography>
-            : <Typography>Files deleted:</Typography>}
-          <ListContainer files={ files } />
+          <Typography>Files found during previous dry run:</Typography>
+          <CleanupFilesTable data={ files } />
         </Grid>
       </Grid>
-    </React.Fragment>
+    </Fragment>
   );
 }
