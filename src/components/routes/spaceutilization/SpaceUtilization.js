@@ -147,7 +147,9 @@ export default function SpaceUtilization() {
           <DragDropTextField item={ folder } setItem={ changeFolder } />
         </Grid>
         <Grid item xs={ 12 } sx={ { display: "flex", justifyContent: "center" } }>
-          <RunButton handleClick={ handleButtonClick } />
+          <RunButton handleClick={ handleButtonClick }>
+            Run
+          </RunButton>
         </Grid>
         <Grid item xs={ 4 }>
           <StatCard title="Total size" stat={ stats.totalSize } />
