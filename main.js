@@ -216,14 +216,6 @@ app.whenReady().then(async () => {
     }
   });
 
-  // const docsWindow = new BrowserWindow({
-  //   // parent: browserWindows.mainWindow,
-  //   height: 300,
-  //   width: 500
-  // });
-  // docsWindow.loadFile("docs/Builder.html");
-  // docsWindow.show();
-
   /**
    * If not using in production, use the loading window
    * and run Flask in shell.

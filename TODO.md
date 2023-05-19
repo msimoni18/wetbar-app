@@ -12,9 +12,6 @@ NEXT UPDATES
 
 - Express service feature
 
-- Add options for vertical and horizontal lines, shapes,
-  annotations, etc
-
 - File Options: Add radio buttons for file select
   and add presets for skiprows etc when different
   files are selected. Show/hide additional options
@@ -59,6 +56,10 @@ General
 
 - Display version somewhere in main window and try to add to
   folder created when packaging app
+
+- Convert all file types from `.js` to `.jsx` and `.scss` to `.css`.
+
+- Update all packages to latest versions.
 
 Docs
 ====

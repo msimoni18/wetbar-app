@@ -146,18 +146,18 @@ export default function SpaceUtilization() {
         <Grid item xs={ 12 }>
           <DragDropTextField item={ folder } setItem={ changeFolder } />
         </Grid>
-        <Grid item xs={ 12 } sx={ { display: "flex", justifyContent: "center" } }>
+        <Grid item xs={ 12 } md={ 3 } sx={ { display: "flex", justifyContent: "center" } }>
           <RunButton handleClick={ handleButtonClick }>
             Run
           </RunButton>
         </Grid>
-        <Grid item xs={ 4 }>
+        <Grid item xs={ 4 } md={ 3 }>
           <StatCard title="Total size" stat={ stats.totalSize } />
         </Grid>
-        <Grid item xs={ 4 }>
+        <Grid item xs={ 4 } md={ 3 }>
           <StatCard title="File count" stat={ stats.fileCount } />
         </Grid>
-        <Grid item xs={ 4 }>
+        <Grid item xs={ 4 } md={ 3 }>
           <StatCard title="Directory count" stat={ stats.directoryCount } />
         </Grid>
         <Grid item xs={ 12 }>

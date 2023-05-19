@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 
 export default function StatCard({ title = "", stat = "" }) {
   return (
-    <Box sx={ { minWidth: 275 } }>
+    <Box sx={ { minWidth: 100 } }>
       <Card variant="outlined">
         <CardContent>
           <Typography
