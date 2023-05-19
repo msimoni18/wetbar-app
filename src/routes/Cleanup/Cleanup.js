@@ -1,6 +1,5 @@
 import React, { Fragment, useState, useEffect, useRef, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setIsRunning, setIsNotRunning } from "components/appSlice";
 import { v4 as uuid } from "uuid";
 import { post, socketIO } from "utils/requests";
 import {
@@ -22,6 +21,7 @@ import RunButton from "components/buttons/RunButton";
 import DeleteTableRow from "components/buttons/DeleteTableRow";
 import CleanupFilesTable from "components/tables/CleanupFilesTable";
 import { AgGridReact } from "ag-grid-react";
+import { setIsRunning, setIsNotRunning } from "../../appSlice";
 import Stats from "./Stats";
 import { addFolders, deleteFolder, changeOption, addFiles, updateStats } from "./cleanupSlice";
 import "ag-grid-community/styles/ag-grid.css";

@@ -307,6 +307,7 @@ def get_plot_data():
     if request.method == 'POST':
         plot_data = []
         for row in request.json:
+            print(row)
             df = data.DATA[row['file']]['df']
 
             if row['type'] in ('contour', 'surface', 'scatter3d'):
@@ -326,8 +327,8 @@ def get_plot_data():
                     'reversescale': row['reversescale'],
                 }])
             
-            x_data = df[row['x']]
-            y_data = df[row['y']]
+            x_data = df[row['x']].dropna()
+            y_data = df[row['y']].dropna()
 
             # Normalize data if enabled
             if row['normalize']['enable']:

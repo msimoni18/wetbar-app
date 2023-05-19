@@ -2,7 +2,6 @@ import * as React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { post, socketIO } from "utils/requests";
 import { formatBytes, addCommaToNumber } from "utils/utilities";
-import { setIsRunning, setIsNotRunning } from "components/appSlice";
 import {
   Box,
   Grid,
@@ -17,6 +16,7 @@ import DragDropTextField from "components/containers/DragDropTextField";
 import StatCard from "components/cards/StatCard";
 import TreemapPlot from "components/plots/TreemapPlot";
 import SpaceUtilizationTable from "components/tables/SpaceUtilizationTable";
+import { setIsRunning, setIsNotRunning } from "../../appSlice";
 import { changeFolder } from "./spaceUtilizationSlice";
 
 export default function SpaceUtilization() {

@@ -1,9 +1,6 @@
 import { v4 as uuid } from "uuid";
 import { rgbaToString } from "utils/utilities";
-import { createSlice } from "@reduxjs/toolkit";
-
-// TODO: Consider thunk for updating name
-//       for better performance
+import { createSlice, current } from "@reduxjs/toolkit";
 
 const baseSeries = {
   file: "",
@@ -30,7 +27,9 @@ const initialColors = {
   majorGridline: { r: 230, g: 230, b: 230, a: 1 },
   minorGridline: { r: 216, g: 216, b: 216, a: 1 },
   font: { r: 68, g: 68, b: 68, a: 1 },
-  plotBackground: { r: 255, g: 255, b: 255, a: 1 }
+  plotBackground: { r: 255, g: 255, b: 255, a: 1 },
+  shapeline: { r: 255, g: 0, b: 0, a: 1 },
+  shapefill: { r: 255, g: 0, b: 0, a: 0.5 }
 };
 
 const baseLayout = {
@@ -78,7 +77,51 @@ const baseLayout = {
     t: 80,
     r: 80
   },
-  barmode: "group"
+  barmode: "group",
+  shapes: []
+};
+
+const basevline = {
+  type: "line",
+  xref: "x",
+  yref: "paper",
+  x0: 0,
+  x1: 0,
+  y0: 0,
+  y1: 1,
+  line: {
+    color: rgbaToString(initialColors.shapeline),
+    width: 2
+  }
+};
+
+const basehline = {
+  type: "line",
+  xref: "paper",
+  yref: "y",
+  x0: 0,
+  x1: 1,
+  y0: 0,
+  y1: 0,
+  line: {
+    color: rgbaToString(initialColors.shapeline),
+    width: 2
+  }
+};
+
+const baserect = {
+  type: "rect",
+  xref: "x",
+  yref: "y",
+  x0: 0,
+  x1: 0,
+  y0: 0,
+  y1: 0,
+  line: {
+    color: rgbaToString(initialColors.shapeline),
+    width: 2
+  },
+  fillcolor: rgbaToString(initialColors.shapefill)
 };
 
 const plotsSlice = createSlice({
@@ -102,6 +145,7 @@ const plotsSlice = createSlice({
     //     },
     //     data: [],
     //     layout: {},
+    //     shapes: {},
     //     options: {
     //       colorscale: "Jet",
     //       reversescale: true
@@ -145,6 +189,7 @@ const plotsSlice = createSlice({
         [uuid()]: {
           series: {},
           layout: { ...baseLayout },
+          shapes: {},
           data: [],
           options: {
             enableY2: false,
@@ -198,6 +243,13 @@ const plotsSlice = createSlice({
         }
       };
     },
+    addData: (state, { payload }) => {
+      state.plots[payload.id].data = payload.newData;
+    },
+    // updateData: (state, {payload}) => {
+    //   // For things like yaxis2, bar labels, etc
+    //   state.plots[payload.plotId].data = xxx
+    // },
     updateLayout: (state, { payload }) => {
       state.plots[payload.id].layout = {
         ...state.plots[payload.id].layout,
@@ -231,18 +283,6 @@ const plotsSlice = createSlice({
         }
       };
     },
-    updateLayoutXAxisGridMinor: (state, { payload }) => {
-      state.plots[payload.id].layout = {
-        ...state.plots[payload.id].layout,
-        xaxis: {
-          ...state.plots[payload.id].layout.xaxis,
-          minor: {
-            ...state.plots[payload.id].layout.xaxis.minor,
-            ...payload.newInput
-          }
-        }
-      };
-    },
     updateLayoutYAxis: (state, { payload }) => {
       state.plots[payload.id].layout = {
         ...state.plots[payload.id].layout,
@@ -252,9 +292,29 @@ const plotsSlice = createSlice({
         }
       };
     },
-    updateLayoutYAxisGridMinor: (state, { payload }) => {
+    updateLayoutMajorGridlines: (state, { payload }) => {
       state.plots[payload.id].layout = {
         ...state.plots[payload.id].layout,
+        xaxis: {
+          ...state.plots[payload.id].layout.xaxis,
+          ...payload.newInput
+        },
+        yaxis: {
+          ...state.plots[payload.id].layout.yaxis,
+          ...payload.newInput
+        }
+      };
+    },
+    updateLayoutMinorGridlines: (state, { payload }) => {
+      state.plots[payload.id].layout = {
+        ...state.plots[payload.id].layout,
+        xaxis: {
+          ...state.plots[payload.id].layout.xaxis,
+          minor: {
+            ...state.plots[payload.id].layout.xaxis.minor,
+            ...payload.newInput
+          }
+        },
         yaxis: {
           ...state.plots[payload.id].layout.yaxis,
           minor: {
@@ -268,38 +328,45 @@ const plotsSlice = createSlice({
       state.plots[payload.id].layout = {
         ...state.plots[payload.id].layout,
         margin: {
-          ...state.plots[payload.id].layout.yaxis,
+          ...state.plots[payload.id].layout.margin,
           ...payload.newInput
         }
       };
     },
     updateColorScaleOptions: (state, { payload }) => {
-      state.data = state.data.map((row) => (
+      state.plots[payload.id].options = {
+        ...state.plots[payload.id].options,
+        ...payload.newInput
+      };
+
+      state.plots[payload.id].data = state.plots[payload.id].data?.map((row) => (
         { ...row, ...payload.newInput }
       ));
-
-      state.options = { ...state.options, ...payload.newInput };
     },
     updateOptions: (state, { payload }) => {
-      state.options = { ...state.options, ...payload.newInput };
+      state.plots[payload.id].options = {
+        ...state.plots[payload.id].options,
+        ...payload.newInput
+      };
     },
     updateOptionsY2: (state, { payload }) => {
-      state.options = {
-        ...state.options,
+      state.plots[payload.id].options = {
+        ...state.plots[payload.id].options,
         y2: {
-          ...state.options.y2,
+          ...state.plots[payload.id].options.y2,
           ...payload.newInput
-        } };
+        }
+      };
 
-      if (state.options.enableY2) {
+      if (state.plots[payload.id].options.enableY2) {
         state.layout = {
           ...state.layout,
           xaxis: {
             ...state.layout.xaxis,
-            domain: [0, state.options.y2.position]
+            domain: [0, state.plots[payload.id].options.y2.position]
           },
           yaxis2: {
-            title: state.options.y2.title,
+            title: state.plots[payload.id].options.y2.title,
             showgrid: false,
             minor: {
               showgrid: false
@@ -307,8 +374,9 @@ const plotsSlice = createSlice({
             anchor: "free",
             overlaying: "y",
             side: "right",
-            position: state.options.y2.position
-          } };
+            position: state.plots[payload.id].options.y2.position
+          }
+        };
       } else {
         state.layout = {
           ...state.layout,
@@ -321,24 +389,111 @@ const plotsSlice = createSlice({
       }
     },
     updateBarLabels: (state, { payload }) => {
-      state.options = { ...state.option, ...payload.newInput };
+      state.plots[payload.id].options = {
+        ...state.plots[payload.id].options,
+        ...payload.newInput
+      };
 
-      if (state.options.enableBarLabels) {
-        state.data = state.data.map((row) => {
+      if (state.plots[payload.id].options.enableBarLabels) {
+        state.plots[payload.id].data = state.plots[payload.id].data?.map((row) => {
           if (row.type === "bar") {
             return { ...row, text: row.y.map(String), textposition: "auto" };
           }
           return row;
         });
       } else {
-        state.data = state.data.map((row) => {
+        state.plots[payload.id].data = state.plots[payload.id].data?.map((row) => {
           if (row.type === "bar") {
             delete row.text;
             delete row.textposition;
-            return row;
           }
+          return row;
         });
       }
+    },
+    addShape: (state, { payload }) => {
+      let newShape = {};
+      if (payload.type === "vline") {
+        newShape = { type: payload.type, shape: { ...basevline } };
+      } else if (payload.type === "hline") {
+        newShape = { type: payload.type, shape: { ...basehline } };
+      } else {
+        newShape = { type: payload.type, shape: { ...baserect } };
+      }
+
+      const shapeId = uuid();
+      state.plots[payload.id].shapes = {
+        ...state.plots[payload.id].shapes,
+        [shapeId]: {
+          id: shapeId,
+          ...newShape
+        }
+      };
+
+      const newShapes = [];
+      Object.keys(state.plots[payload.id].shapes).forEach((row) => {
+        newShapes.push(state.plots[payload.id].shapes[row].shape);
+      });
+
+      state.plots[payload.id].layout = {
+        ...state.plots[payload.id].layout,
+        shapes: newShapes
+      };
+
+    },
+    deleteShape: (state, { payload }) => {
+      delete state.plots[payload.plotId].shapes[payload.id];
+
+      const newShapes = [];
+      Object.keys(state.plots[payload.plotId].shapes).forEach((id) => {
+        newShapes.push(state.plots[payload.plotId].shapes[id]);
+      });
+
+      state.plots[payload.plotId].layout = {
+        ...state.plots[payload.plotId].layout,
+        shapes: newShapes
+      };
+    },
+    updateShape: (state, { payload }) => {
+      state.plots[payload.plotId].shapes[payload.id] = {
+        ...state.plots[payload.plotId].shapes[payload.id],
+        shape: {
+          ...state.plots[payload.plotId].shapes[payload.id].shape,
+          ...payload.newInput
+        }
+      };
+
+      const newShapes = [];
+      Object.keys(state.plots[payload.plotId].shapes).forEach((id) => {
+        newShapes.push(state.plots[payload.plotId].shapes[id].shape);
+      });
+
+      state.plots[payload.plotId].layout = {
+        ...state.plots[payload.plotId].layout,
+        shapes: newShapes
+      };
+    },
+    updateShapeLineStyle: (state, { payload }) => {
+      state.plots[payload.plotId].shapes[payload.id] = {
+        ...state.plots[payload.plotId].shapes[payload.id],
+        shape: {
+          ...state.plots[payload.plotId].shapes[payload.id].shape,
+          line: {
+            ...state.plots[payload.plotId].shapes[payload.id].shape.line,
+            ...payload.newInput
+          }
+        }
+      };
+
+      const newShapes = [];
+      Object.keys(state.plots[payload.plotId].shapes).forEach((id) => {
+        newShapes.push(state.plots[payload.plotId].shapes[id].shape);
+      });
+
+      state.plots[payload.plotId].layout = {
+        ...state.plots[payload.plotId].layout,
+        shapes: newShapes
+      };
     }
   }
 });
@@ -359,18 +514,23 @@ export const {
   updateSeries,
   updateSeriesBooleans,
   updateSeriesNormalize,
+  addData,
   updateLayout,
   updateLayoutFont,
   updateLayoutTitle,
   updateLayoutXAxis,
-  updateLayoutXAxisGridMinor,
   updateLayoutYAxis,
-  updateLayoutYAxisGridMinor,
+  updateLayoutMajorGridlines,
+  updateLayoutMinorGridlines,
   updateLayoutMargin,
   updateColorScaleOptions,
   updateOptions,
   updateOptionsY2,
-  updateBarLabels
+  updateBarLabels,
+  addShape,
+  updateShape,
+  updateShapeLineStyle,
+  deleteShape
 } = plotsSlice.actions;
 
 export default plotsSlice.reducer;

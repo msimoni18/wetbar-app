@@ -1,19 +1,19 @@
 import React, { lazy, Suspense } from "react";
 import { MemoryRouter as Router, Routes, Route } from "react-router-dom";
-import Titlebar from "components/titlebar/Titlebar";
+import Titlebar from "components/Titlebar/Titlebar";
 import { ThemeProvider } from "@mui/material";
-import theme from "../theme/theme";
+import Sidebar from "components/Sidebar/Sidebar";
+import theme from "./theme/theme";
 import styles from "./App.module.scss";
 
-const SpaceHogs = lazy(() => import("components/routes/spacehogs/SpaceHogs"));
-const Sidebar = lazy(() => import("components/sidebar/Sidebar"));
-const Archive = lazy(() => import("components/routes/archive/Archive"));
-const Cleanup = lazy(() => import("components/routes/cleanup/Cleanup"));
-const Flamingo = lazy(() => import("components/routes/flamingo/Flamingo"));
-const Plots = lazy(() => import("components/routes/plots/Plots"));
-const SpaceUtilization = lazy(() => import("components/routes/spaceutilization/SpaceUtilization"));
-const Settings = lazy(() => import("components/routes/settings/Settings"));
-// const Test = lazy(() => import("components/routes/test/Test"));
+const SpaceHogs = lazy(() => import("routes/SpaceHogs/SpaceHogs"));
+const Archive = lazy(() => import("routes/Archive/Archive"));
+const Cleanup = lazy(() => import("routes/Cleanup/Cleanup"));
+const Flamingo = lazy(() => import("routes/Flamingo/Flamingo"));
+const Plots = lazy(() => import("routes/Plots/Plots"));
+const SpaceUtilization = lazy(() => import("routes/SpaceUtilization/SpaceUtilization"));
+const Settings = lazy(() => import("routes/Settings/Settings"));
+const Test = lazy(() => import("routes/test/Test"));
 
 export default function App() {
   return (
@@ -25,13 +25,15 @@ export default function App() {
           <div className={ styles["route-body"] }>
             <Suspense fallback={ <h1>Loading...</h1> }>
               <Routes>
-                <Route path="/" element={ <SpaceHogs /> } />
+                {/* <Route path="/" element={ <SpaceHogs /> } /> */}
                 <Route path="/cleanup" element={ <Cleanup /> } />
                 <Route path="/archive" element={ <Archive /> } />
                 <Route path="/utilization" element={ <SpaceUtilization /> } />
-                <Route path="/plots" element={ <Plots /> } />
+                {/* <Route path="/plots" element={ <Plots /> } /> */}
+                <Route path="/" element={ <Plots /> } />
                 <Route path="/flamingo" element={ <Flamingo /> } />
                 <Route path="/settings" element={ <Settings /> } />
+                {/* <Route path="/" element={ <Test /> } /> */}
                 {/* <Route path="/test" element={ <Test /> } /> */}
               </Routes>
             </Suspense>

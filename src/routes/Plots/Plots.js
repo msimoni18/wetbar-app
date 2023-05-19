@@ -26,10 +26,10 @@ import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 import Header from "components/containers/Header";
 import DragDropFileContainer from "components/containers/DragDropFileContainer";
 import SimpleFileContainer from "components/containers/SimpleFileContainer";
-import PlotContainer from "components/routes/plots/PlotContainer";
+import PlotContainer from "routes/Plots/PlotContainer";
 import ExpressService from "components/containers/ExpressService";
 import RunButton from "components/buttons/RunButton";
-import { setIsRunning, setIsNotRunning } from "components/appSlice";
+import { setIsRunning, setIsNotRunning } from "../../appSlice";
 import {
   addItems,
   deleteItem,

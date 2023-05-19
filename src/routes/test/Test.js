@@ -19,7 +19,24 @@ export default function Test() {
   const testLayout = {
     title: { text: "Title" },
     xaxis: { title: "X Label" },
-    yaxis: { title: "Y Label" }
+    yaxis: { title: "Y Label" },
+    shapes: [
+      {
+        type: "line",
+        xref: "x",
+        // yref: "y",
+        yref: "paper",
+        // yref: "y domain",
+        x0: 2,
+        x1: 2,
+        y0: 0,
+        y1: 1,
+        line: {
+          color: "red",
+          width: 2
+        }
+      }
+    ]
   };
 
   return (

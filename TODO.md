@@ -27,9 +27,22 @@ NEXT UPDATES
 KNOWN ISSUES
 ============
 
+- Secondary y-axis label and position slide do not
+  work because they point to the xaxis property
+
+- Using floats for positioning annotations
+
 - Added new bar data after labels were added removes
   the labels because the response does not have text
   and textposition
+
+POSSIBLE ISSUES
+===============
+
+- What should the normalize parameter be when "use different
+  parameter" is not selected?
+
+- What to do with plot data that has NaN in files?
 
 General
 =======
@@ -69,6 +82,11 @@ Plots
   select components with scroll
 
 - Add options for more than two x or y axes
+
+- Consider async thunk in plotSlice.js for better performance.
+
+- Will moving plot to a different component and getting
+  layout there cause PlotContainer to re-render?
 
 SpaceUtilization
 ================

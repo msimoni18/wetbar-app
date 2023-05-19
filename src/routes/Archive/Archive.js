@@ -26,7 +26,6 @@ import DragDropFileContainer from "components/containers/DragDropFileContainer";
 import RunButton from "components/buttons/RunButton";
 import DeleteTableRow from "components/buttons/DeleteTableRow";
 import { AgGridReact } from "ag-grid-react";
-import { setIsRunning, setIsNotRunning } from "components/appSlice";
 import {
   addItems,
   deleteItem,
@@ -36,6 +35,7 @@ import {
   changeType,
   changeOutputDir
 } from "./archiveSlice";
+import { setIsRunning, setIsNotRunning } from "../../appSlice";
 import { TabPanel, allyProps } from "./TabPanel";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";

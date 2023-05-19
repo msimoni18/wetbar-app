@@ -15,7 +15,7 @@ import {
 import Header from "components/containers/Header";
 import RunButton from "components/buttons/RunButton";
 import DragDropTextField from "components/containers/DragDropTextField";
-import { setIsRunning, setIsNotRunning } from "components/appSlice";
+import { setIsRunning, setIsNotRunning } from "../../appSlice";
 import {
   changeYamlFile,
   changeOutputName,

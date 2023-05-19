@@ -1,5 +1,6 @@
 import * as React from "react";
 import { RgbaColorPicker } from "react-colorful";
+import { rgbaToString } from "utils/utilities";
 import {
   Box,
   Button,
@@ -11,9 +12,9 @@ import {
 } from "@mui/material";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 
-export default function ColorSelector(props) {
-  const { initialColor, color, setColor } = props;
+export default function ColorSelector({ initialColor, text, handleColorChange }) {
   const [openColorPicker, setOpenColorPicker] = React.useState(false);
+  const [color, setColor] = React.useState(initialColor);
 
   const handleOpen = () => {
     setOpenColorPicker(true);
@@ -21,6 +22,7 @@ export default function ColorSelector(props) {
 
   const handleClose = () => {
     setOpenColorPicker(false);
+    handleColorChange(text, rgbaToString(color));
   };
 
   const handleRevertColor = () => {
