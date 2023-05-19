@@ -9,16 +9,19 @@ export default function CleanupFilesTable({ data }) {
     {
       field: "number",
       headerName: "#",
-      maxWidth: 100
+      maxWidth: 100,
+      filter: false
     },
     {
       field: "extension",
       headerName: "Extension",
-      maxWidth: 100
+      maxWidth: 125,
+      filter: true
     },
     {
       field: "filename",
-      headerName: "File"
+      headerName: "File",
+      filter: true
     }
   ]);
 
@@ -26,7 +29,8 @@ export default function CleanupFilesTable({ data }) {
     return {
       flex: 1,
       sortable: true,
-      resizable: true
+      resizable: true,
+      filter: "agTextColumnFilter"
     };
   }, []);
 
