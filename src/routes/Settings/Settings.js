@@ -6,6 +6,9 @@ export default function Settings() {
   return (
     <React.Fragment>
       <Header heading="Settings" />
+      <div>
+        Settings stuff to go here...
+      </div>
     </React.Fragment>
   );
 }

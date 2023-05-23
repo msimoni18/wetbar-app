@@ -25,15 +25,13 @@ export default function App() {
           <div className={ styles["route-body"] }>
             <Suspense fallback={ <h1>Loading...</h1> }>
               <Routes>
-                {/* <Route path="/" element={ <SpaceHogs /> } /> */}
+                <Route path="/" element={ <SpaceHogs /> } />
                 <Route path="/cleanup" element={ <Cleanup /> } />
                 <Route path="/archive" element={ <Archive /> } />
                 <Route path="/utilization" element={ <SpaceUtilization /> } />
-                {/* <Route path="/plots" element={ <Plots /> } /> */}
-                <Route path="/" element={ <Plots /> } />
+                <Route path="/plots" element={ <Plots /> } />
                 <Route path="/flamingo" element={ <Flamingo /> } />
                 <Route path="/settings" element={ <Settings /> } />
-                {/* <Route path="/" element={ <Test /> } /> */}
                 {/* <Route path="/test" element={ <Test /> } /> */}
               </Routes>
             </Suspense>

@@ -17,6 +17,9 @@ NEXT UPDATES
   files are selected. Show/hide additional options
   that are applicable.
 
+- Build out save plot options. Save plot as png and data in xlsx file.
+  Give user option to set name of both files.
+
 - Add options for secondary x axis (mainly for bar/scatter overlay)
 
 - Add button to open dev tools on sidebar
