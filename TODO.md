@@ -1,6 +1,8 @@
 NEXT UPDATES
 ============
 
+ - Add search criteria to redux state in Archive window.
+
 - Make sure file lists are sorted nicely
 
 - Additional contour options:

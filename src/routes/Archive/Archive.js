@@ -120,7 +120,8 @@ export default function Archive() {
         remove_directory: create.removeDir,
         archive_format: create.format,
         extract_option: extract.type,
-        search_criteria: extract.criteria,
+        // search_criteria: extract.criteria,
+        search_criteria: searchCriteria,
         output_directory: extract.outputDir,
         processors
       }),

@@ -397,6 +397,7 @@ def cleanup():
                 dry_run=True
                 )
         elif option == "deleteAfterDryRun":
+            files = [row['filename'] for row in files]
             delete_files(files)
             files = []
         elif option == "deleteNoDryRun":
