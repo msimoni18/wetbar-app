@@ -80,6 +80,7 @@ function cleanProject() {
     getPath("node_modules"),
     getPath("package-lock.json"),
     getPath("yarn.lock"),
+    getPath(path.join("api", "__pycache__")),
 
     // Testing
     getPath("coverage"),

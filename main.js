@@ -243,8 +243,8 @@ app.whenReady().then(async () => {
         "resources",
         "WETbar.app"
       )}" --args`,
-      linux: "./resources/app/WETbar",
-      win32: "start ./resources/app/WETbar.exe"
+      linux: "./resources/WETbar/WETbar",
+      win32: "start ./resources/WETbar/WETbar.exe"
     }[process.platform];
 
     spawn(`${runFlask} ${port}`, {

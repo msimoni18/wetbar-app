@@ -114,7 +114,7 @@ class Packager {
       app: [
         "WETbar",
         "--asar",
-        "--extra-resource=./resources/app",
+        "--extra-resource=./resources/WETbar",
         "--icon ./public/favicon.ico",
         "--win32",
         "--out",
