@@ -11,6 +11,7 @@ from api.utils import Worker, str2bool, read_file, sort_nicely
 from api.archives import  create_archive, extract_files
 from api.utilization import TreeStructure, DirectorySize
 from api.cleanup import find_files_and_delete, delete_files
+from api.express import get_common_parameters, ExpressService
 from entry import app, app_config, socketio
 
 
@@ -24,7 +25,7 @@ data.DATA = {}
 """
 @app.route('/space-hogs', methods=['POST'])
 def space_hogs():
-
+    print('/space-hogs')
     if request.method == 'POST':
         site = request.json
 
@@ -94,6 +95,10 @@ def archive_files():
     archive_format : str, 'PAX' (default) or 'GNU'
         Format of the archive file. This option is only used when
         'option=create'.
+    
+    extract_option: str, 'all' (default) or 'files'
+        Option to extract all files or specific files from an archive
+        file. This option is only used when 'option=extract'.
 
     search_criteria : str
         String containing all of the search criteria, separated by '\n'.
@@ -429,6 +434,59 @@ def flamingo():
         time.sleep(5)
 
         return jsonify({'message': 'Flamingo is complete!'})
+
+
+@app.route('/express-plots', methods=['POST'])
+def express_plots():
+    
+    table_info = request.json['tableData'] # List of dict with keys: file, name
+    xparam = request.json['xParameter']
+    output_dir = request.json['outputDirectory']
+    fout = request.json['outputFilename']
+    ignore_parameters = request.json['ignoreParameters']
+    plot_package = request.json['plotPackage']
+
+    # Filter data to only include files listed in table_info
+    files = []
+    names = []
+    for row in table_info:
+        files.append(row['file'])
+        names.append(row['name'])
+    
+    express_data = {}
+    for f, name in zip(files, names):
+        express_data[f] = {
+            'df': data.DATA[f]['df'],
+            'parameters': data.DATA[f]['parameters'],
+            'name': name
+        }
+
+    # Get common parameters and remove parameters that
+    # should be ignored.
+    common_parameters = get_common_parameters(express_data)
+
+    # Make output directory if it does not exist
+    if not os.path.isdir(output_dir):
+        os.makedirs(output_dir)
+    
+    # Build full output filename
+    output_filename = os.path.join(output_dir, fout)
+
+    service = ExpressService(
+        data=express_data,
+        parameters=common_parameters,
+        output_filename=output_filename
+    )
+
+    if plot_package == 'matplotlib':
+        service.create_matplotlib_plots(save_pngs=False)
+    elif plot_package == 'plotly':
+        service.create_plotly_plots(save_pngs=False, save_html=False)
+
+    return jsonify({
+        'status': 200,
+        'message': 'Success'
+    })
 
 
 #### Test function for socketio

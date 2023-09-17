@@ -9,7 +9,12 @@ import {
   DialogActions,
   DialogContentText,
   Button,
-  Grid
+  Grid,
+  FormLabel,
+  FormControl,
+  FormControlLabel,
+  Radio,
+  RadioGroup
 } from "@mui/material";
 import RunButton from "components/buttons/RunButton";
 import { AgGridReact } from "ag-grid-react";
@@ -28,6 +33,7 @@ function ExpressService({ open, handleClose }) {
 
   const [outputDirectory, setOutputDirectory] = React.useState("");
   const [outputFilename, setOutputFilename] = React.useState("All_Parameters");
+  const [plotType, setPlotType] = React.useState("matplotlib");
 
   const gridRef = React.useRef();
   const gridStyle = React.useMemo(() => ({ height: 400 }), []);
@@ -48,6 +54,12 @@ function ExpressService({ open, handleClose }) {
       field: "name",
       headerName: "Name",
       editable: true
+    },
+    {
+      field: "scaleFactor",
+      headerName: "Scale Factor",
+      editable: true,
+      maxWidth: 125
     }
   ]);
 
@@ -81,59 +93,77 @@ function ExpressService({ open, handleClose }) {
 
   return (
     <Fragment>
-      <Dialog
-        open={ open }
-        onClose={ handleClose }
-        fullWidth
-        maxWidth="lg"
-      >
+      <Dialog open={ open } onClose={ handleClose } fullWidth maxWidth="lg">
         <DialogTitle>Express Service</DialogTitle>
         <DialogContent>
           <DialogContentText>
             Generate plots for all common parameters in the loaded files.
           </DialogContentText>
-          <hr />
-          <Grid container alignItems="stretch" spacing={ 2 }>
-            <Grid item xs={ 12 }>
-              <TextField
-                margin="dense"
-                id="output-directory"
-                label="Output Directory"
-                type="input"
-                fullWidth
-                variant="standard"
-                value={ outputDirectory }
-                onChange={ (event) => setOutputDirectory(event.target.value) }
-              />
-              <TextField
-                margin="dense"
-                id="output-filename"
-                label="Output Filename"
-                type="input"
-                fullWidth
-                variant="standard"
-                value={ outputFilename }
-                onChange={ (event) => setOutputFilename(event.target.value) }
-              />
+          <hr style={ { marginBottom: "15px" } } />
+          <Grid container spacing={ 2 }>
+            <Grid item xs={ 12 } sm={ 3 }>
+              <FormControl fullWidth>
+                <TextField
+                  id="output-name"
+                  variant="outlined"
+                  label="Output File Name"
+                  value={ outputFilename }
+                  onChange={ (event) => setOutputFilename(event.target.value) }
+                />
+              </FormControl>
             </Grid>
-          </Grid>
-          <Grid item xs={ 12 }>
-            <div className="ag-theme-alpine" style={ gridStyle }>
-              <AgGridReact
-                ref={ gridRef }
-                rowData={ rowData }
-                columnDefs={ columnDefs }
-                defaultColDef={ defaultColDef }
-                rowSelection="multiple"
-                suppressRowClickSelection
-              />
-            </div>
+            <Grid item xs={ 12 } sm={ 9 }>
+              <FormControl fullWidth>
+                <TextField
+                  id="output-directory"
+                  variant="outlined"
+                  label="Output Directory"
+                  value={ outputDirectory }
+                  onChange={ (event) => setOutputDirectory(event.target.value) }
+                />
+              </FormControl>
+            </Grid>
+            <Grid item xs={ 12 }>
+              <FormControl>
+                <FormLabel id="plot-type-radio-buttons-group-label">
+                  Plot Type
+                </FormLabel>
+                <RadioGroup
+                  row
+                  aria-labelledby="plot-type-radio-buttons-group-label"
+                  name="row-radio-buttons-group"
+                  value={ plotType }
+                  onChange={ (event) => setPlotType(event.target.value) }
+                >
+                  <FormControlLabel
+                    value="matplotlib"
+                    control={ <Radio /> }
+                    label="matplotlib"
+                  />
+                  <FormControlLabel
+                    value="plotly"
+                    control={ <Radio /> }
+                    label="plotly"
+                  />
+                </RadioGroup>
+              </FormControl>
+            </Grid>
+            <Grid item xs={ 12 }>
+              <div className="ag-theme-alpine" style={ gridStyle }>
+                <AgGridReact
+                  ref={ gridRef }
+                  rowData={ rowData }
+                  columnDefs={ columnDefs }
+                  defaultColDef={ defaultColDef }
+                  rowSelection="multiple"
+                  suppressRowClickSelection
+                />
+              </div>
+            </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>
-          <RunButton handleClick={ handleRun }>
-            Run
-          </RunButton>
+          <RunButton handleClick={ handleRun }>Run</RunButton>
           <Button variant="outlined" onClick={ handleClose }>
             Close
           </Button>
